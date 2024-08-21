@@ -185,7 +185,7 @@ table_edit_server <- function(id,
         if(i <= ncol(df)) {
           if (tolower(col_type_data[i]) == "date") {
             df[[i]] <- as.Date(df[[i]], tryFormats = date_formats)
-            print(df[[i]] )
+            # print(df[[i]] )
           } else if (col_type_data[i] == "numeric") {
             df[[i]] <- as.numeric(df[[i]])
           } else if (col_type_data[i] == "color") {
