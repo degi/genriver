@@ -1,0 +1,190 @@
+options(rgl.useNULL=TRUE)
+
+install_load <- function (package1, ...)  {
+  # convert arguments to vector
+  packages <- c(package1, ...)
+  
+  # start loop to determine if each package is installed
+  for (package in packages) {
+    # if package is installed locally, load
+    if (package %in% rownames(installed.packages()))
+      do.call('library', list(package))
+    
+    # if package is not installed locally, download, then load
+    else {
+      install.packages(package)
+      do.call("library", list(package))
+    }
+  }
+}
+
+install_load(
+  "shiny",
+  "devtools",
+  "bslib",
+  "bsicons",
+  "htmltools",
+  "reactable",
+  "plotly",
+  "leaflet",
+  "stars",
+  "mapview",
+  "excelR",
+  "RColorBrewer",
+  "jsonlite",
+  "reshape2",
+  "leafem",
+  "yaml",
+  "remotes",
+  "zip",
+  "paletteer",
+  "httr",
+  
+  "lubridate",
+  "shinyjqui",
+  "rgl"
+  # "shinyhttr",
+  # "shinyWidgets"
+)
+
+##package ‘starsExtra’ for DEM!!
+
+
+if (!("flowdem" %in% rownames(installed.packages()))) {
+  install_github("KennethTM/flowdem")
+}
+do.call("library", list("flowdem"))
+
+if (!("rayshader" %in% rownames(installed.packages()))) {
+  install_github("tylermorganwall/rayshader")
+}
+do.call("library", list("rayshader"))
+
+if(!("shinycssloaders" %in% rownames(installed.packages()))) {
+  install_github("daattali/shinycssloaders")
+}
+do.call("library", list("shinycssloaders"))
+
+default_wd <- getwd()
+
+input_dialog <- function(title = "",
+                         desc = "",
+                         confirm_id,
+                         confirm_label = "Add",
+                         input_var = NULL,
+                         input_label = NULL,
+                         input_def = NULL,
+                         input_pholder = NULL,
+                         input_type = NULL) {
+  inp <- NULL
+  if (!is.null(input_var)) {
+    blank <- rep("", length(input_var))
+    if (is.null(input_label))
+      input_label <- blank
+    if (is.null(input_def))
+      input_def <- blank
+    if (is.null(input_pholder))
+      input_pholder <- blank
+    if (is.null(input_type))
+      input_type <- blank
+    inp <- mapply(function(v, l, d, p, t) {
+      if(t == "numeric") {
+        paste(numericInput(v, HTML(l), d, width = "100%"))
+      } else {
+        paste(textInput(v, HTML(l), d, width = "100%", p))
+      }
+    },
+    input_var,
+    input_label,
+    input_def,
+    input_pholder,
+    input_type)
+  }
+  names(inp) <- NULL
+  inp <- HTML(inp)
+  showModal(
+  modalDialog(
+    title = title,
+    HTML(desc),
+    inp,
+    footer = tagList(
+      actionButton("cancel_button_dialog", "Cancel"),
+      actionButton(confirm_id, confirm_label)
+    )
+  ))
+}
+
+show_spinner <- function(label) {
+  conditionalPanel(
+    condition = "output.is_spinner",
+    div(
+      style = "position:absolute;top:100px;left:calc(50% - 150px);
+      text-align:center;background-color:white;border-radius:5px;padding:20px",
+      p(tags$strong(label)),
+      div(
+        class = "spinner-border text-warning",
+        style = "width:3rem;height:3rem;margin-top:10px;",
+        role = "status",
+        span(class = "visually-hidden", "loading..")
+      )
+    )
+  )
+}
+
+
+### opentopography.org ########################
+
+opentopo_dataset_df <- data.frame(
+  var = c(
+    "SRTMGL3",
+    "SRTMGL1",
+    "SRTMGL1_E",
+    "AW3D30",
+    "AW3D30_E",
+    "SRTM15Plus",
+    "NASADEM",
+    "COP30",
+    "COP90",
+    "EU_DTM",
+    "GEDI_L3",
+    "GEBCOIceTopo",
+    "GEBCOSubIceTopo"
+  ),
+  
+  label = c(
+    "SRTMGL3 (SRTM GL3 90m)",
+    "SRTMGL1 (SRTM GL1 30m)",
+    "SRTMGL1_E (SRTM GL1 Ellipsoidal 30m)",
+    "AW3D30 (ALOS World 3D 30m)",
+    "AW3D30_E (ALOS World 3D Ellipsoidal, 30m)",
+    "SRTM15Plus (Global Bathymetry SRTM15+ V2.1 500m)",
+    "NASADEM (NASADEM Global DEM)",
+    "COP30 (Copernicus Global DSM 30m)",
+    "COP90 (Copernicus Global DSM 90m)",
+    "EU_DTM (DTM 30m)",
+    "GEDI_L3 (DTM 1000m)",
+    "GEBCOIceTopo (Global Bathymetry 500m)",
+    "GEBCOSubIceTopo (Global Bathymetry 500m)"
+  )
+)
+
+
+
+
+
+
+co2_unit <- function(prefix = "", suffix = "") {
+  tags$html(
+    paste0(prefix, "CO"),
+    tags$sub(2, .noWS = c("after", "before")),
+    paste0("e", suffix),
+    .noWS = c("after", "before")
+  )
+}
+
+per_ha_unit <- function(prefix = "", suffix = "") {
+  tags$html(paste0(prefix, "ha"),
+            tags$sup(-1, .noWS = c("after", "before")),
+            suffix,
+            .noWS = c("after", "before"))
+}
