@@ -1715,21 +1715,6 @@ server <- function(input, output, session) {
       bbsub_h <- rescale(bbsub, v$dem_flow_stars, setProgress)
       msub <- bbsub_h[mb]
       #convert soil map raster to polygon
-      # msf <- st_as_sf(msub,
-      #                 as_points = F,
-      #                 merge = T,
-      #                 connect8 = T)
-      # msf <- st_transform(msf, crs = 4326)
-      # names(msf) <- c("smu_id", "geometry")
-      # # merge polygon for each smu_id
-      # sid <- sort(unique(msf$smu_id))
-      # a <- lapply(sid, function(x) {
-      #   st_as_sf(st_union(msf[msf$smu_id == x, ]))
-      # })
-      # m_a <- do.call(rbind, a)
-      # st_geometry(m_a) <- "geometry"
-      # msf <- cbind(m_a, smu_id = sid)
-      
       msf <- stars_to_sf(msub)
       names(msf) <- c("smu_id", "geometry")
       
@@ -1742,6 +1727,9 @@ server <- function(input, output, session) {
       paint_soil_map(leafletProxy("soil_map_leaflet", session))
       
       # calculate theta sat
+      print("calculate theta sat")
+      df <- v$soil_layer_df
+      
       tc <- c("SMU_ID", "SHARE", "soil_type")
       sc <- c(
         "SAND",

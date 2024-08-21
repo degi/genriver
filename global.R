@@ -20,6 +20,7 @@ install_load <- function (package1, ...)  {
 
 install_load(
   "shiny",
+  "remotes",
   "devtools",
   "bslib",
   "bsicons",
@@ -35,7 +36,7 @@ install_load(
   "reshape2",
   "leafem",
   "yaml",
-  "remotes",
+
   "zip",
   "paletteer",
   "httr",
