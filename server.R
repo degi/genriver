@@ -1,9 +1,9 @@
-library(mapview)
-library(flowdem)
-library(terra)
-
-library(paletteer)
-library(DBI)
+# library(mapview)
+# library(flowdem)
+# library(terra)
+#
+# library(paletteer)
+# library(DBI)
 
 # source("genriverlib.R")
 
@@ -1423,7 +1423,7 @@ server <- function(input, output, session) {
         zoom = 0.75,
         phi = 45,
         triangulate = T,
-        max_tri = 20000
+        max_tri = 15000
       )
     hidePageSpinner()
     rglwidget()
@@ -2032,7 +2032,8 @@ server <- function(input, output, session) {
       vd$river_df <- NULL
       return()
     }
-    if(is.null(v$ws_boundary_outlet_cfg$area) || v$ws_boundary_outlet_cfg$area <= 0)
+    if (is.null(v$ws_boundary_outlet_cfg$area) ||
+        v$ws_boundary_outlet_cfg$area <= 0)
       return()
     # print(df)
     df <- df[order(df$date), ]

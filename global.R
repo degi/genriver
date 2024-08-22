@@ -1,19 +1,26 @@
-options(rgl.useNULL=TRUE)
+### Global rain data: https://docs.ropensci.org/rnoaa/articles/rnoaa.html
+### https://github.com/ropensci/rnoaa
+### https://github.com/ropensci/GSODR
+
+### pedotransfer: https://github.com/julienmoeys/soilwater
+
+
+options(rgl.useNULL = TRUE)
 
 install_load <- function (package1, ...)  {
   # convert arguments to vector
   packages <- c(package1, ...)
-  
   # start loop to determine if each package is installed
+  instp <- rownames(installed.packages())
   for (package in packages) {
-    # if package is installed locally, load
-    if (package %in% rownames(installed.packages()))
-      do.call('library', list(package))
-    
-    # if package is not installed locally, download, then load
-    else {
-      install.packages(package)
-      do.call("library", list(package))
+    # # if package is installed locally, load
+    # if (package %in% rownames(installed.packages()))
+    #   # do.call('library', list(package))
+    # # if package is not installed locally, download, then load
+    # else {
+    if (!package %in% instp) {  
+      install.packages(package, repos = "http://cran.us.r-project.org", dependencies = T)
+      # do.call("library", list(package))
     }
   }
 }
@@ -35,36 +42,80 @@ install_load(
   "jsonlite",
   "reshape2",
   "leafem",
+  "terra",
   "yaml",
-
+  
+  # "textshaping",
+  
   "zip",
   "paletteer",
   "httr",
   
   "lubridate",
   "shinyjqui",
-  "rgl"
+  "rgl",
+  
+  "DBI",
+  "rayvertex",
+  "rayrender",
+  "rayshader"
   # "shinyhttr",
   # "shinyWidgets"
 )
 
 ##package ‘starsExtra’ for DEM!!
-
+##
 
 if (!("flowdem" %in% rownames(installed.packages()))) {
   install_github("KennethTM/flowdem")
 }
-do.call("library", list("flowdem"))
+# do.call("library", list("flowdem"))
 
-if (!("rayshader" %in% rownames(installed.packages()))) {
-  install_github("tylermorganwall/rayshader")
-}
-do.call("library", list("rayshader"))
+# if (!("rayshader" %in% rownames(installed.packages()))) {
+#   install_github("tylermorganwall/rayshader")
+# }
+# # do.call("library", list("rayshader"))
 
-if(!("shinycssloaders" %in% rownames(installed.packages()))) {
+if (!("shinycssloaders" %in% rownames(installed.packages()))) {
   install_github("daattali/shinycssloaders")
 }
-do.call("library", list("shinycssloaders"))
+# do.call("library", list("shinycssloaders"))
+
+
+
+library("shiny")
+library("remotes")
+library("devtools")
+library("bslib")
+library("bsicons")
+library("htmltools")
+library("reactable")
+library("plotly")
+library("leaflet")
+library("stars")
+library("mapview")
+library("excelR")
+library("RColorBrewer")
+library("jsonlite")
+library("reshape2")
+library("leafem")
+library("terra")
+library("yaml")
+library("zip")
+library("paletteer")
+library("httr")
+library("lubridate")
+library("shinyjqui")
+library("rgl")
+library("DBI")
+library("flowdem")
+library("rayvertex")
+library("rayrender")
+library("rayshader")
+library("shinycssloaders")
+
+
+
 
 default_wd <- getwd()
 
@@ -89,7 +140,7 @@ input_dialog <- function(title = "",
     if (is.null(input_type))
       input_type <- blank
     inp <- mapply(function(v, l, d, p, t) {
-      if(t == "numeric") {
+      if (t == "numeric") {
         paste(numericInput(v, HTML(l), d, width = "100%"))
       } else {
         paste(textInput(v, HTML(l), d, width = "100%", p))
@@ -103,8 +154,7 @@ input_dialog <- function(title = "",
   }
   names(inp) <- NULL
   inp <- HTML(inp)
-  showModal(
-  modalDialog(
+  showModal(modalDialog(
     title = title,
     HTML(desc),
     inp,
