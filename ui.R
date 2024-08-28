@@ -1,5 +1,11 @@
 
 
+
+
+
+
+
+
 wait_spinner <- function() {
   div(
     p(tags$strong("Please wait while rendering the map..")),
@@ -65,9 +71,9 @@ dem_input_option <- conditionalPanel(
 )
 
 
-tooltip_blue <- function(...) {
-  tooltip(..., options = list(customClass = "custom-tooltip"))
-}
+# tooltip_blue <- function(...) {
+#   tooltip(..., options = list(customClass = "custom-tooltip"))
+# }
 
 outlet_table <- card(
   class = c("floating_right", "transparent_bg"),
@@ -245,62 +251,87 @@ ui <-
         nav_panel(
           title = "Land Cover",
           icon = icon("tree"),
-          card_body(class = "subpanel", navset_card_underline(
-            nav_panel(
-              title = "Land cover map",
-              icon = icon("layer-group"),
-              p(
-                "Map files can be uploaded individually or in an archived file (.zip).
-                The map files from",
-                tags$b("R-Fallow") ,
-                "output can be uploaded directly."
-              ),
-              layout_column_wrap(
-                card_body(
-                  padding = 0,
-                  fileInput(
-                    "rfalow_lc_map_inp",
-                    NULL,
-                    accept = c(".tif", ".zip"),
-                    placeholder = "Archived map files (.zip)",
-                    width = "100%"
-                  ),
-                  card_body(padding = 0, table_edit_ui(
-                    "lc_df_table", tags$i("Land cover legend")
-                  ))
-                ),
-                card(card_body(padding = 0, uiOutput("lc_map_out")))
-              )
-            ),
-            nav_panel(
-              title = "Evapotranspiration",
-              icon = icon("cloud-sun"),
-              layout_column_wrap(
-                style = css(grid_template_columns = "1fr 2fr"),
-                table_edit_ui(
-                  "evapotran_df_table",
-                  markdown("*Potential evapotranspiration data (mm day<sup>-1</sup>)*"),
-                  is_paginated = T
-                ),
-                card(
-                  plotlyOutput("evapotran_daily_plot"),
-                  plotlyOutput("evapotran_monthly_plot"),
-                  plotlyOutput("evapotran_yearly_plot"),
-                  full_screen = T
-                )
-              )
-            ),
-          ))
-          
-        )
-        ,
-        nav_panel(
-          title = span(icon("water"), "Watershed"),
           card_body(
             class = "subpanel",
             navset_card_underline(
               nav_panel(
-                title = span("Watershed area"),
+                title = "Land Cover Map",
+                icon = icon("layer-group"),
+                p(
+                  "Map files can be uploaded individually or in an archived file (.zip).
+                The map files from",
+                  tags$b("R-Fallow") ,
+                  "output can be uploaded directly."
+                ),
+                layout_column_wrap(
+                  card_body(
+                    padding = 0,
+                    fileInput(
+                      "rfalow_lc_map_inp",
+                      NULL,
+                      accept = c(".tif", ".zip"),
+                      multiple = T,
+                      width = "100%"
+                    ),
+                    card_body(padding = 0, table_edit_ui(
+                      "lc_df_table", tags$i("Land cover legend")
+                    ))
+                  ),
+                  card_body(padding = 10, uiOutput("lc_map_out"))
+                )
+              ),
+              nav_panel(
+                title = "Hydrological Properties",
+                icon = icon("droplet"),
+                card_body(height = "50%", table_edit_ui("lc_props_table")),
+                card_body(height = "50%", table_edit_ui(
+                  "lc_evapot_table",
+                  markdown("*Multiplier of Daily Potential Evapotranspiration*")
+                ))
+              ),
+              nav_panel(
+                title = "Evapotranspiration",
+                icon = icon("cloud-sun"),
+                navset_card_pill(
+                  nav_panel(title = "Daily Data", layout_column_wrap(
+                    style = css(grid_template_columns = "1fr 2fr"),
+                    table_edit_ui(
+                      "evapotran_df_table",
+                      markdown("*Potential Evapotranspiration (mm day<sup>-1</sup>)*"),
+                      is_paginated = T
+                    ),
+                    card(
+                      plotlyOutput("evapotran_daily_plot"),
+                      plotlyOutput("evapotran_monthly_plot"),
+                      plotlyOutput("evapotran_yearly_plot"),
+                      full_screen = T
+                    )
+                  )),
+                  nav_panel(title = "Monthly Data", layout_column_wrap(
+                    style = css(grid_template_columns = "1fr 2fr"),
+                    table_edit_ui(
+                      "evapot_monthly_df_table",
+                      markdown("*Potential Evapotranspiration (mm month<sup>-1</sup>)*"),
+                      is_paginated = T
+                    ),
+                    card(plotlyOutput("evapot_monthly_data_plot"), full_screen = T)
+                  ))
+                )
+              )
+            )
+          )
+          
+        )
+        ,
+        nav_panel(
+          title = "Watershed",
+          icon = icon("water"),
+          card_body(
+            class = "subpanel",
+            navset_card_underline(
+              nav_panel(
+                title = "Watershed Area",
+                icon = icon("mountain"),
                 card_body(
                   padding = 0,
                   leafletOutput("watershed_map_leaflet"),
@@ -308,12 +339,15 @@ ui <-
                 )
               ),
               nav_panel(
-                title = span("Routing distance"),
+                title = "Routing Distance",
+                icon = icon("route"),
                 card_body(padding = 0, leafletOutput("routing_map_leaflet"))
               ),
-              nav_panel(title = span("3D view"), card_body(
-                padding = 0, rglwidgetOutput("plot3d", width = "calc(100% - 20px)")
-              ))
+              nav_panel(
+                title = "3D View",
+                icon = icon("cube"),
+                card_body(padding = 0, rglwidgetOutput("plot3d", width = "calc(100% - 20px)"))
+              )
             )
           )
         ),
@@ -321,11 +355,13 @@ ui <-
           title = span(icon("icicles"), "Soil"),
           card_body(class = "subpanel", navset_card_underline(
             nav_panel(
-              title = span("Physical and chemical properties"),
+              title = "Physical and Chemical Properties",
+              icon = icon("flask"),
               card_body(padding = 0, leafletOutput("soil_map_leaflet"))
             ),
             nav_panel(
-              title = span("Hydraulic properties"),
+              title = "Hydraulic Properties",
+              icon = icon("droplet"),
               card_body(padding = 0, leafletOutput("soil_thetasat_leaflet"))
             )
           ))
@@ -337,7 +373,7 @@ ui <-
             class = "subpanel",
             navset_card_underline(
               nav_panel(
-                title = "Rainfall data",
+                title = "Rainfall Data",
                 icon = icon("cloud-showers-heavy"),
                 layout_column_wrap(
                   style = css(grid_template_columns = "1fr 2fr"),
@@ -355,7 +391,7 @@ ui <-
                 )
               ),
               nav_panel(
-                title = span("River flow data"),
+                title = "River Flow Data",
                 icon = icon("bacon"),
                 layout_column_wrap(
                   style = css(grid_template_columns = "1fr 2fr"),
@@ -373,7 +409,7 @@ ui <-
                 )
               ),
               nav_panel(
-                title = span("Consistency check"),
+                title = span("Consistency Check"),
                 icon = icon("check"),
                 uiOutput("consistency_ui")
               )
@@ -384,7 +420,8 @@ ui <-
         nav_menu(
           title = NULL,
           icon = icon("ellipsis-vertical"),
-          nav_item(style = "margin: 0 20px", 
+          nav_item(
+            style = "margin: 0 20px",
             fileInput(
               "upload_parameter",
               span(icon("upload"), "Upload input data"),
@@ -392,7 +429,8 @@ ui <-
               # placeholder = "Parameters file",
               width = "300px"
             )
-          ),nav_item(style = "border-top: 2px dashed lightgray; margin:10px 20px"),
+          ),
+          nav_item(style = "border-top: 2px dashed lightgray; margin:10px 20px"),
           nav_item(span(
             icon("download"),
             downloadLink("download_params", "Download input data"),

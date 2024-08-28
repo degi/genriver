@@ -36,7 +36,7 @@ install_load(
   "plotly",
   "leaflet",
   "stars",
-  "mapview",
+  # "mapview",
   "excelR",
   "RColorBrewer",
   "jsonlite",
@@ -56,8 +56,8 @@ install_load(
   "rgl",
   
   "DBI",
-  "rayvertex",
-  "rayrender",
+  # "rayvertex",
+  # "rayrender",
   "rayshader"
   # "shinyhttr",
   # "shinyWidgets"
@@ -93,7 +93,7 @@ library("reactable")
 library("plotly")
 library("leaflet")
 library("stars")
-library("mapview")
+# library("mapview")
 library("excelR")
 library("RColorBrewer")
 library("jsonlite")
@@ -109,8 +109,8 @@ library("shinyjqui")
 library("rgl")
 library("DBI")
 library("flowdem")
-library("rayvertex")
-library("rayrender")
+# library("rayvertex")
+# library("rayrender")
 library("rayshader")
 library("shinycssloaders")
 
@@ -182,6 +182,9 @@ show_spinner <- function(label) {
   )
 }
 
+tooltip_blue <- function(...) {
+  tooltip(..., options = list(customClass = "custom-tooltip"))
+}
 
 ### opentopography.org ########################
 

@@ -1,11 +1,4 @@
-# library(mapview)
-# library(flowdem)
-# library(terra)
-#
-# library(paletteer)
-# library(DBI)
 
-# source("genriverlib.R")
 
 server <- function(input, output, session) {
   options(shiny.maxRequestSize = 1000 * 1024 ^ 2)
@@ -49,6 +42,7 @@ server <- function(input, output, session) {
   }
   
   ### Conditional panel UI logic ###
+  
   conditional_id <-
     c("is_dem_map",
       "is_stream_map",
@@ -83,12 +77,52 @@ server <- function(input, output, session) {
   })
   outputOptions(output, "is_spinner", suspendWhenHidden = FALSE)
   
+  month_cols <- data.frame(
+    var = c(
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ),
+    month = c(1:12)
+  )
+  
   v <- reactiveValues(
     genriver_cfg = list(),
     
     lc_map_stars_list = NULL,
     lc_map_df = NULL,
-    lc_df = NULL,
+    lc_df = data.frame(
+      LC_ID = numeric(),
+      color = character(),
+      land_cover = character(),
+      description = character(),
+      stringsAsFactors = FALSE
+    ),
+    lc_par_df = data.frame(
+      LC_ID = numeric(),
+      land_cover = character(),
+      intercept_class  = numeric(),
+      rel_drought_fact  = numeric(),
+      rel_bd = numeric(),
+      stringsAsFactors = FALSE
+    ),
+    lc_evapot_df = NULL,
+    evapot_month_data_df = data.frame(
+      n = month_cols$month,
+      month = month_cols$var,
+      evapotranspiration =  rep(NA, 12),
+      stringsAsFactors = FALSE
+    ),
+    
     map_boundary_sf = NULL,
     
     dem_map_file = NULL,
@@ -141,13 +175,36 @@ server <- function(input, output, session) {
     )
   )
   
+  vd <- reactiveValues(
+    lc_evapot_disp_df = data.frame(
+      LC_ID = numeric(),
+      land_cover = character(),
+      Jan = numeric(),
+      Feb = numeric(),
+      Mar = numeric(),
+      Apr = numeric(),
+      May = numeric(),
+      Jun = numeric(),
+      Jul = numeric(),
+      Aug = numeric(),
+      Sep = numeric(),
+      Oct = numeric(),
+      Nov = numeric(),
+      Dec = numeric(),
+      stringsAsFactors = FALSE
+    ),
+    evapotran_df = NULL,
+    evapotran_month_df = NULL,
+    rain_df = NULL,
+    rain_month_df = NULL,
+    river_df = NULL
+  )
   
   
   lc_df_col <- c("lc_id", "color", "label", "description")
   rain_df_col <- c("date", "rain")
   
   lc_legend_pal = NULL
-  
   
   ws_id <- function(i) {
     return(paste0("ws_", i))
@@ -172,6 +229,75 @@ server <- function(input, output, session) {
     removeModal()
     is_spinner(F)
   })
+  
+  ### INPUT PARAMETES AND DATA
+  
+  io_file_df <- data.frame(
+    var = c(
+      "genriver_cfg",
+      "lc_map_stars_list",
+      "lc_df",
+      "lc_map_df",
+      
+      "lc_par_df",
+      "lc_evapot_df",
+      "evapot_month_data_df",
+      
+      "map_boundary_sf",
+      "ws_boundary_outlet_cfg",
+      "watershed_df",
+      "ws_boundary_sf",
+      "dem_direction_terra",
+      "dem_flow_stars",
+      "dem_contour_sf",
+      "dem_stream_sf",
+      "dem_map_stars",
+      "dem_crop_stars",
+      "routing_map_stars",
+      "routing_river_sf",
+      "soil_map_sf",
+      "soil_map_stars",
+      "soil_layer_df",
+      "soil_metadata_df",
+      "soil_thetasat_stars",
+      "soil_thetasat_sf",
+      "evapotran_df",
+      "rain_df",
+      "river_df"
+    ),
+    file = c(
+      "genriver",
+      "landcovermap",
+      "landcover",
+      "map_list",
+      
+      "lc_props",
+      "lc_evapot",
+      "evapot_monthly",
+      
+      "map_boundary",
+      "ws_boundary_outlet",
+      "watershed",
+      "ws_boundary",
+      "dem_direction",
+      "dem_flow",
+      "contour",
+      "stream",
+      "dem_bb",
+      "dem_ws",
+      "routing_map",
+      "routing_stream",
+      "soil_map",
+      "soil_map",
+      "soil_layer",
+      "soil_metadata",
+      "soil_thetasat",
+      "soil_thetasat",
+      "evapotranspiration",
+      "rain",
+      "river"
+    )
+  )
   
   ### LAND COVER INPUT ############################################
   
@@ -199,208 +325,159 @@ server <- function(input, output, session) {
     }
   }
   
-  # observeEvent(input[[inp_lc_file]], {
-  #   #TODO: progress bar here?
-  #   if (is.null(input[[inp_lc_file]]))
-  #     return()
-  #   is_lc_map_rendering(T)
-  #   ls <- list()
-  #   ls$file <- input[[inp_lc_file]]
-  #   ms <- read_stars(ls$file$datapath)
-  #   if (!check_map_input(ms))
-  #     return()
-  #   ms[ms < 0] <- NA
-  #   #### Generate id and area table ####
-  #   df <- as.data.frame(table(ms))
-  #   colnames(df) <- c("id", "area")
-  #   df$id <- as.numeric(as.character(df$id))
-  #   lc_df <- data.frame("lc_id" = df$id)
-  #   lc_df$color <- map_color(length(df$id))
-  #   lc_df$label <- paste0("Landcover_", df$id)
-  #   lc_df$description <- ""
-  #   v$lc_df <- lc_df
-  #   #### Map boundary ####
-  #   ps <- ms |> st_bbox() |> st_as_sfc() |> st_transform(crs = "+proj=longlat +datum=WGS84") |> st_as_sf()
-  #   v$map_boundary_sf <- ps
-  #   v$lc_map_stars_list[[lc_map_id]] <- ms
-  #   toggle_popover("lc_file_1_pop", F)
-  # })
-  #
-  # observeEvent(input$lc_file_1_pop, {
-  #   if (input$lc_file_1_pop) {
-  #     is_lc_map_rendering(T)
-  #   } else {
-  #     is_lc_map_rendering(F)
-  #   }
-  # })
-  
-  #### LC map plot ####
-  # output[[out_lc_map]] <- renderLeaflet({
-  #   m <- v$lc_map_stars_list[[lc_map_id]]
-  #   if (is.null(m)) {
-  #     return()
-  #   }
-  #   lc_legend_pal <- colorFactor(v$lc_df$color, v$lc_df$lc_id, na.color = NA)
-  #   is_lc_map_rendering(F)
-  #   leaflet(options = leafletOptions(attributionControl = FALSE)) |> addTiles() |>
-  #     fit_map_view(m) |>
-  #     addStarsImage(m,
-  #                   project = T,
-  #                   colors = lc_legend_pal,
-  #                   layerId = 'ID')
-  # })
-  
-  #### Land cover legend list table ####
-  
-  # lc_column <- data.frame(
-  #   title = c("LC_ID", "Color", "Land cover", "Description"),
-  #   type = c("numeric", "color", "text", "text"),
-  #   render = c(NA, "square", NA, NA),
-  #   align = c("right", "center", "left", "left"),
-  #   width = c(NA, NA, 150, 150),
-  #   readOnly = c(T, F, F, F)
-  # )
-  #
-  # output$lc_df_out <- renderExcel({
-  #   df <- v$lc_df
-  #   if (is.null(df))
-  #     return()
-  #   excelTable(
-  #     data = df,
-  #     columns = lc_column,
-  #     tableOverflow = T,
-  #     tableWidth = "100%",
-  #     allowDeleteColumn = F,
-  #     allowRenameColumn = F,
-  #     allowInsertColumn = F,
-  #     allowDeleteRow = F,
-  #     allowInsertRow = F,
-  #     rowDrag = F,
-  #     minDimensions = c(NA, 1),
-  #     tableHeight = "430px",
-  #     autoIncrement = T,
-  #     csvFileName = "landcover_table",
-  #     includeHeadersOnDownload = T
-  #   )
-  # })
-  
   ### INPUT R-FALLOW #########################
-  lc_id_counter <- 0
-  get_next_lc_id <- function() {
-    lc_id_counter <<- lc_id_counter + 1
-    return(lc_id_counter)
+  map_id_counter <- 0
+  get_next_map_id <- function() {
+    map_id_counter <<- map_id_counter + 1
+    return(map_id_counter)
   }
   
   observeEvent(input$rfalow_lc_map_inp, {
-    dpath <- input$rfalow_lc_map_inp$datapath
-    fname <- input$rfalow_lc_map_inp$name
-    is_zip <- F
-    file_list <- NULL
-    try(file_list <- utils::unzip(dpath, list = TRUE), silent = T)
+    dpaths <- input$rfalow_lc_map_inp$datapath
+    fnames <- input$rfalow_lc_map_inp$name
     
-    if (is.null(file_list)) {
-      file_list <- list("Name" = dpath)
-    } else {
-      file_list$Name <- paste0(data_dir, "/", file_list$Name)
-      utils::unzip(dpath, exdir = data_dir, junkpaths = T)
-      is_zip <- T
-    }
-    mlist <- list()
-    mdf <- NULL
-    for (f in file_list$Name) {
-      m <- NULL
-      prevm <- isolate(v$lc_map_stars_list)
-      try(m <- read_stars(f, proxy = T), silent = T)
-      if (!is.null(m) && any(class(m) == "stars")) {
-        mst <- st_as_stars(m)
-        mid <- unique(as.vector(mst[[1]]))
-        if (length(mid[mid < 0]) > 0) {
-          mst[mst < 0] <- NA
-          m <- mst
-        }
-        ps <- m |> st_bbox() |> st_as_sfc() |> st_transform(crs = "+proj=longlat +datum=WGS84") |> st_as_sf()
-        bb <- isolate(v$map_boundary_sf)
-        if (is.null(bb)) {
-          v$map_boundary_sf <- ps
-        } else {
-          int <- st_intersects(bb, ps, sparse = F)
-          if (!all(int)) {
-            if (is_zip) {
-              ferr <- suffix(f, sep = "/")
-            } else {
-              ferr <- fname
+    for (i in 1:length(dpaths)) {
+      dpath <- dpaths[i]
+      fname <- fnames[i]
+      
+      is_zip <- F
+      file_list <- NULL
+      try(file_list <- utils::unzip(dpath, list = TRUE), silent = T)
+      
+      if (is.null(file_list)) {
+        file_list <- list("Name" = dpath)
+      } else {
+        file_list$Name <- paste0(data_dir, "/", file_list$Name)
+        utils::unzip(dpath, exdir = data_dir, junkpaths = T)
+        is_zip <- T
+      }
+      mlist <- list()
+      mdf <- NULL
+      for (f in file_list$Name) {
+        m <- NULL
+        prevm <- isolate(v$lc_map_stars_list)
+        try(m <- read_stars(f, proxy = T), silent = T)
+        if (!is.null(m) && any(class(m) == "stars")) {
+          if (is_zip) {
+            ferr <- suffix(f, sep = "/")
+          } else {
+            ferr <- fname
+          }
+          mst <- st_as_stars(m)
+          mid <- unique(as.vector(mst[[1]]))
+          if (length(mid[mid < 0]) > 0) {
+            mst[mst < 0] <- NA
+            m <- mst
+          }
+          ps <- m |> st_bbox() |> st_as_sfc() |> st_transform(crs = "+proj=longlat +datum=WGS84") |> st_as_sf()
+          bb <- isolate(v$map_boundary_sf)
+          if (is.null(bb)) {
+            v$map_boundary_sf <- ps
+          } else {
+            int <- st_intersects(bb, ps, sparse = F)
+            
+            if (!all(int)) {
+              showNotification(paste(
+                "The map file",
+                ferr,
+                "is outside the previous map boundary"
+              ),
+              type = "warning")
+              next
             }
-            showNotification(paste(
-              "The file",
-              ferr,
-              "is outside the previous map boundary"
-            ),
-            type = "warning")
-            next
+          }
+          idx <- suffix(prefix(f, "."), "-")
+          n <- as.numeric(idx)
+          if (is.na(n))
+            n <- get_next_map_id()
+          id <- paste0("lc_", n)
+          while (id %in% names(prevm) || id %in% names(mlist)) {
+            id <- paste0("lc_", get_next_map_id())
+          }
+          mlist[[id]] <- m
+          if (is.null(mdf)) {
+            mdf <- data.frame(
+              map_id = c(id),
+              year = c(as.numeric(suffix(id))),
+              filename = ferr
+            )
+          } else {
+            mdf <- rbind(mdf, c(id, as.numeric(suffix(id)), ferr))
           }
         }
-        idx <- suffix(prefix(f, "."), "-")
-        n <- as.numeric(idx)
-        if (is.na(n))
-          n <- get_next_lc_id()
-        id <- paste0("lc_", n)
-        while (id %in% names(prevm) || id %in% names(mlist)) {
-          id <- paste0("lc_", get_next_lc_id())
-        }
-        mlist[[id]] <- m
-        if (is.null(mdf)) {
-          mdf <- data.frame(map_id = c(id),
-                            year = c(as.numeric(suffix(id))))
+      }
+      if (length(mlist) > 0) {
+        if (is.null(prevm)) {
+          v$lc_map_stars_list <- mlist
+          v$lc_map_df <- mdf
         } else {
-          mdf <- rbind(mdf, c(id, as.numeric(suffix(id))))
+          v$lc_map_stars_list <- append(prevm, mlist)
+          v$lc_map_df <- rbind(isolate(v$lc_map_df), mdf)
         }
-      }
-    }
-    if (length(mlist) > 0) {
-      if (is.null(prevm)) {
-        v$lc_map_stars_list <- mlist
-        v$lc_map_df <- mdf
       } else {
-        v$lc_map_stars_list <- append(prevm, mlist)
-        v$lc_map_df <- rbind(isolate(v$lc_map_df), mdf)
+        showNotification("File error or wrong file format", type = "error")
       }
-      # lc_id_counter <<- length(isolate(v$lc_map_stars_list))
-    } else {
-      showNotification("File error or wrong file format", type = "error")
+      
     }
   })
-  
-  
   
   observe({
     ms <- v$lc_map_stars_list
     if (is.null(ms))
       return()
-    ids <- unlist(lapply(ms, function(x) {
-      unique(as.vector(st_as_stars(x)[[1]]))
-    }))
-    id <- unique(ids)
-    id <- sort(id[!is.na(id) & id >= 0])
-    lc_df <- data.frame("lc_id" = id)
-    lc_df$color <- map_color(length(id))
-    lc_df$land_use <- paste0("Landuse_", id)
-    lc_df$land_cover <- paste0("Landcover_", id)
-    lc_df$description <- ""
-    v$lc_df <- lc_df
+    lc_df <- isolate(v$lc_df)
+    if(is.null(lc_df) || nrow(lc_df) == 0) {
+      ids <- unlist(lapply(ms, function(x) {
+        unique(as.vector(st_as_stars(x)[[1]]))
+      }))
+      id <- unique(ids)
+      id <- sort(id[!is.na(id) & id >= 0])
+      if (length(id) == 0) {
+        lc_df = data.frame(
+          LC_ID = numeric(),
+          color = character(),
+          land_cover = character(),
+          description = character(),
+          stringsAsFactors = FALSE
+        )
+      } else {
+        lc_df <- data.frame("LC_ID" = id)
+        lc_df$color <- map_color(length(id))
+        lc_df$land_cover <- paste0("Landcover_", id)
+        lc_df$description <- ""
+      }
+      v$lc_df <- lc_df
+    }
     #table
     lc_df_edited <- update_lc_df_display()
-    observe({
-      v$lc_df <- lc_df_edited()
-    })
     
+    map_df <- isolate(v$lc_map_df)
     name_ms <- names(ms)
     output$lc_map_out <- renderUI({
-      lapply(name_ms, function(x) {
-        div(div(class = "inline", numericInput(
-          paste0("lc_map_year_", x), "Year:", NULL, min = 0
-        )),
-        plotOutput(paste0("lc_map_", x)))
-      })
+      layout_column_wrap(width = 1, !!!lapply(name_ms, function(x) {
+        card(
+          card_header(
+            div(class = "inline", numericInput(
+              paste0("lc_map_year_", x), "Year:", map_df[map_df$map_id == x, "year"], min = 0
+            )),
+            tooltip_blue(
+              icon("info-circle", style = "font-size:1.7rem;"),
+              paste("File name:", map_df[map_df$map_id == x, "filename"])
+            ),
+            actionButton(
+              paste0("delete_map_btn_", x),
+              "",
+              icon = icon("trash-can"),
+              class = "toolbar_button"
+            ) |> tooltip_blue("Remove the map"),
+            
+            class = "bg_light2 bg_theme d-flex justify-content-between"
+          ),
+          card_body(padding = 10, plotOutput(paste0(
+            "lc_map_", x
+          )))
+        )
+      }))
     })
     
     lapply(name_ms, function(x, ms) {
@@ -409,33 +486,167 @@ server <- function(input, output, session) {
         plot(
           ms[[x]],
           col = df$color,
-          breaks = c(-1, df$lc_id),
+          breaks = c(-1, df$LC_ID),
           key.pos = NULL,
           main = NULL
         )
       }, height = 400)
     }, ms)
     
-    observe({
-      df <- v$lc_map_df
-      if (is.null(df))
-        return()
-      apply(df, 1, function(x) {
-        updateNumericInput(session, paste0("lc_map_year_", x[["map_id"]]), value = x[["year"]])
+
+    # edit year
+    lapply(name_ms, function(x) {
+      observeEvent(input[[paste0("lc_map_year_", x)]], {
+        yr <- input[[paste0("lc_map_year_", x)]]
+        df <- isolate(v$lc_map_df)
+        df[df$map_id == x, "year"] <- yr
+        v$lc_map_df <- df
       })
     })
+    # delete map
+    lapply(name_ms, function(x) {
+      observeEvent(input[[paste0("delete_map_btn_", x)]], {
+        
+        df <- isolate(v$lc_map_df)
+        v$lc_map_df <- df[df$map_id != x, ]
+        v$lc_map_stars_list[[x]] <- NULL
+        print(paste("delete", x))
+      })
+    })
+    
   })
   
   landuse_list <- c("Forest", "Tree-based system", "Agriculture", "Settlement")
   
   update_lc_df_display <- function() {
+    table_edit_server("lc_df_table",
+                      isolate(v$lc_df),
+                      col_type = c("numeric", "color", "text", "text"))
+  }
+  
+  lc_df_edited <- update_lc_df_display()
+  
+  observe({
+    v$lc_df <- lc_df_edited()
+  })
+  
+  ### LC PROPERTIES ###############################
+  
+  lc_prop_cols <- data.frame(
+    var = c("intercept_class", "rel_drought_fact", "rel_bd"),
+    label = c(
+      "Potential Interception (mm day-1)",
+      "Relative Drought Threshold",
+      "BD/BDref"
+    )
+  )
+  
+  
+  lc_par_df_display <- function() {
     table_edit_server(
-      "lc_df_table",
-      isolate(v$lc_df),
-      col_type = c("numeric", "color", "dropdown", "text", "text"),
-      col_source = I(list(0, 0, landuse_list, 0, 0))
+      "lc_props_table",
+      isolate(v$lc_par_df),
+      col_title = c("LC_ID", "Land Cover", lc_prop_cols$label),
+      col_type = c("numeric", "character", rep("numeric", 3)),
+      col_width = c(50, 150, 250, 250, 100),
+      col_disable = c(T, T, F, F, F)
     )
   }
+  
+  lc_par_df_edited <- lc_par_df_display()
+  
+  observe({
+    v$lc_par_df <- lc_par_df_edited()
+  })
+  
+  lc_evapot_df_display <- function() {
+    table_edit_server(
+      "lc_evapot_table",
+      isolate(vd$lc_evapot_disp_df),
+      col_type = c("numeric", "character", rep("numeric", 12)),
+      col_disable = c(T, T, rep(F, 12))
+    )
+  }
+  
+  lc_evapot_df_edited <- lc_evapot_df_display()
+  
+  observe({
+    vd$lc_evapot_disp_df <- lc_evapot_df_edited()
+  })
+  
+  
+  observe({
+    df <- v$lc_df
+    if (nrow(df) == 0)
+      return()
+    pdf <- isolate(v$lc_par_df)
+    if (is.null(pdf) || nrow(pdf) == 0) {
+      pdf <- df[c("LC_ID", "land_cover")]
+      pdf[lc_prop_cols$var] <- NA
+    } else {
+      adf <- df[c("LC_ID", "land_cover")]
+      pdf <- merge(adf, pdf[c("LC_ID", lc_prop_cols$var)], by = "LC_ID", all.x = T)
+    }
+    v$lc_par_df <- pdf
+    lc_par_df_edited <- lc_par_df_display()
+    
+    edf <- isolate(vd$lc_evapot_disp_df)
+    if (nrow(edf) == 0) {
+      edf <- df[c("LC_ID", "land_cover")]
+      edf[month_cols$var] <- NA
+    } else {
+      adf <- df[c("LC_ID", "land_cover")]
+      edf <- merge(adf, edf[c("LC_ID", month_cols$var)], by = "LC_ID", all.x = T)
+    }
+    vd$lc_evapot_disp_df <- edf
+    lc_evapot_df_edited <- lc_evapot_df_display()
+  })
+  
+  observe({
+    edf <- vd$lc_evapot_disp_df
+    if (nrow(edf) == 0) {
+      vd$lc_evapot_df <- NULL
+    } else {
+      df <- melt(edf[, !(names(edf) %in% c("land_cover"))], id = c("LC_ID"))
+      df <- merge(df, month_cols, by.x = "variable", by.y = "var")
+      vd$lc_evapot_df <- df[c("LC_ID", "month", "value")]
+    }
+  })
+  
+  #### Evapotranspiration Monthly Data #########################
+  
+  evapot_month_df_display <- function() {
+    table_edit_server(
+      "evapot_monthly_df_table",
+      isolate(v$evapot_month_data_df),
+      col_type = c("numeric", "character", "numeric"),
+      col_disable = c(T, T, F)
+    )
+  }
+  
+  evapot_month_df_edited <- evapot_month_df_display()
+  
+  observe({
+    v$evapot_month_data_df <- evapot_month_df_edited()
+  })
+  
+  output$evapot_monthly_data_plot <- renderPlotly({
+    df <- v$evapot_month_data_df
+    if (is.null(df) || nrow(df) == 0)
+      return()
+    df$month <- factor(df$month, ordered = T, levels = df$month)
+    plot_ly(
+      df,
+      x = ~ month,
+      y = ~ evapotranspiration,
+      size = I(1),
+      type = "bar"
+    ) |>
+      layout(
+        yaxis = list(title = "Monthly Evapotranspiration (mm)"),
+        xaxis = list(title = "Months")
+      )
+  })
   
   ### INPUT DEM MAP #########################
   observeEvent(input$dem_map_inp, {
@@ -551,16 +762,11 @@ server <- function(input, output, session) {
     is_watershed_leaflet_base <<- T
     
     if (isolate(is_repaint_watershed())) {
-      lf <- reset_watershed_panel_display(lf) #|>
-      # addHomeButton(
-      #   ext = st_bbox(v$ws_boundary_sf),
-      #   group = "Watershed Area",
-      #   position = "topleft"
-      # )
+      lf <- reset_watershed_panel_display(lf)
       is_repaint_watershed(F)
     }
     
-    if (!is.null(v$map_boundary_sf)) {
+    if (!is.null(v$map_boundary_sf) && is.null(v$dem_stream_sf)) {
       lf <- lf |> addFeatures(
         v$map_boundary_sf,
         layerId = 'dem_boundary',
@@ -581,6 +787,7 @@ server <- function(input, output, session) {
   })
   
   reset_watershed_panel_display <- function(lf) {
+    if(is.null(v$map_boundary_sf)) return(lf)
     print("reset watershed panel")
     lf <- lf |>
       clearShapes() |>
@@ -590,9 +797,9 @@ server <- function(input, output, session) {
       show_stream(v$dem_stream_sf) |>
       repaint_all_watershed_map() |>
       repaint_outlet() |>
-      fit_map_view(v$dem_contour_sf) |>
+      fit_map_view(v$map_boundary_sf) |>
       addHomeButton(
-        ext = st_bbox(v$dem_contour_sf),
+        ext = st_bbox(v$map_boundary_sf),
         group = "Watershed Area",
         position = "topleft"
       )
@@ -686,10 +893,8 @@ server <- function(input, output, session) {
     get_topo_url <- paste0(open_topo_url, params)
     # TODO: temporally commented
     showPageSpinner(caption = "Please wait while downloading DEM map")
-    
-    
-    
-    res <- GET(get_topo_url, shinyhttr::progress(session, id = "pb"))
+    # res <- GET(get_topo_url, shinyhttr::progress(session, id = "pb"))
+    res <- GET(get_topo_url)
     print(res$all_headers)
     setwd(tempdir())
     f <- paste0(tempfile("dem"), ".tif")
@@ -739,6 +944,7 @@ server <- function(input, output, session) {
   })
   
   show_contour <- function(lf, contour_f) {
+    if(is.null(contour_f)) return(lf)
     dem <- contour_f
     names(dem) <- c("val", "geometry")
     col_list <- data.frame(val = sort(unique(dem$val)))
@@ -831,6 +1037,7 @@ server <- function(input, output, session) {
   }
   
   fit_map_view <- function(lf, m) {
+    if(is.null(m)) return(lf)
     bb <- as.list(st_bbox(st_transform(st_as_sfc(st_bbox(
       m
     )), 4326)))
@@ -1405,6 +1612,8 @@ server <- function(input, output, session) {
       sphere_shade(texture = "desert") %>%
       add_shadow(ray_shade(m_mat, zscale = 3), 0.5) %>%
       add_shadow(ambient_shade(m_mat), 0) %>%
+      
+      
       # add_overlay(
       #   generate_polygon_overlay(
       #     stream,
@@ -1483,7 +1692,7 @@ server <- function(input, output, session) {
         <strong><em>Click for more information</em></strong></p></div>"
     ) |> lapply(htmltools::HTML)
     lf <- lf |>
-      # clearShapes() |>
+      
       addFeatures(
         msf,
         layerId = sid,
@@ -1495,8 +1704,6 @@ server <- function(input, output, session) {
         stroke = F,
         popup = unlist(lapply(msf$smu_id, soil_info_ui)),
         labelOptions = labelOptions(className = "map_label", offset = c(0, -5))
-        # popupOptions = popupOptions(className = "mypopup", maxWidth = 800)
-        
       ) |>
       fit_map_view(msf)
     return(lf)
@@ -1726,42 +1933,43 @@ server <- function(input, output, session) {
       v$soil_map_stars <- msub
       paint_soil_map(leafletProxy("soil_map_leaflet", session))
       
-      # calculate theta sat
-      print("calculate theta sat")
-      df <- v$soil_layer_df
-      
-      tc <- c("SMU_ID", "SHARE", "soil_type")
-      sc <- c(
-        "SAND",
-        "SILT",
-        "CLAY",
-        "BULK",
-        "REF_BULK",
-        "ORG_CARBON",
-        "CEC_SOIL",
-        "PH_WATER"
-      )
-      sdf <- df[df$soil_depth == "0-20", c(tc, sc)]
-      sdf <- sdf[!duplicated(sdf), ]
-      sdf[sc] <- sdf[sc] * sdf$SHARE / 100
-      sumdf <- aggregate(sdf[sc], list(SMU_ID = sdf$SMU_ID), sum)
-      sumdf$thetasat <- pt.thetaSat.tropic(sumdf$CLAY,
-                                           sumdf$SAND,
-                                           sumdf$BULK,
-                                           sumdf$CEC_SOIL,
-                                           sumdf$PH_WATER)
-      theta_m <- msub
-      for (id in sumdf$SMU_ID) {
-        theta_m[msub == id] <- sumdf[sumdf$SMU_ID == id, ]$thetasat
-      }
-      
-      theta_sf <- stars_to_sf(theta_m)
-      # names(theta_sf) <- c("thetasat", "geometry")
-      v$soil_thetasat_sf <- theta_sf
-      v$soil_thetasat_stars <- theta_m
-      
+      calculate_hydroprop()
       setProgress(0.98, detail = "Rendering map")
     })
+  }
+  
+  calculate_hydroprop <- function() {
+    print("calculate theta sat")
+    df <- isolate(v$soil_layer_df)
+    msub <- isolate(v$soil_map_stars)
+    
+    tc <- c("SMU_ID", "SHARE", "soil_type")
+    sc <- c("SAND",
+            "SILT",
+            "CLAY",
+            "BULK",
+            "REF_BULK",
+            "ORG_CARBON",
+            "CEC_SOIL",
+            "PH_WATER")
+    sdf <- df[df$soil_depth == "0-20", c(tc, sc)]
+    sdf <- sdf[!duplicated(sdf), ]
+    sdf[sc] <- sdf[sc] * sdf$SHARE / 100
+    sumdf <- aggregate(sdf[sc], list(SMU_ID = sdf$SMU_ID), sum)
+    sumdf$thetasat <- pt.thetaSat.tropic(sumdf$CLAY,
+                                         sumdf$SAND,
+                                         sumdf$BULK,
+                                         sumdf$CEC_SOIL,
+                                         sumdf$PH_WATER)
+    theta_m <- msub
+    for (id in sumdf$SMU_ID) {
+      theta_m[msub == id] <- sumdf[sumdf$SMU_ID == id, ]$thetasat
+    }
+    
+    theta_sf <- stars_to_sf(theta_m)
+    # names(theta_sf) <- c("thetasat", "geometry")
+    v$soil_thetasat_sf <- theta_sf
+    v$soil_thetasat_stars <- theta_m
   }
   
   stars_to_sf <- function(m) {
@@ -1782,13 +1990,7 @@ server <- function(input, output, session) {
     return(msf)
   }
   
-  vd <- reactiveValues(
-    evapotran_df = NULL,
-    evapotran_month_df = NULL,
-    rain_df = NULL,
-    rain_month_df = NULL,
-    river_df = NULL
-  )
+  
   
   output$soil_thetasat_leaflet <- renderLeaflet({
     m <- v$soil_thetasat_sf
@@ -1808,9 +2010,6 @@ server <- function(input, output, session) {
     )
     return(lf)
   })
-  
-  
-  
   
   
   ### Evapotranspiration DATA ######################
@@ -1935,8 +2134,6 @@ server <- function(input, output, session) {
     if (is.null(df) || is.null(nrow(df)) || nrow(df) == 0) {
       return()
     }
-    # print(df)
-    # df$date <- as.Date(df$date, date_format)
     df$year <- year(df$date)
     df$month <- month(df$date)
     df$day <- yday(df$date)
@@ -2111,6 +2308,7 @@ server <- function(input, output, session) {
   })
   
   ### RAIN AND RIVER DATA CONSISTENCY ######################
+  
   observe({
     if (is.null(vd$rain_df) || is.null(vd$river_df))
       return()
@@ -2165,58 +2363,7 @@ server <- function(input, output, session) {
   
   ### DOWNLOAD PARAMETERS ######################
   
-  io_file_df <- data.frame(
-    var = c(
-      "genriver_cfg",
-      "lc_map_stars_list",
-      "lc_df",
-      "ws_boundary_outlet_cfg",
-      "watershed_df",
-      "ws_boundary_sf",
-      "dem_direction_terra",
-      "dem_flow_stars",
-      "dem_contour_sf",
-      "dem_stream_sf",
-      "dem_map_stars",
-      "dem_crop_stars",
-      "routing_map_stars",
-      "routing_river_sf",
-      "soil_map_sf",
-      "soil_map_stars",
-      "soil_layer_df",
-      "soil_metadata_df",
-      "soil_thetasat_stars",
-      "soil_thetasat_sf",
-      "evapotran_df",
-      "rain_df",
-      "river_df"
-    ),
-    file = c(
-      "genriver",
-      "landcovermap",
-      "landcover",
-      "ws_boundary_outlet",
-      "watershed",
-      "ws_boundary",
-      "dem_direction",
-      "dem_flow",
-      "contour",
-      "stream",
-      "dem_bb",
-      "dem_ws",
-      "routing_map",
-      "routing_stream",
-      "soil_map",
-      "soil_map",
-      "soil_layer",
-      "soil_metadata",
-      "soil_thetasat",
-      "soil_thetasat",
-      "evapotranspiration",
-      "rain",
-      "river"
-    )
-  )
+  
   
   output$download_params <- downloadHandler(
     filename = function() {
@@ -2347,6 +2494,10 @@ server <- function(input, output, session) {
     evapotran_df_edited <- update_evapotran_df_display()
     rain_df_edited <- update_rain_df_display()
     river_df_edited <- update_river_df_display()
+    # update map id counter
+    map_df <- isolate(v$lc_map_df)
+    map_idc <- as.numeric(unlist(lapply(map_df$map_id, suffix)))
+    map_id_counter <<- max(map_idc)
     print("parameters uploaded!")
   }
   
