@@ -921,8 +921,8 @@ server <- function(input, output, session) {
     # res <- GET(get_topo_url, shinyhttr::progress(session, id = "pb"))
     res <- GET(get_topo_url)
     print(res$all_headers)
-    # setwd(tempdir())
-    f <- paste0(tempfile("dem"), ".tif")
+    # setwd("www")
+    f <- paste0("www/", "dem", runif(1, 1, 99999999), ".tif")
     writeBin(res$content, f)
     
     # f <- "dem.tif"
@@ -963,7 +963,7 @@ server <- function(input, output, session) {
                   title = "Elevation")
     }
     is_set_ws_boundary <<- T
-    
+    file.remove(f)
     hidePageSpinner()
     is_spinner(F)
   })
