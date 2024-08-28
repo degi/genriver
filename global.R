@@ -13,14 +13,8 @@ install_load <- function (package1, ...)  {
   # start loop to determine if each package is installed
   instp <- rownames(installed.packages())
   for (package in packages) {
-    # # if package is installed locally, load
-    # if (package %in% rownames(installed.packages()))
-    #   # do.call('library', list(package))
-    # # if package is not installed locally, download, then load
-    # else {
     if (!package %in% instp) {  
       install.packages(package, repos = "http://cran.us.r-project.org", dependencies = T)
-      # do.call("library", list(package))
     }
   }
 }
@@ -36,7 +30,6 @@ install_load(
   "plotly",
   "leaflet",
   "stars",
-  # "mapview",
   "excelR",
   "RColorBrewer",
   "jsonlite",
@@ -44,8 +37,6 @@ install_load(
   "leafem",
   "terra",
   "yaml",
-  
-  # "textshaping",
   
   "zip",
   "paletteer",
@@ -56,31 +47,16 @@ install_load(
   "rgl",
   
   "DBI",
-  # "rayvertex",
-  # "rayrender",
   "rayshader"
-  # "shinyhttr",
-  # "shinyWidgets"
 )
-
-##package ‘starsExtra’ for DEM!!
-##
 
 if (!("flowdem" %in% rownames(installed.packages()))) {
   install_github("KennethTM/flowdem")
 }
-# do.call("library", list("flowdem"))
-
-# if (!("rayshader" %in% rownames(installed.packages()))) {
-#   install_github("tylermorganwall/rayshader")
-# }
-# # do.call("library", list("rayshader"))
 
 if (!("shinycssloaders" %in% rownames(installed.packages()))) {
   install_github("daattali/shinycssloaders")
 }
-# do.call("library", list("shinycssloaders"))
-
 
 
 library("shiny")
@@ -93,7 +69,6 @@ library("reactable")
 library("plotly")
 library("leaflet")
 library("stars")
-# library("mapview")
 library("excelR")
 library("RColorBrewer")
 library("jsonlite")
@@ -109,8 +84,6 @@ library("shinyjqui")
 library("rgl")
 library("DBI")
 library("flowdem")
-# library("rayvertex")
-# library("rayrender")
 library("rayshader")
 library("shinycssloaders")
 
@@ -227,18 +200,18 @@ opentopo_dataset_df <- data.frame(
 
 
 
-co2_unit <- function(prefix = "", suffix = "") {
-  tags$html(
-    paste0(prefix, "CO"),
-    tags$sub(2, .noWS = c("after", "before")),
-    paste0("e", suffix),
-    .noWS = c("after", "before")
-  )
-}
-
-per_ha_unit <- function(prefix = "", suffix = "") {
-  tags$html(paste0(prefix, "ha"),
-            tags$sup(-1, .noWS = c("after", "before")),
-            suffix,
-            .noWS = c("after", "before"))
-}
+# co2_unit <- function(prefix = "", suffix = "") {
+#   tags$html(
+#     paste0(prefix, "CO"),
+#     tags$sub(2, .noWS = c("after", "before")),
+#     paste0("e", suffix),
+#     .noWS = c("after", "before")
+#   )
+# }
+# 
+# per_ha_unit <- function(prefix = "", suffix = "") {
+#   tags$html(paste0(prefix, "ha"),
+#             tags$sup(-1, .noWS = c("after", "before")),
+#             suffix,
+#             .noWS = c("after", "before"))
+# }

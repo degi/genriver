@@ -109,7 +109,7 @@ server <- function(input, output, session) {
     ),
     lc_par_df = data.frame(
       LC_ID = numeric(),
-      land_cover = character(),
+      # land_cover = character(),
       intercept_class  = numeric(),
       rel_drought_fact  = numeric(),
       rel_bd = numeric(),
@@ -302,27 +302,31 @@ server <- function(input, output, session) {
   ### LAND COVER INPUT ############################################
   
   update_lc_legend <- function(lc_df, lc_map) {
-    id <- sort(unique(lc_map[[1]]))
-    if (is.null(lc_df)) {
-      lc_df <- data.frame("lc_id" = id)
+    id <- unique(as.vector(lc_map[[1]]))
+    print(id)
+    id <- sort(id[!is.na(id) & id >= 0])
+    print(id)
+    if (is.null(lc_df) || nrow(lc_df) == 0) {
+      lc_df <- data.frame("LC_ID" = id)
       lc_df$color <- map_color(length(id))
       lc_df$land_cover <- paste0("Landcover_", id)
-      lc_df$land_use <- paste0("Landuse_", id)
+      # lc_df$land_use <- paste0("Landuse_", id)
       lc_df$description <- ""
     } else {
-      dif <- as.numeric(setdiff(id, lc_df$lc_id))
-      df <- lc_df
+      dif <- as.numeric(setdiff(id, lc_df$LC_ID))
       if (length(dif) > 0) {
         a_df <- data.frame(
-          lc_id = dif,
+          LC_ID = dif,
           color = chart_color[sample.int(length(chart_color), length(dif))],
           land_cover = paste0("Landcover_", dif),
-          land_use = paste0("Landuse_", dif),
+          # land_use = paste0("Landuse_", dif),
           description = ""
         )
-        df <- rbind(lc_df, a_df)
+        lc_df <- rbind(lc_df, a_df)
+        lc_df <- lc_df[order(lc_df$LC_ID),]
       }
     }
+    return(lc_df)
   }
   
   ### INPUT R-FALLOW #########################
@@ -335,7 +339,7 @@ server <- function(input, output, session) {
   observeEvent(input$rfalow_lc_map_inp, {
     dpaths <- input$rfalow_lc_map_inp$datapath
     fnames <- input$rfalow_lc_map_inp$name
-    
+    lc_df <- isolate(v$lc_df)
     for (i in 1:length(dpaths)) {
       dpath <- dpaths[i]
       fname <- fnames[i]
@@ -404,6 +408,7 @@ server <- function(input, output, session) {
           } else {
             mdf <- rbind(mdf, c(id, as.numeric(suffix(id)), ferr))
           }
+          lc_df <- update_lc_legend(lc_df ,mst)
         }
       }
       if (length(mlist) > 0) {
@@ -419,35 +424,36 @@ server <- function(input, output, session) {
       }
       
     }
+    v$lc_df <- lc_df
   })
   
   observe({
     ms <- v$lc_map_stars_list
     if (is.null(ms))
       return()
-    lc_df <- isolate(v$lc_df)
-    if(is.null(lc_df) || nrow(lc_df) == 0) {
-      ids <- unlist(lapply(ms, function(x) {
-        unique(as.vector(st_as_stars(x)[[1]]))
-      }))
-      id <- unique(ids)
-      id <- sort(id[!is.na(id) & id >= 0])
-      if (length(id) == 0) {
-        lc_df = data.frame(
-          LC_ID = numeric(),
-          color = character(),
-          land_cover = character(),
-          description = character(),
-          stringsAsFactors = FALSE
-        )
-      } else {
-        lc_df <- data.frame("LC_ID" = id)
-        lc_df$color <- map_color(length(id))
-        lc_df$land_cover <- paste0("Landcover_", id)
-        lc_df$description <- ""
-      }
-      v$lc_df <- lc_df
-    }
+    # lc_df <- isolate(v$lc_df)
+    # if(is.null(lc_df) || nrow(lc_df) == 0) {
+    #   ids <- unlist(lapply(ms, function(x) {
+    #     unique(as.vector(st_as_stars(x)[[1]]))
+    #   }))
+    #   id <- unique(ids)
+    #   id <- sort(id[!is.na(id) & id >= 0])
+    #   if (length(id) == 0) {
+    #     lc_df = data.frame(
+    #       LC_ID = numeric(),
+    #       color = character(),
+    #       land_cover = character(),
+    #       description = character(),
+    #       stringsAsFactors = FALSE
+    #     )
+    #   } else {
+    #     lc_df <- data.frame("LC_ID" = id)
+    #     lc_df$color <- map_color(length(id))
+    #     lc_df$land_cover <- paste0("Landcover_", id)
+    #     lc_df$description <- ""
+    #   }
+    #   v$lc_df <- lc_df
+    # }
     #table
     lc_df_edited <- update_lc_df_display()
     
@@ -543,9 +549,14 @@ server <- function(input, output, session) {
   
   
   lc_par_df_display <- function() {
+    pdf <- isolate(v$lc_par_df)
+    adf <- isolate(v$lc_df)[c("LC_ID", "land_cover")]
+    pdf <- merge(adf, pdf, by = "LC_ID", all.x = T)
+    
     table_edit_server(
       "lc_props_table",
-      isolate(v$lc_par_df),
+      # isolate(v$lc_par_df),
+      pdf,
       col_title = c("LC_ID", "Land Cover", lc_prop_cols$label),
       col_type = c("numeric", "character", rep("numeric", 3)),
       col_width = c(50, 150, 250, 250, 100),
@@ -579,12 +590,15 @@ server <- function(input, output, session) {
     df <- v$lc_df
     if (nrow(df) == 0)
       return()
+    
     pdf <- isolate(v$lc_par_df)
     if (is.null(pdf) || nrow(pdf) == 0) {
-      pdf <- df[c("LC_ID", "land_cover")]
+      # pdf <- df[c("LC_ID", "land_cover")]
+      pdf <- df[c("LC_ID")]
       pdf[lc_prop_cols$var] <- NA
     } else {
-      adf <- df[c("LC_ID", "land_cover")]
+      # adf <- df[c("LC_ID", "land_cover")]
+      adf <- df[c("LC_ID")]
       pdf <- merge(adf, pdf[c("LC_ID", lc_prop_cols$var)], by = "LC_ID", all.x = T)
     }
     v$lc_par_df <- pdf
@@ -605,13 +619,26 @@ server <- function(input, output, session) {
   observe({
     edf <- vd$lc_evapot_disp_df
     if (nrow(edf) == 0) {
-      vd$lc_evapot_df <- NULL
+      v$lc_evapot_df <- NULL
     } else {
       df <- melt(edf[, !(names(edf) %in% c("land_cover"))], id = c("LC_ID"))
       df <- merge(df, month_cols, by.x = "variable", by.y = "var")
-      vd$lc_evapot_df <- df[c("LC_ID", "month", "value")]
+      v$lc_evapot_df <- df[c("LC_ID", "month", "value")]
     }
   })
+  
+  update_lc_prop <- function() {
+    lc_df <- isolate(v$lc_df)[c("LC_ID", "land_cover")]
+    
+    
+    df <- isolate(v$lc_evapot_df)
+    wide_df <- dcast(df, LC_ID ~ month)
+    # print(wide_df)
+    colnames(wide_df) <- c("LC_ID", month_cols$var)
+    
+    wide_df <- merge(lc_df, wide_df, by = "LC_ID", all.x = T)
+    vd$lc_evapot_disp_df <- wide_df
+  }
   
   #### Evapotranspiration Monthly Data #########################
   
@@ -2491,9 +2518,11 @@ server <- function(input, output, session) {
       ws_id_last <<- max(ids)
     }
     
+    update_lc_prop()
     evapotran_df_edited <- update_evapotran_df_display()
     rain_df_edited <- update_rain_df_display()
     river_df_edited <- update_river_df_display()
+    evapot_month_df_edited <- evapot_month_df_display()
     # update map id counter
     map_df <- isolate(v$lc_map_df)
     map_idc <- as.numeric(unlist(lapply(map_df$map_id, suffix)))
