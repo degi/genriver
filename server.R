@@ -303,9 +303,7 @@ server <- function(input, output, session) {
   
   update_lc_legend <- function(lc_df, lc_map) {
     id <- unique(as.vector(lc_map[[1]]))
-    print(id)
     id <- sort(id[!is.na(id) & id >= 0])
-    print(id)
     if (is.null(lc_df) || nrow(lc_df) == 0) {
       lc_df <- data.frame("LC_ID" = id)
       lc_df$color <- map_color(length(id))
@@ -923,7 +921,7 @@ server <- function(input, output, session) {
     # res <- GET(get_topo_url, shinyhttr::progress(session, id = "pb"))
     res <- GET(get_topo_url)
     print(res$all_headers)
-    setwd(tempdir())
+    # setwd(tempdir())
     f <- paste0(tempfile("dem"), ".tif")
     writeBin(res$content, f)
     
@@ -1937,7 +1935,7 @@ server <- function(input, output, session) {
     withProgress(message = 'Generating soil map', value = 0, {
       #get global soil map
       setProgress(0.05, detail = "Get the global soil map")
-      setwd(default_wd)
+      # setwd(default_wd)
       smap <- read_stars(soil_map_path, proxy = T)
       smap_crs <- st_crs(smap)
       #crop to bounding box of watershed and expand a bit to avoid resolution conversion lost
