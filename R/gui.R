@@ -53,25 +53,33 @@ table_edit_server <- function(id,
                               col_type = NULL,
                               col_disable = NULL,
                               col_source = NULL,
+                              col_width = NULL,
                               allowRowModif = F,
                               nrow = 0,
                               pagination = NULL,
                               csvFileName = "table_data") {
   
+  
+  
   moduleServer(id, function(input, output, session) {
-    if (is.null(data))
+    if (is.null(data)) {
+      # table_data(data.frame()) 
+      # return(table_data)
+      warning("table_edit_server >> Data should be initialized with dataframe object")
       return()
-    
+    }
     col_names <- colnames(data)
     
     if (is.null(col_title)) {
-      col_title <- tools::toTitleCase(col_names)
-      col_title <- gsub("_", " ", col_title)
+      # col_title <- tools::toTitleCase(col_names)
+      col_title <- gsub("_", " ", col_names)
+      col_title <- tools::toTitleCase(col_title)
     }
     
     
     col_render <- rep(NA, ncol(data))
-    col_width <- col_render
+    if(is.null(col_width))
+      col_width <- col_render
     
     col_align <- rep("left", ncol(data))
     
@@ -93,7 +101,7 @@ table_edit_server <- function(id,
     idx <- which(col_names == "color")
     for (i in idx) {
       col_type[i] <- "color"
-      col_title[i] <- ""
+      col_title[i] <- " "
       col_render[i] <- "square"
       col_align[i] <- "center"
       col_width[i] <- 30
@@ -111,7 +119,6 @@ table_edit_server <- function(id,
       col_disable <- rep(F, ncol(data))
     }
     
-    
     data_column <- data.frame(
       title = col_title,
       type = col_type,
@@ -126,6 +133,7 @@ table_edit_server <- function(id,
       data_column$source <- col_source
     }
     
+    table_data <- reactiveVal(data)
     table_data_edit <- reactiveVal(data)
     
     output$table_edit <- excelR::renderExcel({
@@ -134,6 +142,7 @@ table_edit_server <- function(id,
       if (is.null(df))
         return()
       # print(df)
+      
       excelR::excelTable(
         data = df,
         columns = data_column,
@@ -156,7 +165,7 @@ table_edit_server <- function(id,
       )
     })
     
-    table_data <- reactiveVal(data)
+    
     
     observeEvent(input$table_edit, {
       inp <- input$table_edit
@@ -205,7 +214,7 @@ table_edit_server <- function(id,
       # colnames(df) <- col_names[1:ncol(df)]
       
       # if(ncol(df) <- ncol(col_names))
-      
+      # 
       table_data_edit(df)
       table_data(df)
     })

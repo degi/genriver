@@ -217,3 +217,9 @@ convert_flow_to_mmdaily <- function(flow_m3psec, area_m2) {
   return((flow_m3psec/area_m2)*day_to_sec*1000)
 }
 
+get_rainfall_data <- function() {
+  require(GSODR)
+  ## bogor
+  n <- nearest_stations(LAT = -6.5790138, LON = 106.7352587, distance = 100)
+  tbar <- get_GSOD(years = 2023, station = "967510-99999")
+}
