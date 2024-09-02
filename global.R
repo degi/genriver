@@ -5,6 +5,14 @@
 ### pedotransfer: https://github.com/julienmoeys/soilwater
 
 
+##########################
+#LISA
+#
+# - data evapot bulanan bisa diestimasi dari suhu aja {Thornthwaite}
+# - debit tampilin bulanan juga , buat cek konsistensi juga
+# 
+##########################
+
 options(rgl.useNULL = TRUE)
 
 install_load <- function (package1, ...)  {
@@ -13,7 +21,7 @@ install_load <- function (package1, ...)  {
   # start loop to determine if each package is installed
   instp <- rownames(installed.packages())
   for (package in packages) {
-    if (!package %in% instp) {  
+    if (!package %in% instp) {
       install.packages(package, repos = "http://cran.us.r-project.org", dependencies = T)
     }
   }
@@ -37,6 +45,7 @@ install_load(
   "leafem",
   "terra",
   "yaml",
+  "RSQLite",
   
   "zip",
   "paletteer",
@@ -86,7 +95,7 @@ library("DBI")
 library("flowdem")
 library("rayshader")
 library("shinycssloaders")
-
+library("RSQLite")
 
 
 
@@ -196,7 +205,15 @@ opentopo_dataset_df <- data.frame(
 )
 
 
-
+desc <- list(soil_hydraulic = "At a potential of 0 kPa, soil is in a state of saturation. 
+             At saturation, all soil pores are filled with water, and water typically drains 
+             from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand), 
+             soil is at field capacity. Typically, at field capacity, air is in the macropores, 
+             and water in the micropores. Field capacity is viewed as the optimal condition 
+             for plant growth and microbial activity. At a potential of −1500 kPa, 
+             the soil is at its permanent wilting point, at which plant roots cannot 
+             extract the water through osmotic diffusion.(https://en.wikipedia.org/wiki/Water_potential)"
+            )
 
 
 
@@ -208,7 +225,7 @@ opentopo_dataset_df <- data.frame(
 #     .noWS = c("after", "before")
 #   )
 # }
-# 
+#
 # per_ha_unit <- function(prefix = "", suffix = "") {
 #   tags$html(paste0(prefix, "ha"),
 #             tags$sup(-1, .noWS = c("after", "before")),

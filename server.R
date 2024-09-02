@@ -156,6 +156,12 @@ server <- function(input, output, session) {
     soil_thetasat_stars = NULL,
     soil_thetasat_sf = NULL,
     
+    soil_hydraulic_top_df = NULL,
+    soil_hydraulic_sub_df = NULL,
+    soil_water_content_df = NULL,
+    
+    soil_hydraulic_stars_list = NULL,
+    
     evapotran_df = data.frame(
       date = as.Date(character()),
       evapotranspiration = numeric(),
@@ -922,7 +928,7 @@ server <- function(input, output, session) {
     res <- GET(get_topo_url)
     print(res$all_headers)
     # setwd("www")
-    f <- paste0("www/", "dem", runif(1, 1, 99999999), ".tif")
+    f <- paste0("www/", "dem", ceiling(runif(1, 1, 99999999)), ".tif")
     writeBin(res$content, f)
     
     # f <- "dem.tif"
@@ -1870,10 +1876,23 @@ server <- function(input, output, session) {
         )
       ))
     })
-    d$header$general <- c("Soil type", d$header$general)
-    d$header$physical <- c("Soil_depth", d$header$physical)
-    d$header$chemical <- c("Soil_depth", d$header$chemical)
+    d$header$general <- c("Soil Type", d$header$general)
+    d$header$physical <- c("Soil Depth", d$header$physical)
+    d$header$chemical <- c("Soil Depth", d$header$chemical)
     return(d)
+  }
+  
+  soil_fieldnames <- function(field) {
+      df <- isolate(v$soil_metadata_df)
+      n <- df[df$FIELD == field, "DESCRIPTION"]
+      if(length(n) == 0) return(field)
+      u <- df[df$FIELD == field, "UNIT"]
+      if(length(u) != 0) {
+        n <- paste0(n, " <span style='color:#BBBBBB;font-weight: normal;'>[",
+                    gsub("\\s", "", u),
+                    "]</span>")
+      }
+      return(n)
   }
   
   to_html_table <- function(dataframe, header = NULL) {
@@ -1958,44 +1977,261 @@ server <- function(input, output, session) {
       v$soil_map_stars <- msub
       paint_soil_map(leafletProxy("soil_map_leaflet", session))
       
-      calculate_hydroprop()
+      # calculate_hydroprop()
       setProgress(0.98, detail = "Rendering map")
     })
   }
   
-  calculate_hydroprop <- function() {
-    print("calculate theta sat")
-    df <- isolate(v$soil_layer_df)
-    msub <- isolate(v$soil_map_stars)
-    
-    tc <- c("SMU_ID", "SHARE", "soil_type")
-    sc <- c("SAND",
-            "SILT",
-            "CLAY",
-            "BULK",
-            "REF_BULK",
-            "ORG_CARBON",
-            "CEC_SOIL",
-            "PH_WATER")
-    sdf <- df[df$soil_depth == "0-20", c(tc, sc)]
+  ### SOIL HYDRAULIC PROPERTIES ##############################
+  
+  hydro_id <- c("SMU_ID", "SHARE", "soil_type", "soil_depth", "TOPDEP")
+  hydro_prop <- c("SAND",
+          "SILT",
+          "CLAY",
+          "BULK",
+          "REF_BULK",
+          "ORG_CARBON",
+          "CEC_SOIL",
+          "PH_WATER")
+  
+  # calculate_hydroprop <- function() {
+  #   print("calculate theta sat")
+  #   df <- isolate(v$soil_layer_df)
+  #   msub <- isolate(v$soil_map_stars)
+  #   
+  #   tc <- c("SMU_ID", "SHARE", "soil_type")
+  #   sc <- c("SAND",
+  #           "SILT",
+  #           "CLAY",
+  #           "BULK",
+  #           "REF_BULK",
+  #           "ORG_CARBON",
+  #           "CEC_SOIL",
+  #           "PH_WATER")
+  #   sdf <- df[df$soil_depth == "0-20", c(tc, sc)]
+  #   sdf <- sdf[!duplicated(sdf), ]
+  #   sdf[sc] <- sdf[sc] * sdf$SHARE / 100
+  #   sumdf <- aggregate(sdf[sc], list(SMU_ID = sdf$SMU_ID), sum)
+  #   sumdf$thetasat <- pt.thetaSat.tropic(sumdf$CLAY,
+  #                                        sumdf$SAND,
+  #                                        sumdf$BULK,
+  #                                        sumdf$CEC_SOIL,
+  #                                        sumdf$PH_WATER)
+  #   theta_m <- msub
+  #   for (id in sumdf$SMU_ID) {
+  #     theta_m[msub == id] <- sumdf[sumdf$SMU_ID == id, ]$thetasat
+  #   }
+  #   
+  #   theta_sf <- stars_to_sf(theta_m)
+  #   # names(theta_sf) <- c("thetasat", "geometry")
+  #   v$soil_thetasat_sf <- theta_sf
+  #   v$soil_thetasat_stars <- theta_m
+  #   
+  #   
+  # }
+  
+  
+  
+  observe({
+    sl_df <- v$soil_layer_df
+    if (is.null(sl_df) || nrow(sl_df) == 0)
+      return()
+    #Soil properties
+    sdf <- sl_df[c(hydro_id, hydro_prop)]
     sdf <- sdf[!duplicated(sdf), ]
-    sdf[sc] <- sdf[sc] * sdf$SHARE / 100
-    sumdf <- aggregate(sdf[sc], list(SMU_ID = sdf$SMU_ID), sum)
-    sumdf$thetasat <- pt.thetaSat.tropic(sumdf$CLAY,
-                                         sumdf$SAND,
-                                         sumdf$BULK,
-                                         sumdf$CEC_SOIL,
-                                         sumdf$PH_WATER)
-    theta_m <- msub
-    for (id in sumdf$SMU_ID) {
-      theta_m[msub == id] <- sumdf[sumdf$SMU_ID == id, ]$thetasat
+    sdf[sdf < 0] <- NA
+    if (any(is.na(sdf))) {
+      agg_type_df <- aggregate(sdf[hydro_prop], list(
+        SMU_ID = sdf$SMU_ID,
+        soil_type = sdf$soil_type
+      ), function(x)
+        mean(x, na.rm = T))
+      for (id in unique(agg_type_df$SMU_ID)) {
+        for (st in agg_type_df$soil_type) {
+          if (any(is.na(sdf[sdf$SMU_ID == id & sdf$soil_type == st,]))) {
+            for(coln in hydro_prop) {
+              vdf <- sdf[sdf$SMU_ID == id & sdf$soil_type == st, coln]
+              vdf[is.na(vdf)] <- agg_type_df[agg_type_df$SMU_ID == id & agg_type_df$soil_type == st, coln]
+              sdf[sdf$SMU_ID == id & sdf$soil_type == st, coln] <- vdf
+            }
+          }
+        }
+      }
     }
+    sdf[hydro_prop] <- sdf[hydro_prop] * sdf$SHARE / 100
     
-    theta_sf <- stars_to_sf(theta_m)
-    # names(theta_sf) <- c("thetasat", "geometry")
-    v$soil_thetasat_sf <- theta_sf
-    v$soil_thetasat_stars <- theta_m
+    soil_df <- aggregate(sdf[hydro_prop],
+                         list(
+                           SMU_ID = sdf$SMU_ID,
+                           soil_depth = sdf$soil_depth,
+                           TOPDEP = sdf$TOPDEP
+                         ),
+                         sum)
+    soil_df$soil_saturation <- pt.thetaSat.tropic(soil_df$CLAY, soil_df$SAND, soil_df$BULK, soil_df$CEC_SOIL, soil_df$PH_WATER)
+    soil_df$field_capacity <- pt.theta.tropic(-33,
+                                         soil_df$CLAY,
+                                         soil_df$BULK,
+                                         soil_df$SILT,
+                                         soil_df$ORG_CARBON,
+                                         soil_df$CEC_SOIL,
+                                         soil_df$PH_WATER)
+    soil_df$permanent_wilting_point <- pt.theta.tropic(-1500,
+                                                  soil_df$CLAY,
+                                                  soil_df$BULK,
+                                                  soil_df$SILT,
+                                                  soil_df$ORG_CARBON,
+                                                  soil_df$CEC_SOIL,
+                                                  soil_df$PH_WATER)
+    
+    soil_df[paste0(soil_hydraulic_cols, "_ws")] <- soil_df[paste0(soil_hydraulic_cols)] * 20
+    
+    swsub_df <- aggregate(soil_df[soil_df$SMU_ID != "0-20", paste0(soil_hydraulic_cols, "_ws")], list(SMU_ID = soil_df$SMU_ID), sum)
+    
+    #LC properties
+    lc_par_df <- v$lc_par_df
+    lc_par_df$LC_ID
+    lc_par_df$rel_bd
+    #Calculate hydraulic properties of top soil
+    top_soil_df <- soil_df[soil_df$soil_depth == "0-20", ]
+    nsid <- nrow(top_soil_df)
+    nlc <- nrow(lc_par_df)
+    rep_lc <- lc_par_df[rep(seq_len(nrow(lc_par_df)), nsid), ]
+    rep_s <- top_soil_df[rep(seq_len(nrow(top_soil_df)), each = nlc), ]
+    df <- cbind(rep_lc, rep_s)
+    df$bulk_density <- df$rel_bd * df$REF_BULK
+    df$soil_saturation <- pt.thetaSat.tropic(df$CLAY, df$SAND, df$bulk_density, df$CEC_SOIL, df$PH_WATER)
+    df$field_capacity <- pt.theta.tropic(-33,
+                                         df$CLAY,
+                                         df$bulk_density,
+                                         df$SILT,
+                                         df$ORG_CARBON,
+                                         df$CEC_SOIL,
+                                         df$PH_WATER)
+    df$permanent_wilting_point <- pt.theta.tropic(-1500,
+                                                  df$CLAY,
+                                                  df$bulk_density,
+                                                  df$SILT,
+                                                  df$ORG_CARBON,
+                                                  df$CEC_SOIL,
+                                                  df$PH_WATER)
+    
+    v$soil_hydraulic_top_df <- df[c("LC_ID", "SMU_ID", soil_hydraulic_cols, "bulk_density")]
+    v$soil_hydraulic_sub_df <- soil_df
+    #calculate soil water
+    sw_df <- df[c("SMU_ID", "LC_ID", soil_hydraulic_cols)]
+    sw_df[paste0(soil_hydraulic_cols, "_w")] <- sw_df[paste0(soil_hydraulic_cols)] * 20
+    sw_df <- merge(sw_df, swsub_df, by = "SMU_ID")
+    sw_df[paste0(soil_hydraulic_cols, "_w")] <- sw_df[paste0(soil_hydraulic_cols, "_w")] + sw_df[paste0(soil_hydraulic_cols, "_ws")]
+    v$soil_water_content_df <- sw_df[c("SMU_ID", "LC_ID", paste0(soil_hydraulic_cols, "_w"))]
+  })
+  
+  soil_hydraulic_cols <- c("soil_saturation", "field_capacity", "permanent_wilting_point")
+  
+  hydro_prop_coldef <- function() {
+    d <- lapply(hydro_prop , function(x) {
+      colDef(name = soil_fieldnames(x), html = T)
+    })
+    names(d) <- hydro_prop
+    return(d)
   }
+  
+  
+  output$soil_hydraulic_top_table <- renderReactable({
+    df <- v$soil_hydraulic_top_df
+    if(is.null(df)) return()
+    hdf <- v$soil_metadata_df
+    adf <- isolate(v$lc_df)[c("LC_ID", "land_cover")]
+    df <- merge(df, adf, by = "LC_ID", all.x = T)
+    data <- v$soil_hydraulic_sub_df
+    data <- data[data$soil_depth == "0-20", c("SMU_ID", hydro_prop)] 
+
+    cn <- hydro_prop_coldef()
+    reactable(
+      data,
+      defaultExpanded = TRUE,
+      columns = cn,
+      onClick = "expand",
+      details = function(index) {
+        d_data <- df[df$SMU_ID == data$SMU_ID[index], ]
+        reactable(d_data[c("LC_ID", "land_cover", soil_hydraulic_cols, "bulk_density")],
+          pagination = F,
+          striped = T,
+          borderless = TRUE,
+          compact = TRUE,
+          rownames = F,
+          columns = list(
+            LC_ID = colDef(format = colFormat(digit = 0)),
+            land_cover = colDef(name = "Land Cover"),
+            bulk_density = colDef(name = "Bulk Density"),
+            soil_saturation = colDef(name = "Soil Saturation"),
+            field_capacity = colDef(name = "Field Capacity"),
+            permanent_wilting_point = colDef(name = "Permanent Wilting Point")
+          ),
+          defaultColDef = colDef(format = colFormat(digit = 3))
+      )}
+    )
+  })
+
+  soil_hydraulic_coldef <- list(
+    soil_saturation = colDef(name = "Soil Saturation"),
+    field_capacity = colDef(name = "Field Capacity"),
+    permanent_wilting_point = colDef(name = "Permanent Wilting Point")
+  )
+  
+  output$soil_hydraulic_sub_table <- renderReactable({
+    df <- v$soil_hydraulic_sub_df
+    if (is.null(df))
+      return()
+    hpcd <- hydro_prop_coldef()
+    hpcd <- append(hpcd, list(
+      SMU_ID = colDef(format = colFormat(digit = 0)),
+      soil_depth = colDef(name = "Soil Depth (cm)")
+    ))
+    data <- df[df$soil_depth != "0-20", c("SMU_ID", "soil_depth" , soil_hydraulic_cols, hydro_prop)]
+    reactable(
+      data,
+      defaultExpanded = TRUE,
+      onClick = "expand",
+      groupBy = "SMU_ID",
+      pagination = F,
+      striped = T,
+      borderless = TRUE,
+      compact = TRUE,
+      rownames = F,
+      columns = append(soil_hydraulic_coldef, hpcd),
+      defaultColDef = colDef(format = colFormat(digit = 3))
+    )
+  })
+  
+  output$soil_water_content_table <- renderReactable({
+    df <- v$soil_water_content_df
+    if (is.null(df))
+      return()
+    adf <- isolate(v$lc_df)[c("LC_ID", "land_cover")]
+    df <- merge(adf, df, by = "LC_ID")
+    reactable(
+      df,
+      defaultExpanded = TRUE,
+      onClick = "expand",
+      groupBy = "SMU_ID",
+      pagination = F,
+      striped = T,
+      borderless = TRUE,
+      compact = TRUE,
+      rownames = F,
+      columns = list(
+        SMU_ID = colDef(format = colFormat(digit = 0)),
+        LC_ID = colDef(format = colFormat(digit = 0)),
+        land_cover = colDef(name = "Land Cover"),
+        soil_saturation_w = colDef(name = "Soil Saturation (mm)"),
+        field_capacity_w = colDef(name = "Field Capacity (mm)"),
+        permanent_wilting_point_w = colDef(name = "Permanent Wilting Point (mm)")
+      ),
+      defaultColDef = colDef(format = colFormat(digit = 3))
+    )
+  })
+  
+    
   
   stars_to_sf <- function(m) {
     msf <- st_as_sf(m,
@@ -2004,7 +2240,7 @@ server <- function(input, output, session) {
                     connect8 = T)
     msf <- st_transform(msf, crs = 4326)
     names(msf) <- c("val", "geometry")
-    # merge polygon for each smu_id
+    # merge polygon for each id
     sid <- sort(unique(msf$val))
     a <- lapply(sid, function(x) {
       st_as_sf(st_union(msf[msf$val == x, ]))
@@ -2017,24 +2253,24 @@ server <- function(input, output, session) {
   
   
   
-  output$soil_thetasat_leaflet <- renderLeaflet({
-    m <- v$soil_thetasat_sf
-    if (is.null(m))
-      return()
-    labels <- map_label(paste("Theta Sat:", f_number(m$val)), "Soil hydraulic properties")
-    lf <- base_leaflet()
-    lf <- lf |> addFeatures(
-      m,
-      group = "thetasat",
-      color = chart_color[1:nrow(m)],
-      label = ~ labels,
-      highlightOptions = highlightOptions(fillOpacity = 0.8),
-      fillOpacity = 0.6,
-      stroke = F,
-      labelOptions = labelOptions(className = "map_label", offset = c(0, -5))
-    )
-    return(lf)
-  })
+  # output$soil_thetasat_leaflet <- renderLeaflet({
+  #   m <- v$soil_thetasat_sf
+  #   if (is.null(m))
+  #     return()
+  #   labels <- map_label(paste("Theta Sat:", f_number(m$val)), "Soil hydraulic properties")
+  #   lf <- base_leaflet()
+  #   lf <- lf |> addFeatures(
+  #     m,
+  #     group = "thetasat",
+  #     color = chart_color[1:nrow(m)],
+  #     label = ~ labels,
+  #     highlightOptions = highlightOptions(fillOpacity = 0.8),
+  #     fillOpacity = 0.6,
+  #     stroke = F,
+  #     labelOptions = labelOptions(className = "map_label", offset = c(0, -5))
+  #   )
+  #   return(lf)
+  # })
   
   
   ### Evapotranspiration DATA ######################

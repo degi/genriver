@@ -362,7 +362,20 @@ ui <-
             nav_panel(
               title = "Hydraulic Properties",
               icon = icon("droplet"),
-              card_body(padding = 0, leafletOutput("soil_thetasat_leaflet"))
+              navset_card_pill(
+                nav_panel(
+                  title = "Top Soil (10-20 cm)",
+                  card_body(padding = 0, reactableOutput("soil_hydraulic_top_table"))
+                ),
+                nav_panel(
+                  title = "Sub Soil (20-200 cm)",
+                  card_body(padding = 0, reactableOutput("soil_hydraulic_sub_table"))
+                ),
+                nav_panel(
+                  title = "Soil Water Content",
+                  card_body(padding = 0, reactableOutput("soil_water_content_table"))
+                )
+              )
             )
           ))
         ),
