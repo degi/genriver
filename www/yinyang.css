@@ -1,0 +1,69 @@
+/*body, html
+{
+	width: 100%;
+	height: 100%;
+}
+
+body
+{
+	display: flex;
+  	align-items: center;
+  	justify-content: center;
+	background-color: lightslategray;
+}*/
+
+.yinyang
+{
+	width: 200px;
+	height: 200px;
+	border-radius: 50%;
+	background: linear-gradient(to bottom,#034464 0%,#034464 50%,#06d6a0 50%,#06d6a0 100%);
+	display: block;
+	box-shadow: 6px 6px 27px 4px rgba(0,0,0,0.16);
+	display: flex;
+  	align-items: center;
+  	justify-content: center;
+	/*border: 5px solid white;*/
+	animation: 3s rotate linear infinite;
+	
+}
+
+.yinyang:after, .yinyang:before
+{
+	content: '';
+	display: block;	
+	border-radius: 50%;
+}
+
+.yinyang:after
+{
+	width: 75%;
+	height: 75%;
+	background: radial-gradient(ellipse at center, #034464 0%, #034464 25%, #06d6a0 25%, #06d6a0 100%);
+	animation: inner-size 3s ease-in-out infinite;
+	animation-delay: -1.5s;
+}
+
+.yinyang:before
+{
+	width: 25%;
+	height: 25%;
+	background: radial-gradient(ellipse at center, #06d6a0 0%, #06d6a0 25%, #034464 25%, #034464 100%);
+	animation: inner-size 3s ease-in-out infinite;
+}
+
+@keyframes inner-size {
+	0%, 100% {
+		width: 75%;
+		height: 75%;
+	}
+	
+	50% {
+		width: 25%;
+		height: 25%;
+	}	
+}
+
+@keyframes rotate {
+	to {transform: rotate(-360deg)}
+}
