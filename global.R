@@ -11,6 +11,8 @@
 # - data evapot bulanan bisa diestimasi dari suhu aja {Thornthwaite}
 # - debit tampilin bulanan juga , buat cek konsistensi juga
 # 
+# - bagi sub das berdasarkan ordo stream - otomatis
+# 
 ##########################
 
 options(rgl.useNULL = TRUE)
@@ -38,6 +40,7 @@ install_load(
   "plotly",
   "leaflet",
   "stars",
+  "FNN",
   "excelR",
   "RColorBrewer",
   "jsonlite",
@@ -52,12 +55,14 @@ install_load(
   "httr",
   
   "lubridate",
-  "shinyjqui",
+  # "shinyjqui",
   "rgl",
   
   "DBI",
   "rayshader"
 )
+
+library("remotes")
 
 if (!("flowdem" %in% rownames(installed.packages()))) {
   install_github("KennethTM/flowdem")
@@ -69,27 +74,34 @@ if (!("shinycssloaders" %in% rownames(installed.packages()))) {
 
 
 library("shiny")
-library("remotes")
+
 library("devtools")
 library("bslib")
 library("bsicons")
 library("htmltools")
-library("reactable")
 library("plotly")
-library("leaflet")
-library("stars")
+#table UI
+library("reactable")
 library("excelR")
-library("RColorBrewer")
-library("jsonlite")
-library("reshape2")
-library("leafem")
+#spatial
+library("stars")
 library("terra")
+library("FNN")
+library("leaflet")
+library("leafem")
+#file IO
 library("yaml")
 library("zip")
+#color
 library("paletteer")
+library("RColorBrewer")
+#network
+library("jsonlite")
 library("httr")
+#utiliy
+library("reshape2")
 library("lubridate")
-library("shinyjqui")
+# library("shinyjqui")
 library("rgl")
 library("DBI")
 library("flowdem")
@@ -98,7 +110,7 @@ library("shinycssloaders")
 library("RSQLite")
 
 
-
+seconds_in_day <- 86400 
 default_wd <- getwd()
 
 input_dialog <- function(title = "",
@@ -124,6 +136,8 @@ input_dialog <- function(title = "",
     inp <- mapply(function(v, l, d, p, t) {
       if (t == "numeric") {
         paste(numericInput(v, HTML(l), d, width = "100%"))
+      } else if (t == "boolean") {
+        paste(checkboxInput(v, HTML(l), d, width = "100%"))
       } else {
         paste(textInput(v, HTML(l), d, width = "100%", p))
       }
@@ -138,7 +152,7 @@ input_dialog <- function(title = "",
   inp <- HTML(inp)
   showModal(modalDialog(
     title = title,
-    HTML(desc),
+    HTML(paste("<p>", desc, "</p>")),
     inp,
     footer = tagList(
       actionButton("cancel_button_dialog", "Cancel"),
@@ -215,20 +229,198 @@ desc <- list(soil_hydraulic = "At a potential of 0 kPa, soil is in a state of sa
              extract the water through osmotic diffusion.(https://en.wikipedia.org/wiki/Water_potential)"
             )
 
+soil_water_types <- list("Soil Saturation" = "soil_saturation",
+                         "Field Capacity" = "field_capacity",
+                         "Permanent Wilting Point" = "permanent_wilting_point")
+
+soil_water_availability <- list("Soil quick flow capacity (mm)" = "soil_quick_flow_capacity",
+                         "Plant available water (mm)" = "plant_available_water",
+                         "Inaccessible water (mm)" = "inaccessible_water")
+
+default_par <- function(df) {
+  val <- as.list(df$value)
+  names(val) <- df$var
+  return(val)
+} 
+
+rain_par_df <- data.frame(
+  var = c(
+    "rain_intensity_mean",
+    "rain_intensity_coef",
+    "rain_randseed"
+  ),
+  label = c(
+    "Mean of rain intensity",
+    "Coeffienct variation of rain intensity",
+    "Random seed"
+  ),
+  value = c(10000, 0.3, 200),
+  min = c(1000, 0, NA),
+  max = c(100000, 1, NA),
+  step = c(1, 0.1, NA),
+  stringsAsFactors = FALSE
+)
+
+river_par_df <- data.frame(
+  var = c(
+    # "river_velocity",
+    "river_tortuocity",
+    "river_dispersal",
+    "river_surfloss"
+  ),
+  label = c(
+    # "Routing velocity (m sec<sup>-1</sup>)",
+    "Tortuocity",
+    "River flow dispersal factor",
+    "Surface loss fraction"
+  ),
+  value = c(0.6, 0.6, 0),
+  min = rep(0, 3),
+  max = rep(1, 3),
+  step = rep(0.1, 3),
+  stringsAsFactors = FALSE
+)
+
+infiltration_par_df <- data.frame(
+  var = c(
+    "soil_max_infiltration",
+    "soil_max_infiltration_subsoil",
+    "soil_infiltration_red"
+  ),
+  label = c(
+    "Maximum infiltration",
+    "Maximum infiltration of sub soil",
+    "soil_infiltration_red"
+  ),
+  value = c(200, 100, 3),
+  min = c(30, 0, 3),
+  max = c(1000, 1000, 3.5),
+  step = c(1, 1, 0.1),
+  stringsAsFactors = FALSE
+)
+
+groundwater_par_df <- data.frame(
+  var = c(
+    "groundwater_rel_init",
+    "groundwater_max_dynamic_const",
+    "groundwater_rel_frac_const"
+  ),
+  label = c(
+    "Initial relative ground water",
+    "Maximum dynamic ground water constant",
+    "Ground water relative fraction constant"
+  ),
+  value = c(1, 880, 0.01),
+  min = c(0, 0, 0),
+  max = c(1, 2000, 1),
+  step = c(0.1, 1, 0.1),
+  stringsAsFactors = FALSE
+)
+
+interception_par_df <- data.frame(
+  var = c(
+    "interception_effect_on_transp",
+    "interception_drip_rt",
+    "interception_drip_duration_max"
+  ),
+  label = c(
+    "Rain interception effect on transpiration",
+    "Rain interception drip rt",
+    "Maximum rain interception drip duration"
+  ),
+  value = c(0.1, 10, 0.5),
+  min = c(0, 5, 0),
+  max = c(1, 15, 5),
+  step = c(0.1, 1, 0.1),
+  stringsAsFactors = FALSE
+)
+
+waterplant_par_df <- data.frame(
+  var = c(
+    "waterplant_const",
+    "waterplant_soilsat_min_fc_const"
+  ),
+  label = c(
+    "Available water constant",
+    "Soil saturated min FC const"
+  ),
+  value = c(800, 100),
+  min = c(0, 0),
+  max = c(1000, 500),
+  step = c(1, 1),
+  stringsAsFactors = FALSE
+)
+
+soilplant_par_df <- data.frame(
+  var = c(
+    "percolation_frac_multiplier",
+    "soil_water_initial",
+    "soil_qflow_frac"
+  ),
+  label = c(
+    "Percolation fraction multiplier",
+    "Initial of soil water ",
+    "Soil quick flow"
+  ),
+  value = c(0.05, 2, 0.1),
+  min = c(0, 0, 0),
+  max = c(10, 2, 2),
+  step = c(0.1, 0.1, 0.1),
+  stringsAsFactors = FALSE
+)
+
+lake_par_df <- data.frame(
+  var = c(
+    "L_LakeBottomElev",
+    "L_LakeElevPreHEPP",
+    "L_LakeLevelFullHEPP",
+    "L_LakeLevelHalfHEPP",
+    "L_LakeLevelNoHEPP",
+    "L_FloodTresh",
+    "L_QmecsHEPP",
+    "L_QmecsSanFlow",
+    "L_LakeOverFlowFrac",
+    "L_LakeOverFlPostHEPP",
+    "L_LakeOverFlPow",
+    "L_m3_per_kwh",
+    "L_ResrDepth"
+    
+  ),
+  label = c(
+    "L_LakeBottomElev",
+    "L_LakeElevPreHEPP",
+    "L_LakeLevelFullHEPP",
+    "L_LakeLevelHalfHEPP",
+    "L_LakeLevelNoHEPP",
+    "L_FloodTresh",
+    "L_QmecsHEPP",
+    "L_QmecsSanFlow",
+    "L_LakeOverFlowFrac",
+    "L_LakeOverFlPostHEPP",
+    "L_LakeOverFlPow",
+    "L_m3_per_kwh",
+    "L_ResrDepth"
+  ),
+  value = c(
+    160,
+    362.3,
+    362.3,
+    361.8,
+    359.5,
+    363,
+    47.1,
+    3,
+    0.1,
+    362.6,
+    4,
+    1.584,
+    10000
+  )
+  ,
+  min = c(rep(0, 13)),
+  max = c(rep(NA, 13)),
+  step = c(rep(0.1, 13)),
+  stringsAsFactors = FALSE
+)
 
 
-# co2_unit <- function(prefix = "", suffix = "") {
-#   tags$html(
-#     paste0(prefix, "CO"),
-#     tags$sub(2, .noWS = c("after", "before")),
-#     paste0("e", suffix),
-#     .noWS = c("after", "before")
-#   )
-# }
-#
-# per_ha_unit <- function(prefix = "", suffix = "") {
-#   tags$html(paste0(prefix, "ha"),
-#             tags$sup(-1, .noWS = c("after", "before")),
-#             suffix,
-#             .noWS = c("after", "before"))
-# }

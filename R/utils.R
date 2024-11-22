@@ -42,21 +42,18 @@ save_variables <- function(io_file_df, vlist) {
       i <- i + 1
     }
     if (!is.null(data)) {
-      # type <- tail(unlist(strsplit(vrlab, "_")), 1)
       type <- suffix(vrlab)
       if (type == "list") {
-        # type2 <- tail(unlist(strsplit(vrlab, "_")), 2)[1]
         type2 <- suffix(vrlab, n = 2)[1]
         ns <- names(vlist[[vrlab]])
-        for (n in ns) {
-          data <- vlist[[vrlab]][[n]]
-          f2 <- paste0(f, "_", n)
+        for (id in ns) {
+          data <- vlist[[vrlab]][[id]]
+          f2 <- paste0(f, "-", id)
           fs <- c(fs, write_data(data, f2, type2))
         }
       } else {
         fs <- c(fs, write_data(data, f, type))
       }
-      
     }
   }
   return(fs)
@@ -67,7 +64,7 @@ read_data <- function(fpath, type) {
   if (type == "stars") {
     fpath <- paste0(fpath, ".tif")
     if (file.exists(fpath))
-      data <- suppressWarnings(read_stars(fpath))
+      data <- suppressWarnings(read_stars(fpath, proxy = T))
   } else if (type == "terra") {
     fpath <- paste0(fpath, ".tif")
     if (file.exists(fpath))
@@ -96,22 +93,21 @@ upload_variables <- function(io_file_df, data_dir = "/", vlist = NULL) {
     fpath <- paste0(data_dir, "/", f)
     iv <- unlist(strsplit(io_file_df[i,"var"], split = ".", fixed = T))
     vr <- tail(iv, 1)
-    # type <- tail(unlist(strsplit(vr, "_")), 1)
     type <- suffix(vr)
     if (type == "list") {
-      # type2 <- tail(unlist(strsplit(vr, "_")), 2)[1]
       type2 <- suffix(vr, n = 2)[1]
       fs <- list.files(data_dir)
       fs <- fs[substr(fs, 1, nchar(f)) == f]
       for (fn in fs) {
         ff <- unlist(strsplit(fn, ".", fixed = T))[1]
-        id <- gsub("^.*?_", "", ff)
+        id <- suffix(ff, sep = "-")
         fpath <- paste0(data_dir, "/", ff)
         data <- read_data(fpath, type2)
         vlist[[iv[1]]][[id]] <- data
       }
     } else {
       data <- read_data(fpath, type)
+      if(is.null(data)) next
       i1 <- iv[1]
       if (length(iv) == 1) {
         vlist[[i1]] <- data
@@ -137,47 +133,9 @@ prefix <- function(v, sep = "_", n = 1) {
   return(p[1:min(length(p), n)])
 }
 
-##############
 
-chart_color <- c(
-  paletteer_d("ggthemes::calc"),
-  paletteer_d("ggsci::schwifty_rickandmorty"),
-  paletteer_d("ggsci::default_uchicago"),
-  paletteer_d("ggthemes::Classic_10"),
-  paletteer_d("ggsci::default_jco"),
-  paletteer_d("ggsci::springfield_simpsons"),
-  paletteer_d("ggsci::light_uchicago"),
-  paletteer_d("ggthemes::stata_s2color"),
-  paletteer_d("RColorBrewer::Set1"),
-  paletteer_d("RColorBrewer::Set2"),
-  paletteer_d("RColorBrewer::Set3"),
-  paletteer_dynamic("cartography::multi.pal", 20)
-)
 
-light_color <- c(
-  paletteer_d("ggsci::legacy_tron"),
-  paletteer_d("ggthemes::Superfishel_Stone"),
-  paletteer_d("ggthemes::Classic_10_Light"),
-  paletteer_d("ggpomological::pomological_palette"),
-  paletteer_d("ggthemes::Tableau_10"),
-  paletteer_d("ggthemes::Classic_10_Medium"),
-  paletteer_dynamic("cartography::pastel.pal", 20)
-)
 
-get_color <- function(idx = NULL, is_light = F) {
-  if (is_light) {
-    cl <- light_color
-  } else {
-    cl <- chart_color
-  }
-  max_idx <- length(cl)
-  if (is.null(idx))
-    idx <- sample.int(max_idx, 1)
-  idx <- abs(idx)
-  idx <- idx %% max_idx
-  idx[idx == 0] <- max_idx
-  return(cl[idx])
-}
 
 #TODO: to compare with JSON method, which one is faster
 list_to_df <- function(d) {
@@ -211,10 +169,10 @@ list_to_df_json <- function(d) {
   return(jsonlite::fromJSON(jsonlite::toJSON(d)))
 }
 
-day_to_sec <- 86400
+day_to_seconds <- 86400
 
 convert_flow_to_mmdaily <- function(flow_m3psec, area_m2) {
-  return((flow_m3psec/area_m2)*day_to_sec*1000)
+  return((flow_m3psec/area_m2)*day_to_seconds*1000)
 }
 
 get_rainfall_data <- function() {

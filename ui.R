@@ -1,9 +1,17 @@
 
-
-
-
-
-
+wave_div <- HTML(
+  '<div><svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+          <defs>
+          <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+          </defs>
+          <g class="parallax">
+          <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7" />
+          <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
+          <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
+          <use xlink:href="#gentle-wave" x="48" y="7" fill="#fff" />
+          </g></svg></div>'
+)
 
 
 wait_spinner <- function() {
@@ -76,10 +84,9 @@ dem_input_option <- conditionalPanel(
 # }
 
 outlet_table <- card(
-  class = c("floating_right", "transparent_bg"),
-  height = "50%",
+  class = c("transparent_bg"),
   card_header(
-    span(icon("droplet"), "Subcatchment"),
+    span(icon("droplet"), "Sub-Catchment"),
     class = "d-flex justify-content-between",
     span(
       actionButton(
@@ -96,7 +103,24 @@ outlet_table <- card(
       ) |> tooltip_blue("Merge the selected subcathments and combine the outlets")
     )
   ),
-  card_body(padding = 0, reactableOutput("watershed_list"))
+  card_body(padding = 0, reactableOutput("watershed_list", height = "500px"))
+)
+
+lake_table <- card(
+  class = c("transparent_bg"),
+  card_header(span("Lake")),
+  card_body(padding = 0, reactableOutput("lake_list") |> popover(
+    id = "edit_lake_label",
+    title = "Edit Label",
+    textInput("lake_label", NULL),
+    actionButton("edit_label_confirm", "Confirm")
+  ))
+)
+
+dam_table <- card(
+  class = c("transparent_bg"),
+  card_header(span("DAM")),
+  card_body(padding = 0, reactable_edit_ui("dam_table"))
 )
 
 ui <-
@@ -114,7 +138,7 @@ ui <-
       font_scale = 0.9
       
     ),
-    bg = "#CAEDF6",
+    bg = "#034464",
     header =
       tags$head(
         tags$style(
@@ -127,22 +151,6 @@ ui <-
             .bg_light1{background-color: #CAEDF6}
             .bg_light2{background-color: #ECF9FC !important;}
 
-/*
-            .shiny-notification {
-               height: 100px !important;
-               width: 800px !important;
-               position:absolute !important;
-               top: calc(50% - 50px);
-               left: calc(50% - 320px);
-               right: 10px !important;
-               font-size: 120%;
-               text-align: left;
-               background-color: #ffb703;
-              box-shadow: 2px 2px 10px black !important;
-            }
-
-            .shiny-notification-close {display: none !important;}
-*/
             .modal {z-index: 1150;}
 
             .soil_table th, td {
@@ -151,16 +159,9 @@ ui <-
               border-bottom: 1px solid #ddd;
             }
 
-            .floating_right {
-              position: absolute;
-              top: 20px;
-              left:-webkit-calc(100% - 300px);
-              left:-moz-calc(100% - 300px);
-              left:calc(100% - 300px);
-            }
-
             .transparent_bg {
               background-color: rgba(255, 255, 255, 0.7);
+              box-shadow: 2px 2px 10px #404040;
             }
 
             .toolbar_button {
@@ -205,10 +206,26 @@ ui <-
             .subpanel .card-header {
               background-color: white;
               border-width: 0px;
+
             }
+
+            .subpanel .card {
+              border-width: 0px;
+            }
+
+            .bordercard .card {
+              border-width:1px;
+            }
+            
+            .bordercard .card-header {
+              border-width:1px;
+              background-color: #ECF9FC;
+            }
+
 
             .inline label{ display: table-cell; text-align: left; vertical-align: middle; padding: 0px 10px}
             .inline .form-group{display: table-row;}
+
 
           "
           )
@@ -218,15 +235,16 @@ ui <-
         tags$script(src = "jsuites.js"),
         tags$link(rel = "stylesheet", href = "jsuites.css", type = "text/css"),
         tags$link(rel = "stylesheet", type = "text/css", href = "table.css"),
+        tags$link(rel = "stylesheet", type = "text/css", href = "yinyang.css"),
+        tags$link(rel = "stylesheet", type = "text/css", href = "wave.css")
       ),
     window_title = "GenRiver3",
     title =
-      
       span(
         tags$img(
           height = 22,
           src = "images/genriver_logo.svg",
-          style = "margin-right:5px"
+          style = "margin-right:5px;" #filter: drop-shadow(1px 1px 3px black)
         ),
         "Gen",
         span(
@@ -235,24 +253,57 @@ ui <-
           .noWS = c('before', "after")
         ),
         "3",
-        style = "color:#ffb703; background:#034464; padding:2px 20px 4px 20px; border-radius:15px; font-weight:bold"
+        # background: linear-gradient(60deg, #CAEDF6 -20%, #219ebc 50%
+        # style = "color:#ffb703; background-color: #CAEDF6;
+        # padding:2px 20px 4px 20px; border-radius:15px; font-weight:bold;
+        # text-shadow: 1px 1px 5px black;"
+        style = "color:#ffb703; font-weight:bold; text-shadow: 1px 1px 4px black;"
       ),
     
     padding = 0,
     
+    nav_panel(
+      title = "",
+      icon = icon("house"),
+
+      div(
+        class = "header",
+        div(
+          class = "inner-header flex",
+          tags$img(
+            height = 100,
+            src = "images/genriver_logo.svg",
+            style = "filter: drop-shadow(2px 2px 6px black);margin-right:10px;"
+          ),
+          tags$h1(
+            "Gen",
+            span(
+              "River",
+              style = "color:#fff;",
+              .noWS = c('before', "after")
+            ),
+            "3",
+            style = "color:#ffb703;;font-weight:bold;font-size:4em; text-shadow: 2px 2px 10px black;"
+          )
+        ),
+        wave_div,
+      ),
+      div(class = "content flex", HTML("&copy; World Agroforestry (ICRAF) - 2024"))
+    ),
     nav_panel(
       #### INPUT OPTIONS ####
       title = "Input",
       icon = icon("arrow-down"),
       
       navset_card_tab(
-        title = "Input data and parameters:",
+        title = div("Input data and parameters:", style = "color:#219ebc;"),
         id = "input_panel",
         nav_panel(
           title = "Land Cover",
           icon = icon("tree"),
           card_body(
             class = "subpanel",
+            padding = 0,
             navset_card_underline(
               nav_panel(
                 title = "Land Cover Map",
@@ -270,6 +321,7 @@ ui <-
                       "rfalow_lc_map_inp",
                       NULL,
                       accept = c(".tif", ".zip"),
+                      #if shp, it should accept  = c('.shp','.dbf','.sbn','.sbx','.shx','.prj')
                       multiple = T,
                       width = "100%"
                     ),
@@ -277,7 +329,7 @@ ui <-
                       "lc_df_table", tags$i("Land cover legend")
                     ))
                   ),
-                  card_body(padding = 10, uiOutput("lc_map_out"))
+                  card_body(padding = 10, class = "bordercard", uiOutput("lc_map_out"))
                 )
               ),
               nav_panel(
@@ -291,7 +343,7 @@ ui <-
               ),
               nav_panel(
                 title = "Evapotranspiration",
-                icon = icon("cloud-sun"),
+                icon = icon("cloud-sun-rain"),
                 navset_card_pill(
                   nav_panel(title = "Daily Data", layout_column_wrap(
                     style = css(grid_template_columns = "1fr 2fr"),
@@ -320,106 +372,267 @@ ui <-
               )
             )
           )
-          
-        )
-        ,
+        ),
         nav_panel(
           title = "Watershed",
           icon = icon("water"),
           card_body(
             class = "subpanel",
+            padding = 0,
             navset_card_underline(
               nav_panel(
                 title = "Watershed Area",
-                icon = icon("mountain"),
+                icon = icon("mountain-sun"),
                 card_body(
                   padding = 0,
                   leafletOutput("watershed_map_leaflet"),
-                  conditionalPanel(condition = "output.is_stream_map", jqui_draggable(outlet_table))
+                  conditionalPanel(
+                    condition = "output.is_stream_map",
+                    absolutePanel(
+                      outlet_table,
+                      draggable = T,
+                      right = "20px",
+                      top = "70px",
+                      width = "430px"
+                    )
+                  )
+                )
+              ), 
+              nav_panel(
+                title = "Lake and DAM",
+                icon = icon("fish"),
+                card_body(padding = 0, navset_card_pill(
+                  nav_panel(title = "Lake and DAM Location", card_body(
+                    padding = 0, leafletOutput("lake_map_leaflet"),
+                    conditionalPanel(
+                      condition = "output.is_lake_df",
+                      absolutePanel(
+                        lake_table,
+                        draggable = T,
+                        right = "300px",
+                        top = "70px",
+                        width = "260px"
+                      ) 
+                    ),
+                    conditionalPanel(
+                      condition = "output.is_dam_df",
+                      absolutePanel(
+                        dam_table,
+                        draggable = T,
+                        right = "20px",
+                        top = "70px",
+                        width = "260px"
+                      )
+                    )
+                  )),
+                  nav_panel(title = "Lake Outflows", card_body(layout_columns(
+                    !!!numeric_input_ui("lake_par_input", lake_par_df)
+                  )))
+                ))
+              ), 
+              nav_panel(
+                title = "Ground water and river flow",
+                icon = icon("house-flood-water"),
+                h5("Ground water dynamic and time of river flow"),
+                card(
+                  table_edit_ui("ground_water_table")
                 )
               ),
-              nav_panel(
-                title = "Routing Distance",
-                icon = icon("route"),
-                card_body(padding = 0, leafletOutput("routing_map_leaflet"))
-              ),
+              # nav_panel(
+              #   title = "Routing Distance",
+              #   icon = icon("route"),
+              #   card_body(
+              #     padding = 0,
+              #     leafletOutput("routing_map_leaflet"),
+              #     absolutePanel(
+              #       top = "70px",
+              #       left = "80px",
+              #       card(
+              #         class = "transparent_bg",
+              #       numericInput(
+              #         "stream_velocity_input",
+              #         markdown("Routing velocity (m sec<sup>-1</sup>)"),
+              #         0.4, 0.01, NA, 0.1,  width = "180px"
+              #       ))
+              #     )
+              #   )
+              # ), 
               nav_panel(
                 title = "3D View",
                 icon = icon("cube"),
-                card_body(padding = 0, rglwidgetOutput("plot3d", width = "calc(100% - 20px)"))
+                conditionalPanel(
+                  condition = "!output.is_show_3d",
+                  actionButton("generate_3d_button", "Click here to generate 3D view")
+                ),
+                conditionalPanel(condition = "output.is_show_3d", card_body(
+                  padding = 0, rglwidgetOutput("plot3d", width = "calc(100% - 20px)")
+                ))
               )
             )
           )
         ),
         nav_panel(
           title = span(icon("icicles"), "Soil"),
-          card_body(class = "subpanel", navset_card_underline(
-            nav_panel(
-              title = "Physical and Chemical Properties",
-              icon = icon("flask"),
-              card_body(padding = 0, leafletOutput("soil_map_leaflet"))
-            ),
-            nav_panel(
-              title = "Hydraulic Properties",
-              icon = icon("droplet"),
-              navset_card_pill(
-                nav_panel(
-                  title = "Top Soil (10-20 cm)",
-                  card_body(padding = 0, reactableOutput("soil_hydraulic_top_table"))
-                ),
-                nav_panel(
-                  title = "Sub Soil (20-200 cm)",
-                  card_body(padding = 0, reactableOutput("soil_hydraulic_sub_table"))
-                ),
-                nav_panel(
-                  title = "Soil Water Content",
-                  card_body(padding = 0, reactableOutput("soil_water_content_table"))
+          card_body(
+            class = "subpanel",
+            padding = 0,
+            navset_card_underline(
+              nav_panel(
+                title = "Physical and Chemical Properties",
+                icon = icon("flask"),
+                card_body(
+                  padding = 0,
+                  navset_card_pill(
+                    nav_panel(title = "Soil Type", card_body(
+                      padding = 0, leafletOutput("soil_type_leaflet")
+                    )),
+                    nav_panel(title = "Soil Depth", card_body(
+                      padding = 0,
+                      leafletOutput("soil_depth_leaflet"),
+                      absolutePanel(
+                        top = "70px",
+                        left = "80px",
+                        card(
+                          class = "transparent_bg",
+                          numericInput("min_soil_depth_input", "Minimum soil depth (cm)", 20, width = "180px"),
+                          numericInput("max_soil_depth_input", "Maximum soil depth (cm)", 200, width = "180px")
+                        )
+                      )
+                    )),
+                    nav_panel(title = "Global Soil Database", card_body(
+                      padding = 0, leafletOutput("soil_map_leaflet")
+                    )),
+                    nav_panel(title = "Slope Map", card_body(
+                      padding = 0, leafletOutput("slope_map_leaflet")
+                    ))
+                  )
+                )
+              ), 
+              nav_panel(
+                title = "Hydraulic Properties",
+                icon = icon("house-flood-water-circle-arrow-right"),
+                card_body(padding = 0,
+                          actionButton("generate_soil_water_button","Generate soil hydraulic properties"),
+                          navset_card_pill(
+                            nav_panel(title = "Soil Water Map", card_body(
+                              class = "bordercard", 
+                              
+                              navset_card_tab(
+                                nav_panel(title = "Subcatchment Soil Water", uiOutput("soil_water_subcathment_ui")),
+                                nav_panel(title = "Soil Water Map", 
+                                          selectInput("soil_water_select", NULL, soil_water_availability),
+                                          uiOutput("soil_water_content_ui"))
+                                
+                              )
+                            )),
+                            nav_panel(title = "Top Soil (10%)", reactableOutput("soil_hydraulic_top_table")),
+                            nav_panel(title = "Sub Soil (90%)", reactableOutput("soil_hydraulic_sub_table")),
+                            nav_panel(title = "Soil Water Availability", reactableOutput("soil_water_content_table"))
+                            
+                          ))
+              ),
+              nav_panel(
+                title = "Soil and Plant Water",
+                icon = icon("seedling"),
+                layout_column_wrap(
+                  style = css(grid_template_columns = "1fr 1fr 1fr"),
+                  class = "bordercard",
+                  fill = F,
+                  fillable = F,
+                  card(
+                    card_header(markdown("Infiltration (mm day<sup>-1</sup>)")),
+                    numeric_input_ui("infiltration_par_input", infiltration_par_df)
+                  ),
+                  card(
+                    card_header("Ground Water (mm)"),
+                    input_switch("groundwater_switch", "Use constant ground water"),
+                    numeric_input_ui("groundwater_par_input", groundwater_par_df)
+                  ),
+                  card(
+                    card_header("Water Available for Plant (mm)"),
+                    input_switch("waterplant_switch", "Use constant water availability"),
+                    numeric_input_ui("waterplant_par_input", waterplant_par_df)
+                  ),
+                  card(
+                    card_header("Rainfall Interception (mm)"),
+                    numeric_input_ui("interception_par_input", interception_par_df)
+                  ),
+                  card(
+                    card_header("Soil Water"),
+                    numeric_input_ui("soilplant_par_input", soilplant_par_df)
+                  )
                 )
               )
             )
-          ))
+          )
         ),
+        
+        
+        
         nav_panel(
-          title = "Rain and Rivers",
+          title = "Rainfall and Rivers",
           icon = icon("cloud"),
           card_body(
             class = "subpanel",
+            padding = 0,
             navset_card_underline(
               nav_panel(
-                title = "Rainfall Data",
+                title = "Rainfall",
                 icon = icon("cloud-showers-heavy"),
-                layout_column_wrap(
-                  style = css(grid_template_columns = "1fr 2fr"),
-                  table_edit_ui(
-                    "rain_df_table",
-                    markdown("*Daily rainfall data (mm day<sup>-1</sup>)*"),
-                    is_paginated = T
+                card_body(padding = 0, navset_card_pill(
+                  nav_panel(
+                    title = "Rainfall Intensity",
+                    icon = icon("cloud-bolt"),
+                    numeric_input_ui("rain_par_input", rain_par_df)
                   ),
-                  card(
-                    plotlyOutput("rain_daily_plot"),
-                    plotlyOutput("rain_monthly_plot"),
-                    plotlyOutput("rain_yearly_plot"),
-                    full_screen = T
+                  nav_panel(
+                    title = "Rainfall Data",
+                    icon = icon("table"),
+                    layout_column_wrap(
+                      style = css(grid_template_columns = "1fr 2fr"),
+                      table_edit_ui(
+                        "rain_df_table",
+                        markdown("*Daily rainfall data (mm day<sup>-1</sup>)*"),
+                        is_paginated = T
+                      ),
+                      card(
+                        plotlyOutput("rain_daily_plot"),
+                        plotlyOutput("rain_monthly_plot"),
+                        plotlyOutput("rain_yearly_plot"),
+                        full_screen = T
+                      )
+                    )
                   )
-                )
+                ))
               ),
               nav_panel(
-                title = "River Flow Data",
+                title = "River",
                 icon = icon("bacon"),
-                layout_column_wrap(
-                  style = css(grid_template_columns = "1fr 2fr"),
-                  table_edit_ui(
-                    "river_df_table",
-                    markdown("*River flow data (m<sup>3</sup>sec<sup>-1</sup>)*"),
-                    is_paginated = T
+                card_body(padding = 0, navset_card_pill(
+                  nav_panel(
+                    title = "River hydrology",
+                    icon = icon("tornado"),
+                    numeric_input_ui("river_par_input", river_par_df)
                   ),
-                  card(
-                    plotlyOutput("river_daily_plot"),
-                    uiOutput("river_cum_desc"),
-                    plotlyOutput("river_cum_plot"),
-                    full_screen = T
+                  nav_panel(
+                    title = "River Flow Data",
+                    icon = icon("table"),
+                    layout_column_wrap(
+                      style = css(grid_template_columns = "1fr 2fr"),
+                      table_edit_ui(
+                        "river_df_table",
+                        markdown("*River flow data (m<sup>3</sup>sec<sup>-1</sup>)*"),
+                        is_paginated = T
+                      ),
+                      card(
+                        plotlyOutput("river_daily_plot"),
+                        uiOutput("river_cum_desc"),
+                        plotlyOutput("river_cum_plot"),
+                        full_screen = T
+                      )
+                    )
                   )
-                )
+                ))
               ),
               nav_panel(
                 title = span("Consistency Check"),
@@ -427,9 +640,42 @@ ui <-
                 uiOutput("consistency_ui")
               )
             )
+            
           )
         ),
-        nav_spacer(),
+        nav_panel(
+          title = "Calibration",
+          icon = icon("location-crosshairs"),
+          layout_column_wrap(
+            width = 1,
+            heights_equal = "row",
+            h4("Variable Check"),
+            p(
+              "Calculated variables with constant rain and evapotranspiration in one iteration"
+            ),
+            layout_columns(
+              numericInput("test_month_input", "Month:", value = 1),
+              numericInput("test_year_input", "Year:", value = 1990),
+              numericInput("test_rain_day_input", "I_DailyRain (mm):", value = 50),
+              numericInput("test_evapotrans_input", "I_Daily_Evapotrans (mm):", value = 2),
+              numericInput("test_iteration_input", "Iteration step #:", value = 2)
+            ),
+            navset_card_pill(
+              nav_panel(title = "All Variables", layout_columns(
+                div(
+                  h5("General variables"),
+                  reactableOutput("general_table_output")
+                ), div(
+                  h5("Cumulative values of land cover and subcatchment variables"),
+                  reactableOutput("cumulative_table_output")
+                )
+              )),
+              nav_panel(title = "Land Cover Variables", reactableOutput("subc_lc_table_output")),
+              nav_panel(title = "Subcatchment Variables", reactableOutput("subc_table_output"))
+            )
+          )
+        ),  
+        
         nav_menu(
           title = NULL,
           icon = icon("ellipsis-vertical"),
@@ -439,7 +685,6 @@ ui <-
               "upload_parameter",
               span(icon("upload"), "Upload input data"),
               accept = ".zip",
-              # placeholder = "Parameters file",
               width = "300px"
             )
           ),
@@ -455,13 +700,52 @@ ui <-
     
     ### OUTPUT #############################
     
-    nav_panel(
-      title = "Output data",
-      icon = icon("arrow-up"),
-      layout_column_wrap(fill = F, card(
-        card_header("Output", class = "bg_theme"), p("Output")
-      ))
-    )
+    nav_panel(title = "Simulation",
+              icon = icon("arrow-up"),
+              navset_card_tab(nav_panel(
+                title = "Simulation",
+                card_body(
+                  class = "subpanel",
+                  padding = 0,
+                  layout_column_wrap(
+                    width = 1,
+                    heights_equal = "row",
+                    gap = "0px",
+                    card(
+                      fill = F,
+                      layout_columns(
+                        numericInput("I_WarmUpTime", "I_WarmUpTime:", value = 730),
+                        numericInput("ndays_input", "Simulation Time:", value = 50),
+                        actionButton(
+                          "sim_run_button",
+                          "Run",
+                          icon = icon("play"),
+                          style = "height:100%"
+                        )
+                      )
+                    ),
+                    
+                    navset_card_underline(
+                      nav_panel(title = "Water Balance", card_body(
+                        padding = 0, navset_card_pill(
+                          nav_panel(title = "Cumulative Plot", card(
+                            full_screen = T, plotlyOutput("water_balance_plot", height = "100%")
+                          )),
+                          nav_panel(title = "Daily Data", reactableOutput("water_balance_table_output"))
+                        )
+                      )),
+                      nav_panel(title = "Watershed Indicator", reactableOutput("watershed_indicator_table_output")),
+                      nav_panel(title = "HEPP", card_body(
+                        padding = 0, navset_card_pill(
+                          nav_panel(title = "Cumulative Plot", plotlyOutput("hepp_plot", height = "100%")),
+                          nav_panel(title = "Daily Data", reactableOutput("hepp_table_output"))
+                        )
+                      ))
+                    )
+                    
+                  )
+                )
+              )))
     
     
   )

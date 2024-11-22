@@ -4,36 +4,6 @@
 
 
 
-
-
-
-# generate_stream <- function(dem_flow, t = 100) {
-#   if (is.null(dem_flow)) {
-#     return()
-#   }
-#   ### Generate the stream map and classify based on the flow accumulation in log scale ###
-#   m <- st_as_stars(dem_flow)
-#   mx <- max(m[[1]], na.rm = T)
-#   p <- list()
-#   base = 10
-#   vround = 1000
-#   i <- round(log(t, base)) + 1
-#   x1 <- t
-#   x2 <- base ^ i
-#   mr <- m
-#   mr[m < t] <- NA
-#   mr <- round(mr / vround) * vround
-#   mr[mr == 0] <- t
-#   ps <- st_as_sf(mr,
-#                  as_points = F,
-#                  merge = T,
-#                  connect8 = T) |>
-#     st_transform(crs = 4326)
-#   ps <- st_sf(geometry = ps)
-#   return(ps)
-# }
-
-
 #' Generate routing distance from the flow map of watershed analysis
 #'
 #' The algorithm trace the path from the final outlet, which is the cell
@@ -45,133 +15,38 @@
 #' @return a routing distance map
 #' @export
 #'
-#' @examples
-# generate_routing_dist <- function(flow_map, progress = NULL) {
-#   # sink("myfile.log", append=TRUE, split=TRUE)
-#   m <- flow_map[[1]]
-#   # if(final_row_idx < 0 || final_row_idx > nrow(m))
-#   #   return(NULL)
-#   # if(final_col_idx < 0 || final_col_idx > ncol(m))
-#   #   return(NULL)
-#   md <- matrix(NA, nrow(m), ncol(m))
-#   o <- which(m == max(m, na.rm = T), arr.ind = TRUE)[1, ]
-#   
-#   # o <- c(final_row_idx, final_col_idx)
-#   dist <- 0
-#   m2 <- matrix(NA, 0, 3)
-#   max2 <- 1
-#   #loop until all m map cells replaced by NA
-#   while (length(m[!is.na(m)]) > 0) {
-#     vm <- m[o[1], o[2]]
-#     #check whether the starting point is still exist more then second biggest neighbors
-#     if (is.na(vm) || vm < max2) {
-#       if (!is.na(vm))
-#         m2 <- rbind(m2, c(o[1], o[2], m[o[1], o[2]]))
-#       #TODO: m2 mungkin lebih efisient sebagai matrix peta juga, trus gak perlu di order, tinggal cari max positionnnya aja
-#       m2 <- m2[order(m2[, 3], decreasing = T), ]
-#       m2 <- validate_matrix(m2, 1, 3)
-#       #otherwise get the starting point fron the second largest neighbors list (m2)
-#       if (nrow(m2) > 0) {
-#         o <- m2[1, c(1, 2)]
-#       } else {
-#         a <- which(!is.na(m), arr.ind = TRUE)
-#         if (nrow(a) > 0) {
-#           o <- a[1, c(1, 2)]
-#         }
-#       }
-#       #make sure the starting point exist, otherwise remove from the list
-#       while (is.na(m[o[1], o[2]])) {
-#         m2 <- m2[-1, ]
-#         m2 <- validate_matrix(m2, 1, 3)
-#         if (nrow(m2) > 0) {
-#           o <- m2[1, c(1, 2)]
-#         } else {
-#           a <- which(!is.na(m), arr.ind = TRUE)
-#           if (nrow(a) > 0) {
-#             o <- a[1, c(1, 2)]
-#           }
-#           break
-#         }
-#       }
-#       m2 <- m2[-1, ]
-#       m2 <- validate_matrix(m2, 1, 3)
-#       if (nrow(m2) > 0) {
-#         #Noted the next max neighbor flows
-#         max2 <- m2[1, 3] #2nd max neighbor
-#         #Make sure it exist otherwise remove from the list
-#         while (is.na(m[m2[1, 1], m2[1, 2]])) {
-#           m2 <- m2[-1, ]
-#           m2 <- validate_matrix(m2, 1, 3)
-#           if (nrow(m2) > 0) {
-#             max2 <- m2[1, 3]
-#           } else {
-#             max2 <- 0
-#             break
-#           }
-#         }
-#       }
-#       #Assign the distance to the neighbor shortest path
-#       nd <- get_neighbors(md, o)
-#       fd <- which(nd == min(nd, na.rm = T), arr.ind = TRUE)
-#       ridx <- o[1] + fd[1, 1] - 2
-#       cidx <- o[2] + fd[1, 2] - 2
-#       dist <- md[ridx, cidx] + 1
-#     }
-#     #assign the distance to the distance map (md)
-#     md[o[1], o[2]] <- dist
-#     #remove the cell from the main map by assigning NA
-#     m[o[1], o[2]] <- NA
-#     n <- get_neighbors(m, o)
-#     if (all(is.na(n)))
-#       next
-#     #find index of max neighbors
-#     f <- which(n == max(n, na.rm = T), arr.ind = TRUE)
-#     n[f[1, 1], f[1, 2]] <- 0
-#     #find index of 2nd max neighbors
-#     f2 <- which(n == max(n, na.rm = T), arr.ind = TRUE)
-#     ridx <- o[1] + f2[1, 1] - 2
-#     cidx <- o[2] + f2[1, 2] - 2
-#     m2 <- rbind(m2, c(ridx, cidx, m[ridx, cidx]))
-#     max2 <- max(max2, m[ridx, cidx])
-#     #add distance from the next point
-#     dist <- md[o[1], o[2]] + 1
-#     #connect to the next largest neighbor
-#     o[1] <- o[1] + f[1, 1] - 2
-#     o[2] <- o[2] + f[1, 2] - 2
-#     #if the next point has flow = 1 then find the closest path
-#     next_f <- m[o[1], o[2]]
-#     if (!is.na(next_f) && next_f == 1) {
-#       nd <- get_neighbors(md, o)
-#       fd <- which(nd == min(nd, na.rm = T), arr.ind = TRUE)
-#       ridx <- o[1] + fd[1, 1] - 2
-#       cidx <- o[2] + fd[1, 2] - 2
-#       dist <- md[ridx, cidx] + 1
-#     }
-#   }
-#   flow_map[[1]] <- md
-#   return(flow_map)
-# }
-
-# validate_matrix <- function(m, nrow, ncol) {
-#   if (!any(class(m) == "matrix")) {
-#     m <- matrix(m, nrow, ncol)
-#   }
-#   return(m)
-# }
 
 
-generate_stream <- function(flow_map, threshold = 100) {
+stars_to_proxy <- function(m, f = "") {
+  f <- paste0(tempfile(f), ".tif")
+  write_stars(m, f)
+  return(read_stars(f, proxy = T))
+}
+
+
+stars_to_terra <- function(m) {
+  sr = as(m, "Raster")
+  return(rast(sr))
+}
+
+cellSize.stars <- function(m, ...) {
+  cellSize(stars_to_terra(m), ...)[1]$area
+} 
+
+
+generate_stream <- function(flow_map, threshold = 50) {
   if (is.null(flow_map)) {
     return()
   }
   m <- st_as_stars(flow_map)
-  mr <- m
-  mr[m < threshold] <- NA
-  ps <- generate_rounded_polygon(mr, 1000, threshold)
+  #converted flow celss to ha area
+  mr <- m * cellSize.stars(m, unit = "ha") 
+  mr[mr < threshold] <- NA
+  ps <- generate_rounded_polygon(mr, 100, threshold)
   return(ps)
 }
 
-generate_rounded_polygon <- function(raster_map, rounding = 1000, minval = 0) {
+generate_rounded_polygon <- function(raster_map, rounding = 100, minval = 0) {
   mr <- raster_map
   mr <- round(mr / rounding) * rounding
   mr[mr == 0] <- minval
@@ -184,19 +59,29 @@ generate_rounded_polygon <- function(raster_map, rounding = 1000, minval = 0) {
   return(ps)
 }
 
-
-
 dcross <- sqrt(2)
 ncell_dist_factor <- c(dcross, 1, dcross, 1, 0, 1, dcross, 1, dcross)
 
 generate_river_dist <- function(flow_map, threshold = 20) {
-  res <- st_res(flow_map)
-  p <- st_sfc(st_point(c(0, 0)), st_point(c(res[1], 0)), crs = st_crs(flow_map))
-  wres <- st_distance(p)[1, 2]
+  # res <- st_res(flow_map)
+  # p <- st_sfc(st_point(c(0, 0)), st_point(c(res[1], 0)), crs = st_crs(flow_map))
+  # wres <- st_distance(p)[1, 2]
+  
+  cs <- cellSize.stars(flow_map)
+  wres <- sqrt(cs)
   dmat <- matrix(ncell_dist_factor * wres, nrow = 3, ncol = 3)
-  #get the matrix from the map
-  m <- flow_map[[1]]
+  
+  #get the matrix from the map and convert to area size scale
+  
+  # mr <- flow_map * cellSize.stars(m, unit = "ha") 
+  # mr[mr < threshold] <- NA
+  # 
+  m <- flow_map * cs/10000
+  
+  # m_ha <- m * cs/10000
+  # print(m_ha)
   m[m < threshold] <- NA
+  m <- m[[1]]
   md <- matrix(NA, nrow(m), ncol(m))
   #start from the highest flow cell
   o <- which(m == max(m, na.rm = T), arr.ind = TRUE)[1, ]
@@ -239,9 +124,7 @@ generate_river_dist <- function(flow_map, threshold = 20) {
     } else {
       f <- which(n == max(n, na.rm = T), arr.ind = TRUE)
     }
-    # if (nrow(f) == 0) {
-    #   break
-    # }
+
     #remove the first max value
     n[f[1, 1], f[1, 2]] <- NA
     #find index of 2nd max neighbors
@@ -259,6 +142,10 @@ generate_river_dist <- function(flow_map, threshold = 20) {
     o[2] <- o[2] + f[1, 2] - 2
   }
   flow_map[[1]] <- md
+  print(all(is.na(m)))
+  m_res <- flow_map
+  m_res[[1]] <- m
+  plot(m_res)
   return(flow_map)
 }
 
@@ -445,27 +332,32 @@ get_neighbors = function(m, pos) {
 #' @export
 #'
 #' @examples
-rescale <- function(m, m_scale, progress = NULL) {
-  
-  div = 3
-  d <- st_dimensions(m)$x$delta
+rescale <- function(m, m_scale, progress = NULL, is_smooth_edge = T) {
+  if(is.null(progress)) progress <- function(x, y){}
   d_scale <- st_dimensions(m_scale)$x$delta
-  n <- floor(log(d / d_scale, div))
   bb <- st_bbox(m)
-  nprog <- n + 1
-  for (x in 1:n) {
-    progress(x / (nprog + 1), paste("Rescaling the map step", x, "of", nprog))
+  nprog <- 1
+  if(is_smooth_edge) {
+    div <- 3
     d <- st_dimensions(m)$x$delta
-    grid = st_as_stars(bb, dx = d / div)
-    m = st_warp(m, grid)
-    # write_stars(m, "soil1.tif")
-    m[[1]] <- nfilter(m[[1]], median)
+    n <- floor(log(d / d_scale, div))
+    nprog <- n + 1
+    for (x in 1:n) {
+      progress(x / (nprog + 1), paste("Rescaling the map step", x, "of", nprog))
+      d <- st_dimensions(m)$x$delta
+      grid = st_as_stars(bb, dx = d / div)
+      m = st_warp(m, grid)
+      # write_stars(m, "soil1.tif")
+      m[[1]] <- nfilter(m[[1]], median)
+    }
   }
   progress(nprog / (nprog + 1),
            paste("Rescaling the map step", nprog, "of", nprog))
-  grid = st_as_stars(bb, dx = d_scale)
-  m = st_warp(m, grid)
-  m[[1]] <- nfilter(m[[1]], median)
+  grid <- st_as_stars(bb, dx = d_scale)
+  m <- st_warp(m, grid)
+  if(is_smooth_edge) {
+    m[[1]] <- nfilter(m[[1]], median)
+  }
   return(m)
 }
 
@@ -557,4 +449,452 @@ reclassify_map <- function(map, fromto_df) {
   map2 <- cut(map, c(min(from) - 1, from), labels = to)
   map2 <- map_factor_to_numeric(map2)
   return(map2)
+}
+
+
+crop_raster <- function(raster_map, raster_boundary, extent_fill = NA) {
+  sf_use_s2(FALSE)
+  raster_map <- st_as_stars(raster_map)
+  if(st_crs(raster_map) != st_crs(raster_boundary)) {
+    raster_map <- st_transform(raster_map, crs = st_crs(raster_boundary))
+  }
+  dim_b <- st_dimensions(raster_boundary)
+  dim_m <- st_dimensions(raster_map)
+  if(is.na(dim_m$x$delta) || is.na(dim_m$y$delta) || dim_b$x$delta != dim_m$x$delta || dim_b$y$delta != dim_m$y$delta) {
+    # set the same resolution of the input map as the boundary
+    bb <- st_bbox(raster_map)
+    grid <- st_as_stars(bb, dx = dim_b$x$delta, dy = dim_b$y$delta)
+    suppressMessages({
+      raster_map <- st_warp(raster_map, grid)
+    })
+  }
+  # make sure input map is equal or larger than the boundary
+  x_bound <- raster_boundary
+  x_bound[[1]] <- extent_fill
+  raster_map <- st_mosaic(x_bound, raster_map)
+  # crop the by bounding box
+  suppressMessages(
+    raster_map2 <- st_crop(raster_map, st_bbox(raster_boundary))
+  )
+  # grid = st_as_stars(st_bbox(raster_boundary), dx = dim_b$x$delta, dy = dim_b$y$delta)
+  grid <- raster_boundary
+  grid[[1]] <- 0
+  raster_map2 = st_warp(raster_map2, grid)
+  raster_map2[is.na(raster_boundary)] <- NA
+  return(raster_map2)
+}
+
+
+generate_routing_distance <- function(flow_map, threshold = 20) {
+  cs <- cellSize.stars(flow_map)
+  wres <- sqrt(cs)
+  dmat <- matrix(ncell_dist_factor * wres, nrow = 3, ncol = 3)
+  m <- flow_map * cs / 10000
+  m[m < threshold] <- NA
+  m <- m[[1]]
+  md <- matrix(NA, nrow(m), ncol(m))
+  mo <- matrix(NA, nrow(m), ncol(m))
+  mt <- matrix(NA, nrow(m), ncol(m))
+  md_last <- matrix(NA, nrow(m), ncol(m))
+  #start from the highest flow cell
+  o <- which(m == max(m, na.rm = T), arr.ind = TRUE)[1, ]
+  dist <- 0
+  #dataframe for the branches stream start point
+  m2 <- NULL
+  order <- 1
+  trace <- F
+  while (T) {
+    #assign the distance to the distance map (md)
+    md[o[1], o[2]] <- dist
+    mo[o[1], o[2]] <- order
+    last_dist <- c(o, dist)
+    #remove the cell from the main map by assigning NA
+    m[o[1], o[2]] <- NA
+    n <- get_neighbors(m, o)
+    #if no more neighbors, go to the next branches
+    if (all(is.na(n)) && nrow(m2) > 0) {
+      #record the upstream point
+      md_last[last_dist[1], last_dist[2]] <- last_dist[3]
+      while (nrow(m2) > 0 && all(is.na(n))) {
+        # h <- which(m2[[3]] == max(m2[[3]], na.rm = T), arr.ind = TRUE)[1]
+        h <- 1
+        o <- c(m2[h, 1], m2[h, 2])
+        order <- m2[h, 4] 
+        m2 <- m2[-h, ]
+        if (is.na(m[o[1], o[2]])) {
+          next
+        }
+        n <- get_neighbors(m, o)
+        if(all(is.na(n))) next
+      }
+      mt[o[1], o[2]] <- order
+      nd <- get_neighbors(md, o)
+      if(!all(is.na(nd))) {
+        fd <- which(nd == min(nd, na.rm = T), arr.ind = TRUE)
+        ridx <- o[1] + fd[1, 1] - 2
+        cidx <- o[2] + fd[1, 2] - 2
+        dist <- md[ridx, cidx] + dmat[fd[1, 1], fd[1, 2]]
+      }
+      next
+    }
+
+    if (all(is.na(n)) && nrow(m2) == 0) {
+      if (all(is.na(m))) {
+        break
+      } else {
+        #in case of undetected stream
+        o <- which(m == max(m, na.rm = T), arr.ind = TRUE)[1, ]
+        n <- get_neighbors(m, o)
+        no <- get_neighbors(mo, o)
+        # print("undetected")
+        order <- 0
+        if(!all(is.na(no))) {
+          order <- min(no, na.rm = T) + 1
+        }
+        mt[o[1], o[2]] <- order
+
+      }
+    }
+    f <- which(n == max(n, na.rm = T), arr.ind = TRUE)
+    #remove the max value
+    n[f[1, 1], f[1, 2]] <- NA
+    
+    o_next <- shift_idx(o, c(f[1,1], f[1,2]))
+    while(is_contain_idx(m2, o_next) && !all(is.na(n))) {
+      f <- which(n == max(n, na.rm = T), arr.ind = TRUE)
+      o_next <- shift_idx(o, c(f[1,1], f[1,2]))
+      n[f[1, 1], f[1, 2]] <- NA
+    }
+    #store the coordinates of for the next branches
+    if (!all(is.na(n))) {
+      f2 <- which(!is.na(n), arr.ind = T)
+      for (i in 1:nrow(f2)) {
+        ridx <- o[1] + f2[i, 1] - 2
+        cidx <- o[2] + f2[i, 2] - 2
+        if (is.null(m2) || nrow(m2) == 0) {
+          m2 <- data.frame(
+            row = ridx,
+            col = cidx,
+            val = m[ridx, cidx],
+            order = order + 1
+          )
+        } else {
+          check_df <- m2[m2$row == ridx & m2$col == cidx, ]
+          if (nrow(check_df) == 0) {
+            m2 <- rbind(m2, c(ridx, cidx, m[ridx, cidx], order + 1))
+          }
+        }
+      }
+    }
+    #add distance from the next point
+    if (is.na(md[o[1], o[2]])) {
+      #if starting new point, get the sortest path
+      nd <- get_neighbors(md, o)
+      if(!all(is.na(nd))) {
+        fd <- which(nd == min(nd, na.rm = T), arr.ind = TRUE)
+        ridx <- o[1] + fd[1, 1] - 2
+        cidx <- o[2] + fd[1, 2] - 2
+        dist <- md[ridx, cidx] + dmat[fd[1, 1], fd[1, 2]]
+      } else {
+        dist <- NA
+      }
+    } else {
+      dist <- md[o[1], o[2]] + dmat[f[1, 1], f[1, 2]]
+    }
+    #connect to the next largest neighbor
+    o[1] <- o[1] + f[1, 1] - 2
+    o[2] <- o[2] + f[1, 2] - 2
+  }
+  # routing <- flow_map
+  # routing[[1]] <- md
+  # orderm <- flow_map
+  # orderm[[1]] <- mo
+  # outlet <- flow_map
+  # outlet[[1]] <- mt
+  # upstream <- flow_map
+  # upstream[[1]] <- md_last
+  # rd_map <- c(flow_map, routing, orderm, outlet, upstream)
+  # names(rd_map) <- c("flow", "routing", "order", "outlet", "upstream")
+  # return(rd_map)
+  
+  flow_map[[2]] <- md
+  flow_map[[3]] <- mo
+  flow_map[[4]] <- mt
+  flow_map[[5]] <- md_last
+  names(flow_map) <- c("flow", "routing", "order", "outlet", "upstream")
+  return(flow_map)
+}
+
+is_contain_idx <- function(df, cell) {
+  if (is.null(df) || nrow(df) == 0) return(F) 
+  check_df <- df[df$row == cell[1] & df$col == cell[2],]
+  return(nrow(check_df) != 0) 
+}
+
+shift_idx <- function(o, s) {
+  o[1] <- o[1] + s[1] - 2
+  o[2] <- o[2] + s[2] - 2
+  return(o)
+}
+
+generate_watershed <- function(direction_map, lon, lat, outlet_radius = 10) {
+  #create outlet shape
+  pt.df   <- data.frame(pt = 1, x = lon, y = lat)
+  p   <- st_as_sf(pt.df, coords = c("x", "y"))
+  st_crs(p) <- 4326
+  p <- st_transform(p, crs = 7801)
+  circle <-  st_buffer(p, outlet_radius)
+  circle <- st_transform(circle, crs = 4326)
+  #generate watershed
+  ws <- watershed(direction_map, circle)
+  m <- st_as_stars(ws)
+  return(m)
+}
+
+generate_subcathments <- function(direction_map,
+                                  routing_dist_map,
+                                  order,
+                                  min_sub_area = NULL,
+                                  progress = NULL) {
+  if (is.null(progress))
+    progress <- function(x, y) {
+    }
+  if (class(direction_map) == "stars") {
+    direction_map <- stars_to_terra(direction_map)
+  }
+  flow_map <- routing_dist_map["flow"]
+  fm <- flow_map[routing_dist_map["outlet"] == order]
+  routing_map <- routing_dist_map["routing"]
+  dm <- routing_map[!is.na(fm)]
+  df <- as.data.frame(c(fm, dm))
+  colnames(df) <- c("out_lon", "out_lat", "flow", "routing")
+  df <- df[!is.na(df[[3]]), ]
+  df$area <- df[[3]] * cellSize.stars(flow_map)
+  if (!is.null(min_sub_area)) {
+    df <- df[df$area >= min_sub_area*10000, ]
+  }
+  #find the last outlet
+  dfm <- st_dimensions(fm)
+  last_o <- which(df$routing == max(df$routing, na.rm = T), arr.ind = TRUE) 
+  row <- ceiling((df[last_o,"out_lon"]-dfm$x$offset)/dfm$x$delta)
+  col <- ceiling((df[last_o,"out_lat"]-dfm$y$offset)/dfm$y$delta)
+  nord <- get_neighbors(routing_dist_map["order"][[1]], c(row, col))
+  nrou <- get_neighbors(routing_dist_map["routing"][[1]], c(row, col))
+  nrou[nord != (order-1)] <- NA
+  ni <- which(nrou == max(nrou, na.rm = T), arr.ind = T)
+  
+  ridx <- row + ni[1, 1] - 2
+  cidx <- col + ni[1, 2] - 2
+  rcoo <- dfm$x$offset + (ridx-0.5)*dfm$x$delta
+  ccoo <- dfm$y$offset + (cidx-0.5)*dfm$y$delta
+  area <- flow_map[[1]][ridx, cidx] * cellSize.stars(flow_map)
+  last_outlet <- c(rcoo, ccoo, flow_map[[1]][ridx, cidx], routing_map[[1]][ridx, cidx], area)
+  if (is.null(min_sub_area) ) {
+    df <- rbind(df, last_outlet)
+  } else {
+    if(area >=  min_sub_area*10000) {
+      df <- rbind(df, last_outlet)
+    }
+  }
+  df <- df[order(df[[3]], decreasing = T), ]
+  df$out_id <- c(1:nrow(df))
+  df$distance <- NA
+  m <- flow_map
+  m[!is.na(m)] <- NA
+  nsc <- nrow(df)
+  for (i in 1:nsc) {
+    progress(i / nsc, paste("Generating subcathment", i, "of", nsc))
+    wm <- generate_watershed(direction_map, df[i, 1], df[i, 2])
+    wm[!is.na(wm)] <- i
+    m <- st_mosaic(m, wm)
+    #calculate mean of subcatchment routing distance
+    up_m <- routing_dist_map["upstream"]
+    wm2 <- crop_raster(wm, up_m)
+    up_m[is.na(wm2)] <- NA
+    df[i, "distance"] <- mean(up_m[[1]], na.rm = T)
+    if(is.na(df[i, "distance"])) {
+      df[i, "distance"] <- get_map_value(routing_dist_map["routing"], df[i, "out_lon"], df[i, "out_lat"])
+    }
+  }
+  ps <- st_as_sf(m,
+                 as_points = F,
+                 merge = T,
+                 connect8 = T)
+  names(ps) <- c("out_id", "geometry")
+  # ps$area <- as.numeric(st_area(ps))/10000 #in ha
+  ps$area_m2 <- st_area(ps) #in m2
+  ps <- merge(ps, df[c("out_id", "out_lon", "out_lat", "distance")], by = "out_id")
+  ps$ws_id <- ps$out_id
+  return(ps)
+}
+
+get_map_value <- function(map, lon, lat) {
+  pc <- st_sfc(st_point(c(lon, lat)))
+  p <- st_as_sf(pc, crs = st_crs(map))
+  v <- st_extract(map, p)
+  return(v[[1]])
+}
+
+library(mapview)
+library(stars)
+library(terra)
+library(flowdem)
+
+tes <- function() {
+  
+  # setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/genriver_sbj")
+  setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/genriver_tes")
+  dem_map <- read_stars("dem_bb.tif")
+  dem_ws <- read_stars("dem_ws.tif")
+  ws_boundary_sf <- st_read("ws_boundary.shp")
+  ws_boundary_stars <- st_rasterize(ws_boundary_sf, dem_map, align = T)
+  
+  flow_map <- read_stars("dem_flow.tif")
+  rd <- generate_routing_distance(flow_map)
+  direction_map <- rast("dem_direction.tif")
+  sf_use_s2(FALSE)
+  sc <- generate_subcathments(direction_map, rd, 2)
+  sc <- generate_subcathments(direction_map, rd, 2, min_sub_area = 200)
+
+  m <- rd["order"]
+  om <- rd["outlet"]
+  om[om != 2] <- NA
+  mapview(list(sc["distance"],m,om), col.regions = rainbow)
+  
+  rm <- rd["routing"]
+  
+  dem <- read_stars("dem_ws.tif")
+  dem2 <- stars_to_terra(dem)
+  dem2<- focal(dem2, w=25, fun = "mean", na.policy="omit", na.rm=T)
+  # plot(dem2)
+  dem2 <- st_as_stars(dem2)
+  min <- min(dem2[[1]], na.rm = T)
+  max <- max(dem2[[1]], na.rm = T)
+  del_elv <- max - min
+  nd <- 4
+  d <- c(1:nd)^2/nd^2
+  dem2 <- dem2 - min
+  seg_m <- dem2
+  seg_m[!is.na(seg_m)] <- 1
+  for(i in 1:(nd-1)) {
+    seg_m[dem2 >= del_elv * d[i]] <- i+1
+  }
+  plot(seg_m)
+  
+  slope <- terrain(stars_to_terra(dem))
+  slope2 <- focal(slope, w=15, fun = "mean", na.policy="omit", na.rm=T)
+  slope2 <- st_as_stars(slope2)
+  min <- min(slope2[[1]], na.rm = T)
+  max <- max(slope2[[1]], na.rm = T)
+  del_elv <- max - min
+  nd <- 4
+  d <- min + del_elv * c(1:nd)^2/nd^2
+  # slope2 <- slope2 - min
+  slope_class <- slope2
+  slope_class[!is.na(slope_class)] <- 1
+  for(i in 1:(nd-1)) {
+    slope_class[slope2 >= d[i]] <- i+1
+  }
+  plot(slope_class)
+  
+  fter <- ter
+  for(i in 1:5) {
+    fter <- focal(fter, w=15, fun = "mean", na.policy="omit", na.rm=T)
+  }
+  plot(fter)
+  plot(dem)
+  
+  ### SOIL HYDRAULIC #############
+  setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/genriver_sbj_5")
+  sl_df <- read.csv("soil_layer.csv")
+  lc_par_df <- read.csv("lc_props.csv")
+  
+  subc <- st_read("subcatchment.shp")
+  lc_m <- read_stars("lcmapcrop_lc_1.tif")
+  lc_m2 <- read_stars("lcmapcrop_lc_2.tif")
+  
+  subc_stars <- st_rasterize(subc["ws_id"], lc_m, align = T)
+  subc_stars <- crop_raster(subc_stars, lc_m)
+  
+  qfc <- read_stars("soil_quick_flow_capacity_lc_1.tif")
+  qfc <- crop_raster(qfc, lc_m)
+  
+  subc_arr <- as.vector(subc_stars[[1]])
+  lc_m_arr <- as.vector(lc_m[[1]])
+  qfc_arr <- as.vector(qfc[[1]])
+  qfc_df <- data.frame(ws_id = subc_arr, lc_id = lc_m_arr, qfc = qfc_arr)
+  qfc_df <- qfc_df[!is.na(qfc_df$lc_id), ]
+  aggregate(qfc_df["qfc"], by = qfc_df[c("ws_id", "lc_id")], mean, na.rm = T)
+    
+  lc <- c(lc_m, lc_m2)
+  ws <- subc["ws_id"]
+  ssf <- ws[ws$ws_id == 2,]
+  ssf1 <- ws[ws$ws_id == 1,]
+  lcs <- lc[ssf]
+  mean(lcs[[1]], na.rm = T)
+  plot(lcs[2])
+  plot(subc)
+  
+  qfc <- read_stars("qfc.tif")
+  plot(qfc)
+  qfc_sub <- qfc[ssf]
+  qfc_sub <- qfc[ssf1]
+  plot(qfc_sub)
+  
+  st_bbox(subc)
+
+  dim <- st_dimensions(qfc)
+  ssf_m <- st_rasterize(ssf, qfc, align = T)
+  qfc_sub <- crop_raster(qfc, ssf_m)
+  lc_sub <- crop_raster(lc_m, ssf_m)
+  m <- c(lc_sub, qfc_sub)
+  names(m) <- c("lc", "qfc")
+  
+  qfc2 <- crop_raster(qfc, lc_m)
+  
+  ws_stars <- st_rasterize(ws, dx = dim$x$delta, dy = dim$y$delta)
+  ws_stars2 <- st_rasterize(ws, lc_m)
+
+  qfc_sub2 <- qfc2[ws_stars == 2]
+  lc_sub2 <- lc_m[ws_stars == 2]
+  mm <- c(ws_stars, lc_m)
+  a <- qfc2[ws_stars2 == 2 & lc_m == 6]
+  
+  # b <- qfc_sub2[lc_sub2 == 6]
+  # plot(lc_sub2)
+  # 
+  # qfc_sub3 <- qfc2[ssf]
+  # lc_sub3 <- lc_m[ssf]
+  # c <- qfc_sub3[lc_sub3 == 6]
+  qfc <- read_stars("soil_plant_available_water-lc_1.tif")
+  
+  ### CALCULATE #############
+  setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/genriver_sbj_14")
+  subc_lc_df <- read.csv("subcatchment_lc.csv")
+  lc_map_df <- read.csv("map_list.csv")
+  
+  
+  
+  
+}
+
+
+
+# dimension(s):
+#   from  to offset      delta refsys x/y
+# x    1 940  104.3  0.0002778 WGS 84 [x]
+# y    1 862 -4.924 -0.0002778 WGS 84 [y]
+# Simple feature collection with 117 features and 7 fields
+# Geometry type: POLYGON
+# Dimension:     XY
+# Bounding box:  xmin: 104.3082 ymin: -5.16375 xmax: 104.5699 ymax: -4.929583
+
+
+google_earth_engine <- function() {
+  library(rgee)
+  # ee_install(py_env = "rgee")
+  # ee_Initialize()
+  ee_Initialize(user = 'degi.ecomodels@gmail.com')
+  srtm <- ee$Image("USGS/SRTMGL1_003")
+
 }
