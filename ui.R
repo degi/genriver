@@ -1,4 +1,7 @@
 
+
+
+
 wave_div <- HTML(
   '<div><svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
             viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
@@ -79,42 +82,99 @@ dem_input_option <- conditionalPanel(
 )
 
 
-# tooltip_blue <- function(...) {
-#   tooltip(..., options = list(customClass = "custom-tooltip"))
-# }
+menu_button <- function(id,
+                        label,
+                        icon = NULL,
+                        desc = NULL,
+                        placement = "auto") {
+  d <- actionButton(id, label, icon = icon, class = "menu_button")
+  if (is.null(desc)) {
+    return(d)
+  } else {
+    return(tooltip_blue(
+      d,
+      desc,
+      placement = placement,
+      id = paste0("tooltip_", id)
+    ))
+  }
+}
+
 
 outlet_table <- card(
   class = c("transparent_bg"),
+  full_screen = TRUE,
   card_header(
-    span(icon("droplet"), "Sub-Catchment"),
+    span(icon("droplet"), "Sub-Catchments", style = "padding-top:5px"),
     class = "d-flex justify-content-between",
+    style = "border-bottom: 2px solid #F4F4F4;",
     span(
-      actionButton(
+      menu_button(
         "delete_outlet_btn",
-        "",
-        icon = icon("trash-can"),
-        class = "toolbar_button"
-      ) |> tooltip_blue("Remove the selected subcathments"),
-      actionButton(
+        "Delete",
+        icon("trash-can"),
+        "Remove the selected subcathments",
+        "top"
+      ),
+      menu_button(
         "merge_outlet_btn",
+        "Merge",
+        icon("object-group"),
+        "Merge the selected subcathments",
+        "top"
+      ),
+      actionButton(
+        "menu_outlet_btn",
         "",
-        icon = icon("object-group"),
-        class = "toolbar_button"
-      ) |> tooltip_blue("Merge the selected subcathments and combine the outlets")
+        icon = icon("ellipsis-vertical"),
+        class = "menu_button"
+      ) |> popover(
+        id = "subcatchment_popover",
+        div("Subcatchments:"),
+        div(menu_button(
+          "reset_subcathment", "Reset", icon("arrows-rotate")
+        )),
+        div(
+          menu_button(
+            "regenerate_subcathment",
+            "Re-generate...",
+            icon("wand-magic-sparkles")
+          )
+        ),
+        
+        div("Download:", style = "margin-top:20px"),
+        downloadButton("download_subcathment", "Subcathment Map", class = "menu_button"),
+        downloadButton("download_stream", "Stream Map", class = "menu_button"),
+        downloadButton("download_dem", "DEM Map", class = "menu_button")
+      )
     )
   ),
-  card_body(padding = 0, reactableOutput("watershed_list", height = "500px"))
+  card_body(padding = 0, reactableOutput("watershed_list", height = "500px")),
+  card_footer(
+    style = "background-color: rgba(255, 255, 255, 0.5);",
+    "Unclassified watershed area:" ,
+    tags$b(textOutput("ws_unclassified_area", inline = T)),
+    "ha",
+    info(
+      "Unclassified watershed area will be considered as a sub-catchment which covers the remaining area (ID: 999)"
+    )
+  )
 )
+
+
 
 lake_table <- card(
   class = c("transparent_bg"),
   card_header(span("Lake")),
-  card_body(padding = 0, reactableOutput("lake_list") |> popover(
-    id = "edit_lake_label",
-    title = "Edit Label",
-    textInput("lake_label", NULL),
-    actionButton("edit_label_confirm", "Confirm")
-  ))
+  card_body(
+    padding = 0,
+    reactableOutput("lake_list") |> popover(
+      id = "edit_lake_label",
+      title = "Edit Label",
+      textInput("lake_label", NULL),
+      actionButton("edit_label_confirm", "Confirm")
+    )
+  )
 )
 
 dam_table <- card(
@@ -123,34 +183,159 @@ dam_table <- card(
   card_body(padding = 0, reactable_edit_ui("dam_table"))
 )
 
+textc <- function(text) {
+  div(text, style = "padding:5px 0")
+}
+
+download_link <- function(id, filename = NULL) {
+  if (is.null(filename))
+    filename <- paste0(id, ".csv")
+  div(style = "margin-left:auto; margin-right:0;", table_download_link(id, filename = filename))
+}
+
+inset_plot <- function(plot_id, top = "70px") {
+  absolutePanel(
+    top = top,
+    right = "20px",
+    width = "300px",
+    card(
+      class = "transparent_bg",
+      full_screen = TRUE,
+      card_body(
+        padding = 10,
+        height = "250px",
+        div(tags$b(textOutput(
+          paste0(plot_id, "_title")
+        )), style = "text-align:right"),
+        plotOutput(plot_id)
+      )
+    )
+  )
+}
+
+soil_segment_setting_ui <- layout_sidebar(
+  class = "p-0",
+  sidebar = sidebar(
+    padding = 0,
+    width = "400px",
+    class = "bordercard squarecard",
+    
+    navset_card_tab(
+      nav_panel(
+        title = span(
+          "Segmentation",
+          info(
+            "Automatic procedural map segmentation based on slope and elevation factors"
+          )
+        ),
+        
+        accordion(
+          class = "bordercard compact_blue",
+          open = F,
+          accordion_panel(
+            "Soil depth",
+            card(
+              card_header("Soil depth ranges"),
+              numericInput("min_soil_depth_input", "Minimum (cm)", 20),
+              numericInput("max_soil_depth_input", "Maximum (cm)", 200),
+              numericInput("top_soil_prop_input", "Depth of top soil (%)", 10)
+            ),
+            card(
+              card_header("Slope factor"),
+              numericInput("slope_coe_input", "Scaling coefficient", 1),
+              numericInput("slope_exp_input", "Scaling exponent", 1)
+            ),
+            card(
+              card_header("Elevation factor"),
+              numericInput("elevation_coe_input", "Scaling coefficient", 1),
+              numericInput("elevation_exp_input", "Scaling exponent", 1)
+            )
+          ),
+          accordion_panel(
+            "Map segmentations",
+            numericInput("n_class_input", "Number of segmentation classes", 10, min = 0),
+            card(
+              card_header("Slope factor"),
+              numericInput("slope_coe_segment_input", "Scaling coefficient", 1),
+              numericInput("slope_exp_segment_input", "Scaling exponent", 1)
+            ),
+            card(
+              card_header("Elevation factor"),
+              numericInput(
+                "elevation_coe_segment_input",
+                "Scaling coefficient",
+                1,
+                width = "200px"
+              ),
+              numericInput("elevation_exp_segment_input", "Scaling exponent", 1)
+            ),
+            card(
+              card_header("Soil depth factor"),
+              numericInput("depth_coe_segment_input", "Scaling coefficient", 1),
+              numericInput("depth_exp_segment_input", "Scaling exponent", 1)
+            ),
+            card(
+              card_header("Edge smoothing filter"),
+              "A modal filter which smoothing the edge and removing small patches of segments",
+              numericInput("noise_filter_input", "Filter mask size (pixels)", 15, min = 1),
+              numericInput("noise_rep_input", "Repetition", 3, min = 0)
+            )
+          ),
+          accordion_panel(
+            "Slope factor smoothing filter",
+            numericInput("slope_filter_input", "Filter mask size (pixels)", 15, min = 1),
+            plotOutput("slope_std_plot", height = 200)
+          ),
+          accordion_panel(
+            "Elevation factor smoothing filter",
+            numericInput("elevation_filter_input", "Filter mask size (pixels)", 15, min = 1),
+            plotOutput("elevation_std_plot", height = 200)
+          )
+          
+        )
+      ),
+      nav_panel(
+        title = "Soil Map Table",
+        card_body(
+          padding = 10,
+          "List of segments and the asscociated soil type ID",
+          conditionalPanel(condition = "input.soil_type_select == 'soil_type_global'", reactableOutput("soil_mapped_table_global")),
+          conditionalPanel(condition = "input.soil_type_select == 'soil_type_user'", table_edit_ui("soil_mapped_table_user"))
+        )
+      )
+    )
+  ),
+  card_body(
+    padding = 0,
+    leafletOutput("soil_type_leaflet"),
+    inset_plot("slope_map_plot", top = "20px"),
+    inset_plot("elevation_map_plot", top = "290px"),
+    inset_plot("depth_map_plot", top = "560px")
+    
+  )
+)
+
 ui <-
   page_navbar(
     id = "main_page",
     theme = bs_theme(
-      primary = "#034464",
-      secondary = "#219ebc",
-      dark = "#404040",
-      success = "#06d6a0",
-      info = "#fb8500",
-      warning = "#ffb703",
-      #"#FFF3B0",
-      danger = "#9a130e",
+      primary = theme_color$primary,
+      secondary = theme_color$secondary,
+      dark = theme_color$dark,
+      success = theme_color$success,
+      info = theme_color$info,
+      warning = theme_color$warning,
+      danger = theme_color$danger,
       font_scale = 0.9
       
     ),
-    bg = "#034464",
+    bg = theme_color$primary,
     header =
       tags$head(
         tags$style(
           tags$link(rel = "shortcut icon", href = "favicon.ico"),
           HTML(
-            ".bg_theme{background-color: #CAEDF6;}
-            .bg_theme2{background-color: #EDF9FC;}
-
-            .bg_warning{background-color: #ffb703;}
-            .bg_light1{background-color: #CAEDF6}
-            .bg_light2{background-color: #ECF9FC !important;}
-
+            "
             .modal {z-index: 1150;}
 
             .soil_table th, td {
@@ -161,18 +346,25 @@ ui <-
 
             .transparent_bg {
               background-color: rgba(255, 255, 255, 0.7);
-              box-shadow: 2px 2px 10px #404040;
+              box-shadow: 2px 2px 8px #404040C9;
             }
 
-            .toolbar_button {
-              width: 24px;
-              height: 24px;
-              padding: 0px;
+            .gray_bg {
+              background-color: #ECF9FC;
+            }
+
+            .menu_button {
+              height: 26px;
+              padding: 2px 10px;
+              margin: 2px;
               border-width: 0px;
             }
 
             .custom-tooltip {
-              --bs-tooltip-bg: #023047;
+              --bs-tooltip-bg: #023047D9;
+              --bs-tooltip-border-radius: 8px;
+              --bs-tooltip-opacity: 1;
+              --bs-tooltip-max-width: 300px;
             }
 
             .map_label {
@@ -184,19 +376,18 @@ ui <-
             }
 
             .leaflet-popup-content-wrapper{
-              background-color: rgba(255, 255, 255, 0.9);
+              background-color: rgba(255, 255, 255, 0.85);
               box-shadow: 4px 4px 20px black;
             }
 
             .leaflet-popup-tip {
-              background: rgba(255, 255, 255, 0.9);
+              background: rgba(255, 255, 255, 0.85);
             }
 
-            #input_panel {
+            #input_panel, #sim_panel, #info_panel {
               --bs-nav-link-color: #219ebc;
               --bs-nav-tabs-border-radius:10px;
               --bs-nav-tabs-link-active-color:#fb8500;
-
             }
 
             .card-header {
@@ -206,7 +397,6 @@ ui <-
             .subpanel .card-header {
               background-color: white;
               border-width: 0px;
-
             }
 
             .subpanel .card {
@@ -216,15 +406,68 @@ ui <-
             .bordercard .card {
               border-width:1px;
             }
-            
+
             .bordercard .card-header {
               border-width:1px;
               background-color: #ECF9FC;
             }
 
+            .squarecard .card {
+              border-radius:0px
+            }
+
+            .squarecard .card-header {
+              border-radius:0px
+            }
 
             .inline label{ display: table-cell; text-align: left; vertical-align: middle; padding: 0px 10px}
             .inline .form-group{display: table-row;}
+
+            #I_WarmUpTime, #ndays_input {
+              color:#219ebc;
+              border-width:0;
+              height:30px;
+              padding-right:0;
+            }
+
+            .border_right {
+              border-right: 1px solid rgba(0, 0, 0, 0.05);
+            }
+
+            .leaflet-control-container { position:absolute; top:35px }
+
+            .accordion-body {
+              background-color: #CAEDF6;
+            }
+
+            .highlight_label {
+              color: black;
+              background-color: white;
+              font-size: 1.5em;
+              padding: 5px 10px;
+              margin:10px 5px;
+              border-radius:5px;
+            }
+
+            .highlight_label_blue {
+              color: white;
+              background-color: #219ebc;
+              padding: 5px 20px;
+              margin:10px 10px 0 10px;
+              border-radius:5px;
+              font-size: 1em;
+            }
+
+            #soil_type_select {
+              margin:10px;
+            }
+
+            .soil_group {
+              color:white;
+              background-color:#CAEDF6;
+              margin: 0 5px;
+              font-family:'Arial black';
+            }
 
 
           "
@@ -244,7 +487,7 @@ ui <-
         tags$img(
           height = 22,
           src = "images/genriver_logo.svg",
-          style = "margin-right:5px;" #filter: drop-shadow(1px 1px 3px black)
+          style = "margin-right:5px;"
         ),
         "Gen",
         span(
@@ -253,10 +496,6 @@ ui <-
           .noWS = c('before', "after")
         ),
         "3",
-        # background: linear-gradient(60deg, #CAEDF6 -20%, #219ebc 50%
-        # style = "color:#ffb703; background-color: #CAEDF6;
-        # padding:2px 20px 4px 20px; border-radius:15px; font-weight:bold;
-        # text-shadow: 1px 1px 5px black;"
         style = "color:#ffb703; font-weight:bold; text-shadow: 1px 1px 4px black;"
       ),
     
@@ -265,7 +504,7 @@ ui <-
     nav_panel(
       title = "",
       icon = icon("house"),
-
+      
       div(
         class = "header",
         div(
@@ -283,12 +522,19 @@ ui <-
               .noWS = c('before', "after")
             ),
             "3",
-            style = "color:#ffb703;;font-weight:bold;font-size:4em; text-shadow: 2px 2px 10px black;"
+            style = "color:#ffb703;font-weight:bold;font-size:4em; text-shadow: 2px 2px 10px black;"
           )
         ),
         wave_div,
       ),
-      div(class = "content flex", HTML("&copy; World Agroforestry (ICRAF) - 2024"))
+      div(class = "content flex", div(
+        div(
+          tags$b("GenRiver"),
+          "is a generic river model on river flow",
+          style = "margin-bottom:60px"
+        ),
+        HTML("&copy; World Agroforestry (ICRAF) - 2024")
+      ))
     ),
     nav_panel(
       #### INPUT OPTIONS ####
@@ -296,7 +542,7 @@ ui <-
       icon = icon("arrow-down"),
       
       navset_card_tab(
-        title = div("Input data and parameters:", style = "color:#219ebc;"),
+        title = div("Input data and parameters", style = "color:#219ebc;font-size:1.2em; padding:5px 0 0;font-family:'Arial black';"),
         id = "input_panel",
         nav_panel(
           title = "Land Cover",
@@ -308,33 +554,43 @@ ui <-
               nav_panel(
                 title = "Land Cover Map",
                 icon = icon("layer-group"),
-                p(
-                  "Map files can be uploaded individually or in an archived file (.zip).
-                The map files from",
-                  tags$b("R-Fallow") ,
-                  "output can be uploaded directly."
-                ),
                 layout_column_wrap(
+                  class = "bordercard",
+                  
                   card_body(
                     padding = 0,
-                    fileInput(
-                      "rfalow_lc_map_inp",
-                      NULL,
-                      accept = c(".tif", ".zip"),
-                      #if shp, it should accept  = c('.shp','.dbf','.sbn','.sbx','.shx','.prj')
-                      multiple = T,
-                      width = "100%"
-                    ),
-                    card_body(padding = 0, table_edit_ui(
-                      "lc_df_table", tags$i("Land cover legend")
-                    ))
+                    div(
+                      actionButton(
+                        "add_lc_button",
+                        "Add Land Cover Map",
+                        icon = icon("plus"),
+                        width = "100%"
+                      ) |>
+                        popover(
+                          id = "add_lc_pop",
+                          fileInput(
+                            "rfalow_lc_map_inp",
+                            "Add land cover map files",
+                            accept = c(".tif", ".zip"),
+                            multiple = T,
+                            width = "100%"
+                          )
+                        )
+                    ) |>
+                      tooltip_blue(
+                        "Map files can be uploaded individually or in an archived file (.zip)",
+                        placement = "top"
+                      ),
+                    card_body(uiOutput("lc_map_out"))
                   ),
-                  card_body(padding = 10, class = "bordercard", uiOutput("lc_map_out"))
+                  conditionalPanel(condition = "output.is_lc_df", card(
+                    table_edit_ui("lc_df_table", tags$b("Land cover legend"), is_label = T)
+                  ))
                 )
               ),
               nav_panel(
                 title = "Hydrological Properties",
-                icon = icon("droplet"),
+                icon = icon("arrow-up-from-ground-water"),
                 card_body(height = "50%", table_edit_ui("lc_props_table")),
                 card_body(height = "50%", table_edit_ui(
                   "lc_evapot_table",
@@ -373,6 +629,9 @@ ui <-
             )
           )
         ),
+        
+        ### WATERSHED ###################
+        
         nav_panel(
           title = "Watershed",
           icon = icon("water"),
@@ -381,11 +640,22 @@ ui <-
             padding = 0,
             navset_card_underline(
               nav_panel(
-                title = "Watershed Area",
+                title = "Watershed",
                 icon = icon("mountain-sun"),
                 card_body(
                   padding = 0,
                   leafletOutput("watershed_map_leaflet"),
+                  conditionalPanel(condition = "output.is_subcatchment", absolutePanel(
+                    top = "70px",
+                    left = "80px",
+                    div(
+                      "Total area:",
+                      tags$b(textOutput("ws_area", inline = T)),
+                      "ha",
+                      class = "transparent_bg",
+                      style = "padding: 5px 10px; border-radius:5px;"
+                    )
+                  )),
                   conditionalPanel(
                     condition = "output.is_stream_map",
                     absolutePanel(
@@ -397,82 +667,74 @@ ui <-
                     )
                   )
                 )
-              ), 
+              ),
               nav_panel(
                 title = "Lake and DAM",
                 icon = icon("fish"),
                 card_body(padding = 0, navset_card_pill(
-                  nav_panel(title = "Lake and DAM Location", card_body(
-                    padding = 0, leafletOutput("lake_map_leaflet"),
-                    conditionalPanel(
-                      condition = "output.is_lake_df",
-                      absolutePanel(
-                        lake_table,
-                        draggable = T,
-                        right = "300px",
-                        top = "70px",
-                        width = "260px"
-                      ) 
-                    ),
-                    conditionalPanel(
-                      condition = "output.is_dam_df",
-                      absolutePanel(
-                        dam_table,
-                        draggable = T,
-                        right = "20px",
-                        top = "70px",
-                        width = "260px"
+                  nav_panel(
+                    title = "Lake and DAM Location",
+                    card_body(
+                      padding = 0,
+                      leafletOutput("lake_map_leaflet"),
+                      conditionalPanel(
+                        condition = "output.is_lake_df",
+                        absolutePanel(
+                          lake_table,
+                          draggable = T,
+                          right = "300px",
+                          top = "70px",
+                          width = "260px"
+                        )
+                      ),
+                      conditionalPanel(
+                        condition = "output.is_dam_df",
+                        absolutePanel(
+                          dam_table,
+                          draggable = T,
+                          right = "20px",
+                          top = "70px",
+                          width = "260px"
+                        )
                       )
                     )
-                  )),
-                  nav_panel(title = "Lake Outflows", card_body(layout_columns(
-                    !!!numeric_input_ui("lake_par_input", lake_par_df)
-                  )))
+                  ),
+                  nav_panel(title = "Lake Outflows", card_body(
+                    flowLayout(
+                      cellArgs = list(style = "width:auto; margin:0px;"),
+                      !!!numeric_input_ui("lake_par_input", lake_par_df, width = "200px")
+                    )
+                  ))
                 ))
-              ), 
+              ),
               nav_panel(
                 title = "Ground water and river flow",
                 icon = icon("house-flood-water"),
                 h5("Ground water dynamic and time of river flow"),
-                card(
-                  table_edit_ui("ground_water_table")
-                )
+                card(table_edit_ui("ground_water_table"))
               ),
-              # nav_panel(
-              #   title = "Routing Distance",
-              #   icon = icon("route"),
-              #   card_body(
-              #     padding = 0,
-              #     leafletOutput("routing_map_leaflet"),
-              #     absolutePanel(
-              #       top = "70px",
-              #       left = "80px",
-              #       card(
-              #         class = "transparent_bg",
-              #       numericInput(
-              #         "stream_velocity_input",
-              #         markdown("Routing velocity (m sec<sup>-1</sup>)"),
-              #         0.4, 0.01, NA, 0.1,  width = "180px"
-              #       ))
-              #     )
-              #   )
-              # ), 
+              
               nav_panel(
                 title = "3D View",
                 icon = icon("cube"),
-                conditionalPanel(
-                  condition = "!output.is_show_3d",
-                  actionButton("generate_3d_button", "Click here to generate 3D view")
-                ),
-                conditionalPanel(condition = "output.is_show_3d", card_body(
-                  padding = 0, rglwidgetOutput("plot3d", width = "calc(100% - 20px)")
-                ))
+                card_body(padding = 5, plotlyOutput("ws3d_plot"))
+                
+                # conditionalPanel(condition = "!output.is_show_3d", div(
+                #   actionButton("generate_3d_button", "Click here to generate 3D view")
+                # )),
+                # conditionalPanel(condition = "output.is_show_3d", card_body(
+                #   padding = 0, rglwidgetOutput("plot3d", width = "calc(100% - 20px)")
+                # ))
               )
             )
           )
         ),
+        
+        ### SOIL #############################################
+        
         nav_panel(
-          title = span(icon("icicles"), "Soil"),
+          title = "Soil",
+          icon = icon("icicles"),
           card_body(
             class = "subpanel",
             padding = 0,
@@ -482,54 +744,82 @@ ui <-
                 icon = icon("flask"),
                 card_body(
                   padding = 0,
-                  navset_card_pill(
-                    nav_panel(title = "Soil Type", card_body(
-                      padding = 0, leafletOutput("soil_type_leaflet")
-                    )),
-                    nav_panel(title = "Soil Depth", card_body(
-                      padding = 0,
-                      leafletOutput("soil_depth_leaflet"),
-                      absolutePanel(
-                        top = "70px",
-                        left = "80px",
-                        card(
-                          class = "transparent_bg",
-                          numericInput("min_soil_depth_input", "Minimum soil depth (cm)", 20, width = "180px"),
-                          numericInput("max_soil_depth_input", "Maximum soil depth (cm)", 200, width = "180px")
+                  gap = 0,
+                  div(
+                    class = "highlight_label_blue",
+                    radioButtons(
+                      "soil_type_select",
+                      NULL,
+                      list(
+                        "Use Global Soil Database" = "soil_type_global",
+                        "Define the soil types manually" = "soil_type_user"
+                      ),
+                      inline = T
+                    )
+                  ),
+                  navset_card_underline(
+                    id = "soil_type_panel",
+                    nav_panel(
+                      title = "Soil Type List",
+                      card_body(
+                        class = "bordercard",
+                        padding = 10,
+                        conditionalPanel(condition = "input.soil_type_select == 'soil_type_user'", div(div(
+                          actionButton("import_soil_button", "Import from Global Soil Database")
+                        ), div(
+                          table_edit_ui("soil_type_table", is_label = T, vspace = "30px")
+                        ))),
+                        conditionalPanel(
+                          condition = "input.soil_type_select == 'soil_type_global'",
+                          navset_card_tab(
+                            nav_panel(title = "Soil Types", reactableOutput("soil_type_global_table")),
+                            nav_panel(title = "Map of Global Soil Database", card_body(
+                              padding = 0, leafletOutput("soil_map_leaflet")
+                            )),
+                            height = "100%"
+                          )
                         )
                       )
-                    )),
-                    nav_panel(title = "Global Soil Database", card_body(
-                      padding = 0, leafletOutput("soil_map_leaflet")
-                    )),
-                    nav_panel(title = "Slope Map", card_body(
-                      padding = 0, leafletOutput("slope_map_leaflet")
-                    ))
+                    ),
+                    nav_panel(title = "Soil Map", soil_segment_setting_ui)
                   )
                 )
-              ), 
+              ),
               nav_panel(
                 title = "Hydraulic Properties",
                 icon = icon("house-flood-water-circle-arrow-right"),
-                card_body(padding = 0,
-                          actionButton("generate_soil_water_button","Generate soil hydraulic properties"),
-                          navset_card_pill(
-                            nav_panel(title = "Soil Water Map", card_body(
-                              class = "bordercard", 
-                              
-                              navset_card_tab(
-                                nav_panel(title = "Subcatchment Soil Water", uiOutput("soil_water_subcathment_ui")),
-                                nav_panel(title = "Soil Water Map", 
-                                          selectInput("soil_water_select", NULL, soil_water_availability),
-                                          uiOutput("soil_water_content_ui"))
-                                
-                              )
-                            )),
-                            nav_panel(title = "Top Soil (10%)", reactableOutput("soil_hydraulic_top_table")),
-                            nav_panel(title = "Sub Soil (90%)", reactableOutput("soil_hydraulic_sub_table")),
-                            nav_panel(title = "Soil Water Availability", reactableOutput("soil_water_content_table"))
-                            
-                          ))
+                card_body(padding = 0, navset_card_pill(
+                  nav_panel(
+                    title = "Soil Water Map",
+                    card_body(
+                      padding = 10,
+                      class = "bordercard",
+                      flowLayout(
+                        cellArgs = list(style = "width:auto; margin:0"),
+                        style = " margin:0",
+                        actionButton(
+                          "generate_soil_water_button",
+                          "Calculate Soil Water",
+                          icon = icon("droplet")
+                        ),
+                        div(
+                          style = "margin-top:10px",
+                          radioButtons("soil_water_select", NULL, soil_water_availability, inline = T)
+                        )
+                      ),
+                      navset_card_tab(
+                        nav_panel(title = "Subcatchment Soil Water", uiOutput("soil_water_subcathment_ui")),
+                        nav_panel(title = "Soil Water By Land Cover Map", uiOutput("soil_water_content_ui"))
+                      )
+                    )
+                  ),
+                  
+                  nav_panel(
+                    title = "Soil Water Lookup Table",
+                    download_link("soil_water_content_table"),
+                    reactableOutput("soil_water_content_table")
+                  )
+                ))
               ),
               nav_panel(
                 title = "Soil and Plant Water",
@@ -562,6 +852,11 @@ ui <-
                     numeric_input_ui("soilplant_par_input", soilplant_par_df)
                   )
                 )
+              ),
+              nav_panel(
+                title = "Soil Erosion and Sedimentation",
+                icon = icon("hill-rockslide"),
+                p("Erosion and sedimentation parameters")
               )
             )
           )
@@ -643,41 +938,9 @@ ui <-
             
           )
         ),
-        nav_panel(
-          title = "Calibration",
-          icon = icon("location-crosshairs"),
-          layout_column_wrap(
-            width = 1,
-            heights_equal = "row",
-            h4("Variable Check"),
-            p(
-              "Calculated variables with constant rain and evapotranspiration in one iteration"
-            ),
-            layout_columns(
-              numericInput("test_month_input", "Month:", value = 1),
-              numericInput("test_year_input", "Year:", value = 1990),
-              numericInput("test_rain_day_input", "I_DailyRain (mm):", value = 50),
-              numericInput("test_evapotrans_input", "I_Daily_Evapotrans (mm):", value = 2),
-              numericInput("test_iteration_input", "Iteration step #:", value = 2)
-            ),
-            navset_card_pill(
-              nav_panel(title = "All Variables", layout_columns(
-                div(
-                  h5("General variables"),
-                  reactableOutput("general_table_output")
-                ), div(
-                  h5("Cumulative values of land cover and subcatchment variables"),
-                  reactableOutput("cumulative_table_output")
-                )
-              )),
-              nav_panel(title = "Land Cover Variables", reactableOutput("subc_lc_table_output")),
-              nav_panel(title = "Subcatchment Variables", reactableOutput("subc_table_output"))
-            )
-          )
-        ),  
         
         nav_menu(
-          title = NULL,
+          title = "Options",
           icon = icon("ellipsis-vertical"),
           nav_item(
             style = "margin: 0 20px",
@@ -698,54 +961,268 @@ ui <-
       )
     ),
     
-    ### OUTPUT #############################
+    ### SIMULATION #############################
     
-    nav_panel(title = "Simulation",
-              icon = icon("arrow-up"),
-              navset_card_tab(nav_panel(
-                title = "Simulation",
+    nav_panel(
+      title = "Simulation",
+      icon = icon("gears"),
+      navset_card_tab(
+        id = "sim_panel",
+        title =
+          flowLayout(
+            style = "color:#219ebc;font-weight:bold",
+            cellArgs = list(style = "width:auto; margin:0px; height:30px;"),
+            textc("Warm Up Time (days):"),
+            numericInput("I_WarmUpTime", NULL, value = 730, width = "100px"),
+            textc("Simulation Time (days):"),
+            numericInput("ndays_input", NULL, value = 2000, width = "100px"),
+            actionButton(
+              "sim_run_button",
+              "Run",
+              icon = icon("play"),
+              style = "width:100px;height:32px;padding:0px;"
+            )
+          ),
+        nav_panel(
+          title = "Output",
+          icon = icon("arrow-up"),
+          card_body(
+            class = "subpanel",
+            padding = 0,
+            navset_card_underline(
+              nav_panel(title = "Water Balance", card_body(
+                padding = 0, navset_card_pill(
+                  nav_panel(title = "Cumulative Plot", card(
+                    full_screen = T,
+                    plotlyOutput("water_balance_plot", height = "100%")
+                  )),
+                  nav_panel(
+                    title = "Data Table",
+                    download_link("water_balance_table_output"),
+                    reactableOutput("water_balance_table_output")
+                  )
+                )
+              )),
+              nav_panel(
+                title = "Watershed Indicator",
+                card_body(
+                  padding = 0,
+                  gap = 0,
+                  flowLayout(
+                    textc("Starting month of hydrology year:"),
+                    selectInput(
+                      "month_hydro_select",
+                      NULL,
+                      choices = month.name,
+                      width = "150px"
+                    ),
+                    cellArgs = list(style = "width:auto; margin-top:auto; margin-bottom:0;"),
+                    style = "margin:10px 0 0 20px;"
+                  ),
+                  
+                  
+                  
+                  navset_card_pill(
+                    nav_panel(title = "Daily River Flow", card_body(
+                      h5("Hydrograph of Observed and Simulated River Flow "),
+                      uiOutput("river_flow_ui")
+                    )),
+                    nav_panel(title = "Cumulative River Flow", card_body(
+                      h5(
+                        "Double Mass Curve of Cumulative Rainfall VS Cumulative River Flow (Observation and Simulation)"
+                      ),
+                      uiOutput("cum_river_flow_ui")
+                    )),
+                    nav_panel(
+                      title = "Performance Test",
+                      download_link("performance_table_output"),
+                      reactableOutput("performance_table_output")
+                    ),
+                    nav_panel(
+                      title = "Data Table",
+                      download_link("watershed_indicator_table_output"),
+                      reactableOutput("watershed_indicator_table_output")
+                    )
+                  )
+                )
+              ),
+              nav_panel(title = "Buffering Indicator", card_body(
+                padding = 0,
+                gap = 0,
+                navset_card_pill(
+                  nav_panel(title = "Graph", card_body(
+                    h5("Indicators Per Year"),
+                    layout_column_wrap(
+                      width = 0.5,
+                      plotlyOutput("indicator1_plot"),
+                      plotlyOutput("indicator2_plot"),
+                      plotlyOutput("indicator3_plot"),
+                      plotlyOutput("indicator4_plot")
+                    )
+                  )),
+                  nav_panel(title = "Average of Indicators", card_body(
+                    h5("Average of Indicators of Watershed Functions"),
+                    download_link("buff_avg_table_output"),
+                    reactableOutput("buff_avg_table_output")
+                  )),
+                  nav_panel(title = "Average of Water Balance", card_body(
+                    h5("Average of Yearly Water Balance"),
+                    download_link("wb_avg_table_output"),
+                    reactableOutput("wb_avg_table_output")
+                  )),
+                  nav_panel(title = "Yearly Water Balance Data", card_body(
+                    h5("Yearly Water Balance Data"),
+                    download_link("wb_yr_table_output"),
+                    reactableOutput("wb_yr_table_output")
+                  ))
+                )
+              )),
+              nav_panel(title = "HEPP", card_body(
+                padding = 0, navset_card_pill(
+                  nav_panel(title = "Cumulative Plot", plotlyOutput("hepp_plot", height = "100%")),
+                  nav_panel(
+                    title = "Data Table",
+                    download_link("hepp_table_output"),
+                    reactableOutput("hepp_table_output")
+                  )
+                )
+              )),
+              nav_panel(
+                title = "",
+                icon = icon("location-crosshairs"),
+                card_body(
+                  gap = 0,
+                  style = "min-height:175px; margin:0;padding-bottom:0",
+                  h4("Variable Check"),
+                  p(
+                    style = "padding-bottom:20px",
+                    "Calculated variables with constant rain and evapotranspiration in one iteration"
+                  ),
+                  flowLayout(
+                    cellArgs = list(style = "width:auto; margin:0px;"),
+                    numericInput(
+                      "test_month_input",
+                      "Month:",
+                      value = 1,
+                      width = "80"
+                    ),
+                    numericInput(
+                      "test_year_input",
+                      "Year:",
+                      value = 1990,
+                      width = "80"
+                    ),
+                    numericInput(
+                      "test_rain_day_input",
+                      "I_DailyRain (mm):",
+                      value = 50,
+                      width = "180"
+                    ),
+                    numericInput(
+                      "test_evapotrans_input",
+                      "I_Daily_Evapotrans (mm):",
+                      value = 2,
+                      width = "180"
+                    ),
+                    numericInput(
+                      "test_iteration_input",
+                      "Iteration#:",
+                      value = 2,
+                      width = "80"
+                    ),
+                    actionButton("run_calibration_button", "Check!", style =
+                                   "height:80px")
+                  )
+                ),
                 card_body(
                   class = "subpanel",
                   padding = 0,
-                  layout_column_wrap(
-                    width = 1,
-                    heights_equal = "row",
-                    gap = "0px",
-                    card(
-                      fill = F,
-                      layout_columns(
-                        numericInput("I_WarmUpTime", "I_WarmUpTime:", value = 730),
-                        numericInput("ndays_input", "Simulation Time:", value = 50),
-                        actionButton(
-                          "sim_run_button",
-                          "Run",
-                          icon = icon("play"),
-                          style = "height:100%"
-                        )
+                  height = "100%",
+                  navset_card_underline(
+                    nav_panel(title = "All Variables", layout_columns(
+                      div(
+                        h5("General variables"),
+                        download_link("general_table_output"),
+                        reactableOutput("general_table_output")
+                      ),
+                      div(
+                        h5("Cumulative values of land cover and subcatchment variables"),
+                        download_link("cumulative_table_output"),
+                        reactableOutput("cumulative_table_output")
                       )
+                    )),
+                    nav_panel(
+                      title = "Land Cover Variables",
+                      download_link("subc_lc_table_output"),
+                      reactableOutput("subc_lc_table_output")
                     ),
-                    
-                    navset_card_underline(
-                      nav_panel(title = "Water Balance", card_body(
-                        padding = 0, navset_card_pill(
-                          nav_panel(title = "Cumulative Plot", card(
-                            full_screen = T, plotlyOutput("water_balance_plot", height = "100%")
-                          )),
-                          nav_panel(title = "Daily Data", reactableOutput("water_balance_table_output"))
-                        )
-                      )),
-                      nav_panel(title = "Watershed Indicator", reactableOutput("watershed_indicator_table_output")),
-                      nav_panel(title = "HEPP", card_body(
-                        padding = 0, navset_card_pill(
-                          nav_panel(title = "Cumulative Plot", plotlyOutput("hepp_plot", height = "100%")),
-                          nav_panel(title = "Daily Data", reactableOutput("hepp_table_output"))
-                        )
-                      ))
+                    nav_panel(
+                      title = "Subcatchment Variables",
+                      download_link("subc_table_output"),
+                      reactableOutput("subc_table_output")
                     )
-                    
                   )
                 )
-              )))
+              )
+              
+            )
+          )
+        )
+      )
+    ),
+    
+    ### FLOWPER ##########################
+    
+    nav_panel(
+      title = "FlowPer",
+      icon = icon("wave-square"),
+      layout_sidebar(
+        sidebar = sidebar(
+          title = "Fp-Value Table",
+          padding = 10,
+          gap = 0,
+          width = "350px",
+          reactableOutput("flowper_yearly_table")
+        ),
+        layout_column_wrap(
+          width = 0.5,
+          plotlyOutput("fp1_plot"),
+          plotlyOutput("fp2_plot"),
+          plotlyOutput("fp3_plot"),
+          plotlyOutput("fp4_plot")
+        )
+      )
+    ),
+    
+    ### ABOUT ##########################
+    
+    nav_panel(
+      title = "",
+      icon = bs_icon("question-circle", size = "1.3em"),
+      navset_card_tab(
+        id = "info_panel",
+        nav_panel(
+          title = "About",
+          icon = icon("circle-info"),
+          card_body(includeMarkdown("docs/about.md"))
+        ),
+        nav_panel(
+          title = "Tutorial",
+          icon = icon("book"),
+          card_body(includeMarkdown("docs/tutorial.md"))
+        ),
+        nav_panel(
+          title = "References",
+          icon = icon("bookmark"),
+          card_body(includeMarkdown("docs/references.md"))
+        ),
+        nav_panel(
+          title = "Software Library",
+          icon = icon("screwdriver-wrench"),
+          card_body(includeMarkdown("docs/library.md"))
+        )
+      )
+    )
     
     
   )

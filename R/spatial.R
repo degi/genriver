@@ -452,15 +452,19 @@ reclassify_map <- function(map, fromto_df) {
 }
 
 
-crop_raster <- function(raster_map, raster_boundary, extent_fill = NA) {
+crop_raster <- function(raster_map,
+                        raster_boundary,
+                        extent_fill = NA) {
   sf_use_s2(FALSE)
   raster_map <- st_as_stars(raster_map)
-  if(st_crs(raster_map) != st_crs(raster_boundary)) {
-    raster_map <- st_transform(raster_map, crs = st_crs(raster_boundary))
+  if (st_crs(raster_map) != st_crs(raster_boundary)) {
+    suppressMessages(raster_map <- st_transform(raster_map, crs = st_crs(raster_boundary)))
   }
   dim_b <- st_dimensions(raster_boundary)
   dim_m <- st_dimensions(raster_map)
-  if(is.na(dim_m$x$delta) || is.na(dim_m$y$delta) || dim_b$x$delta != dim_m$x$delta || dim_b$y$delta != dim_m$y$delta) {
+  if (is.na(dim_m$x$delta) ||
+      is.na(dim_m$y$delta) ||
+      dim_b$x$delta != dim_m$x$delta || dim_b$y$delta != dim_m$y$delta) {
     # set the same resolution of the input map as the boundary
     bb <- st_bbox(raster_map)
     grid <- st_as_stars(bb, dx = dim_b$x$delta, dy = dim_b$y$delta)
@@ -473,9 +477,7 @@ crop_raster <- function(raster_map, raster_boundary, extent_fill = NA) {
   x_bound[[1]] <- extent_fill
   raster_map <- st_mosaic(x_bound, raster_map)
   # crop the by bounding box
-  suppressMessages(
-    raster_map2 <- st_crop(raster_map, st_bbox(raster_boundary))
-  )
+  suppressMessages(raster_map2 <- st_crop(raster_map, st_bbox(raster_boundary)))
   # grid = st_as_stars(st_bbox(raster_boundary), dx = dim_b$x$delta, dy = dim_b$y$delta)
   grid <- raster_boundary
   grid[[1]] <- 0
@@ -486,6 +488,7 @@ crop_raster <- function(raster_map, raster_boundary, extent_fill = NA) {
 
 
 generate_routing_distance <- function(flow_map, threshold = 20) {
+  flow_map <- st_as_stars(flow_map)
   cs <- cellSize.stars(flow_map)
   wres <- sqrt(cs)
   dmat <- matrix(ncell_dist_factor * wres, nrow = 3, ncol = 3)
@@ -724,8 +727,12 @@ generate_subcathments <- function(direction_map,
   # ps$area <- as.numeric(st_area(ps))/10000 #in ha
   ps$area_m2 <- st_area(ps) #in m2
   ps <- merge(ps, df[c("out_id", "out_lon", "out_lat", "distance")], by = "out_id")
-  ps$ws_id <- ps$out_id
-  return(ps)
+  outlet_columns <- c("out_id",
+                      "out_lon",
+                      "out_lat",
+                      "area_m2",
+                      "distance")
+  return(ps[outlet_columns])
 }
 
 get_map_value <- function(map, lon, lat) {
@@ -735,6 +742,37 @@ get_map_value <- function(map, lon, lat) {
   return(v[[1]])
 }
 
+flowper <- function(df, vcol, group_col) {
+  df$Qt <- df[[vcol]]
+  df$Qt1 <- c(df[[vcol]][-1], NA) 
+  df <- df[df$Qt > 0 & df$Qt1 > 0,]
+  df$Qt_Qt1 <- df$Qt/df$Qt1
+  # calculate thq quartile
+  ds <- aggregate(df$Qt_Qt1, df[group_col], quantile, na.rm = T)
+  ds <- cbind(ds[group_col], as.data.frame(ds[["x"]]))
+  colnames(ds) <- c(group_col, "min", "quartile_1", "med", "quartile_3", "max")
+  ds$range <- ds$quartile_3 - ds$quartile_1
+  ds$above_limit <- ds$quartile_3 + ds$range * 1.5
+  ds$below_limit <- ds$quartile_1 - ds$range * 1.5
+  
+  df <- merge(df, ds[c(group_col, "above_limit")], by = group_col, all.x = T)
+  df$Qtc <- df$Qt
+  df$Qtc1 <- df$Qt1
+  df <- df[!is.na(df$Qt_Qt1), ] 
+  df[df$Qt_Qt1 > df$above_limit, "Qtc"] <- NA
+  df[df$Qt_Qt1 > df$above_limit, "Qtc1"] <- NA
+  df$Qtc1_Qtc <- df$Qtc1/df$Qtc
+  
+  fp <- aggregate(df$Qtc1_Qtc, df[group_col], min, na.rm = T)
+  colnames(fp) <- c(group_col, "flowper")
+  ds <- merge(ds, fp, by = group_col)
+  return(ds)
+}
+
+
+
+
+
 library(mapview)
 library(stars)
 library(terra)
@@ -743,7 +781,7 @@ library(flowdem)
 tes <- function() {
   
   # setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/genriver_sbj")
-  setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/genriver_tes")
+  setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/pars/genriver_tes")
   dem_map <- read_stars("dem_bb.tif")
   dem_ws <- read_stars("dem_ws.tif")
   ws_boundary_sf <- st_read("ws_boundary.shp")
@@ -873,7 +911,16 @@ tes <- function() {
   subc_lc_df <- read.csv("subcatchment_lc.csv")
   lc_map_df <- read.csv("map_list.csv")
   
+  ###########################################
+  ### TEST PLOTLY #########################
   
+  setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/pars/genriver_tes")
+  dem_ws <- read_stars("dem_ws.tif")
+  delta_m <- sqrt(cellSize.stars(dem_ws))
+  plot_ly(z = dem_ws[[1]], colorscale= 'Portland') |> add_surface() |>
+    layout(scene = list(
+      aspectratio = list(x = 1, y = 1, z = 10 / delta_m)
+    ))
   
   
 }

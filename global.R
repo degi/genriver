@@ -10,10 +10,17 @@
 #
 # - data evapot bulanan bisa diestimasi dari suhu aja {Thornthwaite}
 # - debit tampilin bulanan juga , buat cek konsistensi juga
-# 
+#
 # - bagi sub das berdasarkan ordo stream - otomatis
-# 
+#
 ##########################
+
+
+# Nash-Sutcliffe model efficiency (NSE)
+# https://search.r-project.org/CRAN/refmans/ie2misc/html/vnse.html
+
+
+#https://icons.getbootstrap.com/icons/tsunami/
 
 options(rgl.useNULL = TRUE)
 
@@ -56,10 +63,12 @@ install_load(
   
   "lubridate",
   # "shinyjqui",
-  "rgl",
+  # "rgl",
   
-  "DBI",
-  "rayshader"
+  "DBI"
+  # "rayshader"
+  
+  # "shinyWidgets"
 )
 
 library("remotes")
@@ -83,6 +92,7 @@ library("plotly")
 #table UI
 library("reactable")
 library("excelR")
+# library("shinyWidgets")
 #spatial
 library("stars")
 library("terra")
@@ -102,64 +112,121 @@ library("httr")
 library("reshape2")
 library("lubridate")
 # library("shinyjqui")
-library("rgl")
+# library("rgl")
 library("DBI")
 library("flowdem")
-library("rayshader")
+# library("rayshader")
 library("shinycssloaders")
 library("RSQLite")
 
 
-seconds_in_day <- 86400 
+theme_color <- list(
+  primary = "#034464",
+  secondary = "#219ebc",
+  dark = "#404040",
+  success = "#06d6a0",
+  # info = "#fb8500",
+  info = "#219ebc",
+  warning = "#ffb703",
+  danger = "#9a130e",
+  light1 = "#CAEDF6",
+  light2 = "#ECF9FC"
+)
+
+
+
+seconds_in_day <- 86400
 default_wd <- getwd()
 
-input_dialog <- function(title = "",
-                         desc = "",
-                         confirm_id,
-                         confirm_label = "Add",
-                         input_var = NULL,
-                         input_label = NULL,
-                         input_def = NULL,
-                         input_pholder = NULL,
-                         input_type = NULL) {
-  inp <- NULL
-  if (!is.null(input_var)) {
-    blank <- rep("", length(input_var))
-    if (is.null(input_label))
-      input_label <- blank
-    if (is.null(input_def))
-      input_def <- blank
-    if (is.null(input_pholder))
-      input_pholder <- blank
-    if (is.null(input_type))
-      input_type <- blank
-    inp <- mapply(function(v, l, d, p, t) {
-      if (t == "numeric") {
-        paste(numericInput(v, HTML(l), d, width = "100%"))
-      } else if (t == "boolean") {
-        paste(checkboxInput(v, HTML(l), d, width = "100%"))
-      } else {
-        paste(textInput(v, HTML(l), d, width = "100%", p))
-      }
-    },
-    input_var,
-    input_label,
-    input_def,
-    input_pholder,
-    input_type)
-  }
-  names(inp) <- NULL
-  inp <- HTML(inp)
-  showModal(modalDialog(
-    title = title,
-    HTML(paste("<p>", desc, "</p>")),
-    inp,
-    footer = tagList(
-      actionButton("cancel_button_dialog", "Cancel"),
-      actionButton(confirm_id, confirm_label)
-    )
-  ))
+
+map_label <- function(desc = "",
+                      title = "",
+                      footer = "") {
+  title_div <- ""
+  if (title != "")
+    title_div <- paste("<div style='font-size:1.5em;'>",title,
+                       "</div><hr style='margin:2px auto;'>")
+  footer_div <- "</div>"
+  if (footer != "")
+    footer_div <- paste("<hr style='margin:2px auto;'><strong><em>",
+                        footer,
+                        "</em></strong></div>")
+  paste("<div style='font-size:1.2em;'>",
+        title_div,
+        "<div>",
+        desc,
+        "</div>",
+        footer_div) |>
+    lapply(htmltools::HTML)
 }
+
+
+#TODO: create modal dialog only, show later
+# input_dialog <- function(title = "",
+#                          desc = "",
+#                          confirm_id,
+#                          confirm_label = "Confirm",
+#                          input_var = NULL,
+#                          input_label = NULL,
+#                          input_def = NULL,
+#                          input_pholder = NULL,
+#                          input_type = NULL,
+#                          input_info = NULL,
+#                          custom_input = NULL) {
+#   inp <- NULL
+#   if (!is.null(input_var)) {
+#     blank <- rep("", length(input_var))
+#     if (is.null(input_label))
+#       input_label <- blank
+#     if (is.null(input_def))
+#       input_def <- blank
+#     if (is.null(input_pholder))
+#       input_pholder <- blank
+#     if (is.null(input_type))
+#       input_type <- blank
+#     if (is.null(input_info))
+#       input_info <- blank
+#     inp <- mapply(
+#       function(v, l, d, p, t, i) {
+#         if (i != "") {
+#           # label = span(HTML(l), tooltip(icon("info-circle", style = "margin-left:10px;"), i))
+#           label = span(HTML(l), info(i))
+#         } else {
+#           label = HTML(l)
+#         }
+#         if (t == "numeric") {
+#           paste(numericInput(v, label, d, width = "100%"))
+#         } else if (t == "boolean") {
+#           paste(checkboxInput(v, label, d, width = "100%"))
+#         } else {
+#           paste(textInput(v, label, d, width = "100%", p))
+#         }
+#       },
+#       input_var,
+#       input_label,
+#       input_def,
+#       input_pholder,
+#       input_type,
+#       input_info
+#     )
+#   }
+#   names(inp) <- NULL
+#   inp <- HTML(inp)
+#   modalDialog(
+#     title = title,
+#     HTML(paste("<p>", desc, "</p>")),
+#     custom_input,
+#     inp,
+#     footer = tagList(
+#       modalButton("Cancel"),
+#       actionButton(confirm_id, confirm_label)
+#     )
+#   )
+# }
+# 
+# show_input_dialog <- function(...) {
+#   showModal(input_dialog(...))
+# }
 
 show_spinner <- function(label) {
   conditionalPanel(
@@ -218,30 +285,69 @@ opentopo_dataset_df <- data.frame(
   )
 )
 
+dem_fail <- "The DEM download was failed. You may do the following:
+* Make sure the internet connection is stable
+* Try another DEM sources
+* Register to  <a href='https://portal.opentopography.org/' target='_blank'>opentopography.org</a> and get your own API key.
+Make sure the key was correctly copied into 'API key' input"
 
-desc <- list(soil_hydraulic = "At a potential of 0 kPa, soil is in a state of saturation. 
-             At saturation, all soil pores are filled with water, and water typically drains 
-             from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand), 
-             soil is at field capacity. Typically, at field capacity, air is in the macropores, 
-             and water in the micropores. Field capacity is viewed as the optimal condition 
-             for plant growth and microbial activity. At a potential of −1500 kPa, 
-             the soil is at its permanent wilting point, at which plant roots cannot 
+dem_info <- "The DEM data is acquired from <a href='https://opentopography.org/' 
+target='_blank'><b>opentopography.org</b></a>.
+          OpenTopography provides open and free access to DEM dataset.
+          Please visit the website for further info and follow
+          the instruction at <a href='https://opentopography.org/citations' target='_blank'>
+          https://opentopography.org/citations</a> for the <b>citation</b> of using the dataset"
+
+dem_api_info <- "The API key can be obtained when you register at opentopography.org,
+                         or you may leave it empty to try using the default key"
+
+
+
+desc <- list(
+  soil_hydraulic = "At a potential of 0 kPa, soil is in a state of saturation.
+             At saturation, all soil pores are filled with water, and water typically drains
+             from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand),
+             soil is at field capacity. Typically, at field capacity, air is in the macropores,
+             and water in the micropores. Field capacity is viewed as the optimal condition
+             for plant growth and microbial activity. At a potential of −1500 kPa,
+             the soil is at its permanent wilting point, at which plant roots cannot
              extract the water through osmotic diffusion.(https://en.wikipedia.org/wiki/Water_potential)"
-            )
+)
 
-soil_water_types <- list("Soil Saturation" = "soil_saturation",
-                         "Field Capacity" = "field_capacity",
-                         "Permanent Wilting Point" = "permanent_wilting_point")
 
-soil_water_availability <- list("Soil quick flow capacity (mm)" = "soil_quick_flow_capacity",
-                         "Plant available water (mm)" = "plant_available_water",
-                         "Inaccessible water (mm)" = "inaccessible_water")
+hydro_id <- c("SMU_ID",
+              "SHARE",
+              "soil_type",
+              "SOIL",
+              "soil_depth",
+              "TOPDEP",
+              "BOTDEP")
+hydro_prop <- c("SAND",
+                "SILT",
+                "CLAY",
+                "BULK",
+                "REF_BULK",
+                "ORG_CARBON",
+                "CEC_SOIL",
+                "PH_WATER")
+
+soil_water_types <- list(
+  "Soil Saturation" = "soil_saturation",
+  "Field Capacity" = "field_capacity",
+  "Permanent Wilting Point" = "permanent_wilting_point"
+)
+
+soil_water_availability <- list(
+  "Soil quick flow capacity (mm)" = "soil_quick_flow_capacity",
+  "Plant available water (mm)" = "plant_available_water",
+  "Inaccessible water (mm)" = "inaccessible_water"
+)
 
 default_par <- function(df) {
   val <- as.list(df$value)
   names(val) <- df$var
   return(val)
-} 
+}
 
 rain_par_df <- data.frame(
   var = c(
@@ -263,21 +369,21 @@ rain_par_df <- data.frame(
 
 river_par_df <- data.frame(
   var = c(
-    # "river_velocity",
-    "river_tortuocity",
-    "river_dispersal",
-    "river_surfloss"
+    "I_RoutVeloc_m_per_s",
+    "I_Tortuosity",
+    "I_RiverflowDispersalFactor",
+    "I_SurfLossFrac"
   ),
   label = c(
-    # "Routing velocity (m sec<sup>-1</sup>)",
-    "Tortuocity",
+    "Routing velocity (m sec<sup>-1</sup>)",
+    "TortuoSity",
     "River flow dispersal factor",
     "Surface loss fraction"
   ),
-  value = c(0.6, 0.6, 0),
-  min = rep(0, 3),
-  max = rep(1, 3),
-  step = rep(0.1, 3),
+  value = c(0.55, 0.6, 0.6, 0),
+  min = rep(0, 4),
+  max = c(100, rep(1, 3)),
+  step = rep(0.1, 4),
   stringsAsFactors = FALSE
 )
 
@@ -336,14 +442,8 @@ interception_par_df <- data.frame(
 )
 
 waterplant_par_df <- data.frame(
-  var = c(
-    "waterplant_const",
-    "waterplant_soilsat_min_fc_const"
-  ),
-  label = c(
-    "Available water constant",
-    "Soil saturated min FC const"
-  ),
+  var = c("waterplant_const", "waterplant_soilsat_min_fc_const"),
+  label = c("Available water constant", "Soil saturated min FC const"),
   value = c(800, 100),
   min = c(0, 0),
   max = c(1000, 500),
@@ -422,5 +522,3 @@ lake_par_df <- data.frame(
   step = c(rep(0.1, 13)),
   stringsAsFactors = FALSE
 )
-
-

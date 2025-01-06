@@ -1,7 +1,7 @@
-# 
+#
 # - soil zone should be combine elevation effect (include depth)
 # - konsitensi check.. keluarin garis one one
-    # tambah chek konsistensi (nima)
+# tambah chek konsistensi (nima)
 # ouput -> buffering indicator
 
 # setelah warming up. trus balik lagi ke tanggal awal
@@ -10,31 +10,30 @@ server <- function(input, output, session) {
   options(shiny.maxRequestSize = 1000 * 1024 ^ 2)
   data_dir <- paste0(tempdir(), "/data_temp")
   
-  vars <-
-    c("primary",
-      "success",
-      "info",
-      "danger",
-      "warning",
-      "secondary",
-      "dark")
-  color_theme <-
-    as.list(bs_get_variables(bs_current_theme(session), varnames = vars))
-  
   map_color <-
     colorRampPalette(c("darkgreen", "#ffb703", "#9a130e", "#023e8a"))
   grad_color <- colorRampPalette(c("#023047", "#219ebc", "#06d6a0", "#ffb703", "#9a130e"))
+  slope_color <- colorRampPalette(c("#034464", "#06d6a0", "#ffb703"))
   stream_color <-
-    colorRampPalette(c( "#e07a5f", "#7D60E0","#606EE0","#609AE1","#0077b6", "#023e8a", "#03045e"))
-  soil_color <- colorRampPalette(c("#331A05", "#a39171", "#FDEFE1"))
-
-  water_color <-
-    colorRampPalette(c("#D4FEF3", "#219ebc", "#034464"))
+    colorRampPalette(c(
+      "#e07a5f",
+      "#7D60E0",
+      "#606EE0",
+      "#609AE1",
+      "#0077b6",
+      "#023e8a",
+      "#03045e"
+    ))
+  # soil_color <- colorRampPalette(c("#331A05", "#a39171", "#FDEFE1"))
+  soil_color <- colorRampPalette(c("darkgreen", "#ffb703", "#9a130e", "#023e8a"))
+  depth_color <- colorRampPalette(c("#FDEFE1", "#a39171", "#331A05"))
+  water_color <- colorRampPalette(c("#D4FEF3", "#219ebc", "#034464"))
   
   options(reactable.theme = reactableTheme(
     style = list(fontFamily = "Arial, Helvetica, sans-serif", fontSize = "1em")
   ))
   
+  #not working for vector of number
   f_number <- function(v, ...) {
     format(v, big.mark = ",", scientific = F, ...)
   }
@@ -43,24 +42,29 @@ server <- function(input, output, session) {
     sprintf("%0.1f%%", v * 100)
   }
   
+  soil_db_path <- "soil/HWSD2.sqlite"
+  soil_map_path <- "/vsizip/soil/HWSD2_RASTER.zip/HWSD2.bil"
+  
   ### Conditional panel UI logic ###
   
   conditional_id <-
     c(
       "is_dem_map",
       "is_stream_map",
-      "is_stream_render",
       "is_lc_df",
+      "is_subcatchment",
       "is_lake_df",
       "is_dam_df"
     )
   conditional_v <-
-    c("dem_map_stars",
+    c(
+      "dem_map_stars",
       "dem_stream_sf",
-      "stream_render",
       "lc_df",
+      "subcatchment_map_sf",
       "lake_df",
-      "dam_df")
+      "dam_df"
+    )
   
   mapply(function(id, val) {
     output[[id]] <- reactive({
@@ -117,6 +121,7 @@ server <- function(input, output, session) {
   
   v <- reactiveValues(
     genriver_cfg = list(),
+    soil_cfg = list(),
     
     lc_map_stars_list = NULL,
     lc_map_df = NULL,
@@ -130,7 +135,6 @@ server <- function(input, output, session) {
     
     lc_par_df = data.frame(
       lc_id = numeric(),
-      # land_cover = character(),
       I_InterceptClass  = numeric(),
       I_RelDroughtFact  = numeric(),
       I_BD_BDRefVegNow = numeric(),
@@ -163,18 +167,13 @@ server <- function(input, output, session) {
     dem_direction_terra = NULL,
     
     dem_flow_bb_stars = NULL,
-    # dem_contour_bb_sf = NULL,
     dem_stream_bb_sf = NULL,
     
     ws_boundary_sf = NULL,
-    ws_boundary_outlet_cfg = NULL,
     
     dem_flow_stars = NULL,
-    # dem_contour_sf = NULL,
     dem_stream_sf = NULL,
-    stream_render = NULL,
     
-    watershed_df = NULL,
     watershed_map_list = NULL,
     outlet_map_list = NULL,
     
@@ -184,12 +183,23 @@ server <- function(input, output, session) {
     
     watershed_map_stars = NULL,
     subcatchment_map_sf = NULL,
+    subcatchment_desc_df = NULL,
+    outlet_map_sf = NULL,
+    
+    
+    soil_segments_sf = NULL,
+    soil_segments_df = NULL,
+    soil_segments_global_sf = NULL,
+    soil_segments_global_df = NULL,
+    soil_type_df = NULL,
+    
+    
+    
     
     
     slope_class_sf = NULL,
-
-    soil_depth_stars = NULL,
     
+    soil_depth_stars = NULL,
     
     soil_map_stars = NULL,
     soil_map_sf = NULL,
@@ -202,13 +212,10 @@ server <- function(input, output, session) {
     soil_hydraulic_sub_df = NULL,
     soil_water_content_df = NULL,
     
-
     soil_quick_flow_capacity_stars_list = NULL,
     soil_plant_available_water_stars_list = NULL,
     soil_inaccessible_water_stars_list = NULL,
     
-    
-    subc_soil_water_df = NULL,
     subc_lc_df = NULL,
     
     evapotran_df = data.frame(
@@ -251,13 +258,10 @@ server <- function(input, output, session) {
       ws_id = numeric(),
       label = character(),
       stringsAsFactors = FALSE
-    )
+    ),
+    
+    slope_sf = NULL
   )
-  
-
-
-  
-
   
   vd <- reactiveValues(
     lc_evapot_disp_df = data.frame(
@@ -283,25 +287,31 @@ server <- function(input, output, session) {
     rain_month_df = NULL,
     river_df = NULL,
     soil_water_map_stars_list = NULL,
-    lc_df_crop_list = NULL,
+    # lc_df_crop_list = NULL,
     cell_size = NULL,
     
-    
-    # soil_quick_flow_capacity = NULL,
-    # plant_available_water = NULL,
-    # inaccessible_water = NULL,
-    # 
-    
+    subcatchment_map_sf = NULL,
     
     slope_stars = NULL,
     slope_factor_stars = NULL,
     
+    slope_std_stars = NULL,
+    elevation_std_stars = NULL,
+    soil_depth_std_stars = NULL,
+    soil_depth_stars = NULL,
     
-    # subc_lc_trace_df = NULL,
-    # subc_trace_df = NULL,
     calibration_vars = NULL,
     
-    output_df = NULL
+    output_df = NULL,
+    performance_df = NULL,
+    buffering_df = NULL,
+    wb_ind_avg = NULL,
+    wb_avg = NULL,
+    wb_yearly = NULL,
+    
+    soil_type_global_df = NULL,
+    soil_water_content_global_df = NULL,
+    soil_water_content_user_df = NULL,
   )
   
   
@@ -325,24 +335,21 @@ server <- function(input, output, session) {
   check_map_input <- function(map_id) {
     T
   }
+  
   inp_lc_file <- "lc_file_1"
   out_lc_map <- "lc_map_1_out"
   lc_map_id <- "lc_1"
-  
-  observeEvent(input$cancel_button_dialog, {
-    removeModal()
-    is_spinner(F)
-  })
   
   ### INPUT PARAMETES AND DATA
   
   io_file_df <- data.frame(
     var = c(
       "genriver_cfg",
+      "soil_cfg",
+      
       "lc_map_stars_list",
       "lc_df",
       "lc_map_df",
-      "lc_map_crop_stars_list",
       
       "lc_par_df",
       "lc_evapot_df",
@@ -351,35 +358,13 @@ server <- function(input, output, session) {
       "ground_par_df",
       
       "map_boundary_sf",
-      "ws_boundary_outlet_cfg",
-      "watershed_df",
       "ws_boundary_sf",
-      "ws_boundary_stars",
       
       "subcatchment_map_sf",
+      "subcatchment_desc_df",
+      "outlet_map_sf",
       
-      
-      "dem_direction_terra",
-      "dem_flow_stars",
-      # "dem_contour_sf",
-      "dem_stream_sf",
       "dem_map_stars",
-      "dem_crop_stars",
-      "routing_map_stars",
-      "routing_river_sf",
-      "soil_map_sf",
-      "soil_map_stars",
-      "soil_layer_df",
-      "soil_metadata_df",
-      "soil_thetasat_stars",
-      "soil_thetasat_sf",
-      
-      "soil_quick_flow_capacity_stars_list",
-      "soil_plant_available_water_stars_list",
-      "soil_inaccessible_water_stars_list",
-      
-      "subc_soil_water_df",
-      "subc_lc_df",
       
       "evapotran_df",
       "rain_df",
@@ -394,14 +379,18 @@ server <- function(input, output, session) {
       "stream_par_cfg",
       
       "lake_df",
-      "dam_df"
+      "dam_df",
+      
+      "soil_segments_df",
+      "soil_type_df"
     ),
     file = c(
       "genriver",
+      "soil",
+      
       "landcovermap",
       "landcover",
       "map_list",
-      "lcmapcrop",
       
       "lc_props",
       "lc_evapot",
@@ -410,34 +399,13 @@ server <- function(input, output, session) {
       "ground_par",
       
       "map_boundary",
-      "ws_boundary_outlet",
-      "watershed",
       "ws_boundary",
-      "ws_boundary_raster",
       
       "subcatchment",
+      "subcatchment_desc",
+      "outlet",
       
-      "dem_direction",
-      "dem_flow",
-      # "contour",
-      "stream",
       "dem_bb",
-      "dem_ws",
-      "routing_map",
-      "routing_stream",
-      "soil_map",
-      "soil_map",
-      "soil_layer",
-      "soil_metadata",
-      "soil_thetasat",
-      "soil_thetasat",
-      
-      "soil_quick_flow_capacity",
-      "soil_plant_available_water",
-      "soil_inaccessible_water",
-      
-      "subcatchment_soil_water",
-      "subcatchment_lc",
       
       "evapotranspiration",
       "rain",
@@ -452,7 +420,10 @@ server <- function(input, output, session) {
       "stream_par",
       
       "lake",
-      "dam"
+      "dam",
+      
+      "soil_segments",
+      "soil_type"
     )
   )
   
@@ -466,19 +437,16 @@ server <- function(input, output, session) {
     "soilplant_par_cfg"
   )
   
-  
-  
   update_numeric_par <- function() {
-    for(par in numeric_par) {
+    for (par in numeric_par) {
       id <- gsub(suffix(par), "input", par)
       update_numeric_input_ui(id, v[[par]])
     }
     
-    for(var in names(v$stream_par_cfg)) {
+    for (var in names(v$stream_par_cfg)) {
       updateNumericInput(inputId = var, value = v$stream_par_cfg[[var]])
     }
   }
-  
   
   ### LAND COVER INPUT ############################################
   
@@ -489,7 +457,6 @@ server <- function(input, output, session) {
       lc_df <- data.frame("lc_id" = id)
       lc_df$color <- map_color(length(id))
       lc_df$land_cover <- paste0("Landcover_", id)
-      # lc_df$land_use <- paste0("Landuse_", id)
       lc_df$description <- ""
     } else {
       dif <- as.numeric(setdiff(id, lc_df$lc_id))
@@ -498,7 +465,6 @@ server <- function(input, output, session) {
           lc_id = dif,
           color = chart_color[sample.int(length(chart_color), length(dif))],
           land_cover = paste0("Landcover_", dif),
-          # land_use = paste0("Landuse_", dif),
           description = ""
         )
         lc_df <- rbind(lc_df, a_df)
@@ -517,6 +483,7 @@ server <- function(input, output, session) {
   }
   
   observeEvent(input$rfalow_lc_map_inp, {
+    toggle_popover("add_lc_pop", show = F)
     dpaths <- input$rfalow_lc_map_inp$datapath
     fnames <- input$rfalow_lc_map_inp$name
     lc_df <- isolate(v$lc_df)
@@ -540,12 +507,9 @@ server <- function(input, output, session) {
         m <- NULL
         prevm <- isolate(v$lc_map_stars_list)
         ex <- suffix(f, sep = ".")
-        if(ex == "tif") {
+        if (ex == "tif") {
           try(m <- read_stars(f, proxy = T), silent = T)
-        } 
-        # else {
-        #   m <- st_read(f)
-        # }
+        }
         if (!is.null(m) && any(class(m) == "stars")) {
           if (is_zip) {
             ferr <- suffix(f, sep = "/")
@@ -564,26 +528,26 @@ server <- function(input, output, session) {
             v$map_boundary_sf <- ps
           } else {
             suppressMessages({
-            int <- st_intersects(bb, ps, sparse = F)
-            
-            if (!all(int)) {
-              showNotification(paste(
-                "The map file",
-                ferr,
-                "is outside the previous map boundary"
-              ),
-              type = "warning")
-              next
-            }
-
-            v$map_boundary_sf <- st_union(bb, ps) |> st_bbox() |> st_as_sfc()
+              int <- st_intersects(bb, ps, sparse = F)
+              
+              if (!all(int)) {
+                showNotification(
+                  paste(
+                    "The map file",
+                    ferr,
+                    "is outside the previous map boundary"
+                  ),
+                  type = "warning"
+                )
+                next
+              }
+              
+              v$map_boundary_sf <- st_union(bb, ps) |> st_bbox() |> st_as_sfc()
             })
           }
           
           idx <- suffix(prefix(f, "."), "-")
-          suppressWarnings(
-          n <- as.numeric(idx)
-          )
+          suppressWarnings(n <- as.numeric(idx))
           if (is.na(n))
             n <- get_next_map_id()
           id <- paste0("lc_", n)
@@ -626,35 +590,49 @@ server <- function(input, output, session) {
     ms <- v$lc_map_stars_list
     if (is.null(ms))
       return()
-
-    #table
-    lc_df_edited <- update_lc_df_display()
     
     map_df <- isolate(v$lc_map_df)
     name_ms <- names(ms)
     output$lc_map_out <- renderUI({
       layout_column_wrap(width = 1, !!!lapply(name_ms, function(x) {
         card(
-          card_header(
-            div(class = "inline", numericInput(
-              paste0("lc_map_year_", x), "Year:", map_df[map_df$map_id == x, "year"], min = 0
-            )),
-            tooltip_blue(
-              icon("info-circle", style = "font-size:1.7rem;"),
-              paste("File name:", map_df[map_df$map_id == x, "filename"])
+          class = "gray_bg",
+          full_screen = T,
+          card_body(
+            gap = "5px",
+            padding = "10px",
+            div(
+              span(
+                span("Year:", tags$b(textOutput(
+                  paste0("lc_year_label_", x), inline = T
+                ))) |>
+                  
+                  popover(
+                    numericInput(
+                      paste0("lc_map_year_", x),
+                      "Map Acquisition Year:",
+                      map_df[map_df$map_id == x, "year"],
+                      min = 0
+                    )
+                  ),
+                info("Click to edit the map acquisition year")
+                # bs_icon("info-circle") |>
+                #   tooltip_blue("Click to edit the map acquisition year")
+              ) ,
+              actionButton(
+                paste0("delete_map_btn_", x),
+                "Remove",
+                icon = icon("trash-can"),
+                class = "menu_button"
+              ) |> tooltip_blue("Remove the map"),
+              
+              class = "bg_light2 bg_theme d-flex justify-content-between"
             ),
-            actionButton(
-              paste0("delete_map_btn_", x),
-              "",
-              icon = icon("trash-can"),
-              class = "toolbar_button"
-            ) |> tooltip_blue("Remove the map"),
-            
-            class = "bg_light2 bg_theme d-flex justify-content-between"
-          ),
-          card_body(padding = 10, plotOutput(paste0(
-            "lc_map_", x
-          )))
+            card_body(padding = 0, plotOutput(paste0(
+              "lc_map_", x
+            ))) |>
+              tooltip_blue(paste("File name:", map_df[map_df$map_id == x, "filename"]))
+          )
         )
       }))
     })
@@ -662,48 +640,39 @@ server <- function(input, output, session) {
     lapply(name_ms, function(x, ms) {
       output[[paste0("lc_map_", x)]] <- renderPlot({
         df <- v$lc_df
-        plot(
+        # par(bg = "#F6F6F6")
+        suppressMessages(plot(
           ms[[x]],
           col = df$color,
           breaks = c(-1, df$lc_id),
           key.pos = NULL,
           main = NULL
-        )
-      }, height = 400)
-    }, ms)
-    
-    
-    # edit year
-    lapply(name_ms, function(x) {
+        ))
+      }, bg = "transparent")
+      
       observeEvent(input[[paste0("lc_map_year_", x)]], {
         yr <- input[[paste0("lc_map_year_", x)]]
         df <- isolate(v$lc_map_df)
         df[df$map_id == x, "year"] <- yr
         v$lc_map_df <- df
       })
-    })
-    # delete map
-    lapply(name_ms, function(x) {
+      
+      output[[paste0("lc_year_label_", x)]] <- renderText(v$lc_map_df[v$lc_map_df$map_id == x, "year"])
+      
       observeEvent(input[[paste0("delete_map_btn_", x)]], {
         df <- isolate(v$lc_map_df)
         v$lc_map_df <- df[df$map_id != x, ]
         v$lc_map_stars_list[[x]] <- NULL
         print(paste("delete", x))
       })
-    })
+    }, ms)
     
   })
   
   landuse_list <- c("Forest", "Tree-based system", "Agriculture", "Settlement")
-  
-  update_lc_df_display <- function() {
-    table_edit_server("lc_df_table",
-                      isolate(v$lc_df),
-                      col_type = c("numeric", "color", "text", "text"))
-  }
-  
-  lc_df_edited <- update_lc_df_display()
-  
+  lc_df_edited <- table_edit_server("lc_df_table",
+                                    reactive(v$lc_df),
+                                    col_type = c("numeric", "color", "text", "text"))
   observe({
     v$lc_df <- lc_df_edited()
   })
@@ -720,15 +689,16 @@ server <- function(input, output, session) {
   )
   
   
-  lc_par_df_display <- function() {
-    pdf <- isolate(v$lc_par_df)
-    adf <- isolate(v$lc_df)[c("lc_id", "land_cover")]
-    pdf <- merge(adf, pdf, by = "lc_id", all.x = T)
+  lc_par_df_display_ed <- function() {
+    d <- reactive({
+      if (is.null(v$lc_df) || is.null(v$lc_par_df))
+        return()
+      merge(v$lc_df[c("lc_id", "land_cover")], v$lc_par_df[names(v$lc_par_df) != "land_cover"], by = "lc_id", all.x = T)
+    })
     
     table_edit_server(
       "lc_props_table",
-      # isolate(v$lc_par_df),
-      pdf,
+      d,
       col_title = c("lc_id", "Land Cover", lc_prop_cols$label),
       col_type = c("numeric", "character", rep("numeric", 3)),
       col_width = c(50, 150, 250, 250, 100),
@@ -736,22 +706,18 @@ server <- function(input, output, session) {
     )
   }
   
-  lc_par_df_edited <- lc_par_df_display()
+  lc_par_df_edited <- lc_par_df_display_ed()
   
   observe({
     v$lc_par_df <- lc_par_df_edited()
   })
   
-  lc_evapot_df_display <- function() {
-    table_edit_server(
-      "lc_evapot_table",
-      isolate(vd$lc_evapot_disp_df),
-      col_type = c("numeric", "character", rep("numeric", 12)),
-      col_disable = c(T, T, rep(F, 12))
-    )
-  }
-  
-  lc_evapot_df_edited <- lc_evapot_df_display()
+  lc_evapot_df_edited <- table_edit_server(
+    "lc_evapot_table",
+    reactive(vd$lc_evapot_disp_df),
+    col_type = c("numeric", "character", rep("numeric", 12)),
+    col_disable = c(T, T, rep(F, 12))
+  )
   
   observe({
     vd$lc_evapot_disp_df <- lc_evapot_df_edited()
@@ -759,44 +725,37 @@ server <- function(input, output, session) {
   
   
   observe({
-    # if(is.null(v$lc_df)) return()
-    # if(is.null(v$lc_par_df)) return()
-    # v$lc_df$lc_id <- v$lc_df$LC_ID
-    # v$lc_df$LC_ID <- NULL
-    # v$lc_par_df$lc_id <- v$lc_par_df$LC_ID
-    # v$lc_par_df$LC_ID <- NULL
-    
-    
     df <- v$lc_df
-    if (nrow(df) == 0)
+    if (is.null(df) || nrow(df) == 0)
       return()
     
     pdf <- isolate(v$lc_par_df)
     if (is.null(pdf) || nrow(pdf) == 0) {
       pdf <- df[c("lc_id")]
-      pdf[lc_prop_cols$var] <- NA
+      # pdf[lc_prop_cols$var] <- NA
+      pdf[lc_prop_cols$var[1]] <- 3
+      pdf[lc_prop_cols$var[2]] <- 0.6
+      pdf[lc_prop_cols$var[3]] <- 1
     } else {
       adf <- df[c("lc_id")]
       pdf <- merge(adf, pdf[c("lc_id", lc_prop_cols$var)], by = "lc_id", all.x = T)
     }
     v$lc_par_df <- pdf
-    lc_par_df_edited <- lc_par_df_display()
-    
     edf <- isolate(vd$lc_evapot_disp_df)
-    if (nrow(edf) == 0) {
+    if (is.null(edf) || nrow(edf) == 0) {
       edf <- df[c("lc_id", "land_cover")]
-      edf[month_cols$var] <- NA
+      # edf[month_cols$var] <- NA
+      edf[month_cols$var] <- 1
     } else {
       adf <- df[c("lc_id", "land_cover")]
       edf <- merge(adf, edf[c("lc_id", month_cols$var)], by = "lc_id", all.x = T)
     }
     vd$lc_evapot_disp_df <- edf
-    lc_evapot_df_edited <- lc_evapot_df_display()
   })
   
   observe({
     edf <- vd$lc_evapot_disp_df
-    if (nrow(edf) == 0) {
+    if (is.null(edf) || nrow(edf) == 0) {
       v$lc_evapot_df <- NULL
     } else {
       df <- melt(edf[, !(names(edf) %in% c("land_cover"))], id = c("lc_id"))
@@ -820,16 +779,12 @@ server <- function(input, output, session) {
   
   #### Evapotranspiration Monthly Data #########################
   
-  evapot_month_df_display <- function() {
-    table_edit_server(
-      "evapot_monthly_df_table",
-      isolate(v$evapot_month_data_df),
-      col_type = c("numeric", "character", "numeric"),
-      col_disable = c(T, T, F)
-    )
-  }
-  
-  evapot_month_df_edited <- evapot_month_df_display()
+  evapot_month_df_edited <- table_edit_server(
+    "evapot_monthly_df_table",
+    reactive(v$evapot_month_data_df),
+    col_type = c("numeric", "character", "numeric"),
+    col_disable = c(T, T, F)
+  )
   
   observe({
     v$evapot_month_data_df <- evapot_month_df_edited()
@@ -868,7 +823,14 @@ server <- function(input, output, session) {
   api_key_default <- "d4b532fa2c9ef65c2dad6336a851e669"
   
   observeEvent(input$get_dem_open_topo, {
+    print("Get DEM")
     removeModal()
+    thres <- max(input$dem_flow_threshold, 1)
+    v$genriver_cfg$flow_threshold <- thres
+    api_key <- input$user_api_key
+    if (api_key == "") {
+      api_key <- api_key_default
+    }
     bb <- st_bbox(v$map_boundary_sf)
     l <- list(
       demtype = input$demtype_inp,
@@ -877,40 +839,46 @@ server <- function(input, output, session) {
       east = bb[["xmax"]],
       south = bb[["ymin"]],
       north = bb[["ymax"]],
-      API_Key = api_key_default
+      API_Key = api_key
     )
     params <- paste0(paste0(names(l), "=", l), collapse = "&")
     get_topo_url <- paste0(open_topo_url, params)
     # TODO: temporally commented
     showPageSpinner(caption = "Please wait while downloading DEM map")
+    f <- NULL
+    m <- NULL
     res <- GET(get_topo_url)
-    print(res$all_headers)
-    # f <- paste0("www/", "dem", ceiling(runif(1, 1, 99999999)), ".tif")
-    f <- tempfile("dem")
-    writeBin(res$content, f)
-    
+    if (res$status == 401) {
+      showNotification("DEM download failed!", type = "error")
+      showModal(modalDialog(title = "DEM Download Failed", markdown(dem_fail)))
+    } else if (res$status == 200) {
+      showNotification("DEM download is sucsesfull!", type = "message")
+      f <- tempfile("dem")
+      writeBin(res$content, f)
+    }
     # f <- "dem_sbj.tif"
-    try(m <- read_stars(f, proxy = T))
-    if (!is.null(m)) {
-      # write_stars(m, "dem_kalsel.tif")
+    if (!is.null(f)) {
+      try(m <- read_stars(f, proxy = T))
+    }
+    if (!is.null(m) && !is.null(f)) {
       v$dem_map_stars <- m
+      v$genriver_cfg$dem <- l
       m <- st_as_stars(m)
-      val <- sort(unique(as.vector(m[[1]]))) 
+      val <- sort(unique(as.vector(m[[1]])))
       pal <- colorNumeric(grad_color(10), val, na.color = "transparent")
       leafletProxy(active_watershed_lf, session) |>
         clearShapes() |>
         addFeatures(
           v$map_boundary_sf,
           layerId = 'dem_map',
-          color = color_theme$secondary,
+          color = theme_color$secondary,
           label = "Click here to generate the stream path",
           labelOptions = labelOptions(className = "map_label", offset = c(0, -5)),
-          highlightOptions = highlightOptions(weight = 5, color = color_theme$danger),
+          highlightOptions = highlightOptions(weight = 5, color = theme_color$danger),
           fillOpacity = 0,
           opacity = 1,
           weight = 1
         ) |>
-        # addStarsImage(m, colors = pal, opacity = 0.8) |>
         addGeoRaster(
           m,
           colorOptions = colorOptions(palette = grad_color(200)),
@@ -920,17 +888,18 @@ server <- function(input, output, session) {
         addLegend(pal = pal,
                   values = val,
                   title = "Elevation")
+      generate_dem_flow(v$genriver_cfg$flow_threshold)
+      is_set_ws_boundary <<- T
     }
-    is_set_ws_boundary <<- T
-    # file.remove(f)
     hidePageSpinner()
     is_spinner(F)
   })
   
   observe({
     m <- v$dem_map_stars
-    if(is.null(m)) return()
-    vd$cell_size <- cellSize.stars(m, unit = "ha") 
+    if (is.null(m))
+      return()
+    vd$cell_size <- cellSize.stars(m, unit = "ha")
   })
   
   ### WATERSHED BOUNDARY#########################
@@ -940,183 +909,170 @@ server <- function(input, output, session) {
   
   observeEvent(input$set_watershed_btn, {
     removeModal()
-    if (is.null(selected_ws_outlet_id))
-      return()
-    dem_map <- v$dem_map_stars
-    ws <- v$outlet_map_list[[selected_ws_outlet_id]]
-    v$ws_boundary_sf <- ws$map
-    # dim <- st_dimensions(dem_map)
-    # v$ws_boundary_stars <- st_rasterize(v$ws_boundary_sf,
-    #                                     dx = dim$x$delta,
-    #                                     dy = dim$y$delta)
-    v$ws_boundary_stars <- st_rasterize(v$ws_boundary_sf, dem_map, align = T)
-    v$ws_boundary_outlet_cfg <- list(lon = ws$lon,
-                                     lat = ws$lat,
-                                     area_m2 = st_area(ws$map))
-    v$watershed_df <- NULL
-    v$watershed_map_list <- NULL
-    v$outlet_map_list <- NULL
-    #crop stars
-    v$dem_crop_stars <- crop_raster(v$dem_map_stars, v$ws_boundary_stars)
-    # v$dem_contour_sf <- generate_contour_sf(v$dem_crop_stars)
-    v$dem_flow_stars <- crop_raster(v$dem_flow_bb_stars, v$ws_boundary_stars)
-    t <- v$genriver_cfg$flow_threshold
-    v$dem_stream_sf <- generate_stream(v$dem_flow_stars, t)
-    #crop land cover map
-    crop_land_cover_map()
-    #query soil properties
-    generate_soil_map()
-    #generate routing distance
-    # withProgress(message = 'Generate stream routing distance', value = 0, {
-    #   print("generate_routing_dist_map")
-    #   # rm <- generate_routing_dist_map(v$dem_flow_stars, t, progress = setProgress)
-    #   rm <- generate_river_dist(v$dem_flow_stars, t)
-    # })
-    
-    print("generate routing distance")
-    rd_map <- generate_routing_distance(v$dem_flow_stars, t)
-    strm_sf <- generate_rounded_polygon(rd_map["routing"]/1000, 1)
-    v$routing_river_sf <- strm_sf
-    v$routing_map_stars <- rd_map
-    
-    print("generate subcathments")
-    withProgress(message = 'Generate subcathments', value = 0, {
-      subc_map <- generate_subcathments(isolate(v$dem_direction_terra),
-                                       rd_map,
-                                       order = 2, progress = setProgress)
-    })
-    subc_map$rel_area <- subc_map$area_m2/v$ws_boundary_outlet_cfg$area_m2
-    subc_map <- subc_map[order(subc_map$distance),]
-    subc_map$color <-  grad_color(nrow(subc_map))
-    
-    v$subc_lc_df <- NULL
-    v$subcatchment_map_sf <- subc_map
-    plot_subcathment(leafletProxy(active_watershed_lf, session))
-    
-    initialize_ground_par_df() 
-    
-    ws_id_last <<- 0
-    # reset_watershed_panel_display(leafletProxy(active_watershed_lf, session))
+    print("set watershed boundary")
+    sf <- v$outlet_map_sf[1, ]
+    v$outlet_map_sf <- NULL
+    v$ws_boundary_sf <- sf
     is_set_ws_boundary <<- F
   })
   
- 
   
+  observe({
+    sf <- v$ws_boundary_sf
+    dem_map <- v$dem_map_stars
+    if (is.null(sf) ||
+        is.null(dem_map))
+      return()
+    fthres <- isolate(v$genriver_cfg$flow_threshold)
+    if (is.null(isolate(v$dem_flow_bb_stars))) {
+      generate_dem_flow(fthres)
+    }
+    v$ws_boundary_stars <- st_rasterize(st_sf(st_geometry(sf)), dem_map, align = T)
+    print("DEM crop")
+    v$dem_crop_stars <- crop_raster(dem_map, v$ws_boundary_stars)
+    print("DEM flow crop")
+    v$dem_flow_stars <- crop_raster(isolate(v$dem_flow_bb_stars), v$ws_boundary_stars)
+    print("Generate stream map")
+    v$dem_stream_sf <- generate_stream(v$dem_flow_stars, fthres)
+    leafletProxy(active_watershed_lf, session) |> clearMarkers() |>
+      clearControls() |>
+      clearShapes() |>
+      fit_map_view(v$dem_stream_sf) |>
+      plot_watershed_boundary() |>
+      show_stream(v$dem_stream_sf, opacity = 1)
+    isolate(if (is.null(isolate(v$outlet_map_sf))) {
+      is_update_watershed_table(T)
+      process_generate_subcatchment()
+    })
+    #crop land cover map
+    isolate(suppressWarnings(crop_land_cover_map()))
+    #query soil properties
+    isolate(generate_soil_map())
+  })
+  
+  
+  process_generate_subcatchment <- function(min_sub_area = 20) {
+    print("generate routing distance")
+    min_sub_area <- max(min_sub_area, 1)
+    v$genriver_cfg$flow_threshold <- min_sub_area
+    rd_map <- generate_routing_distance(v$dem_flow_stars, min_sub_area)
+    strm_sf <- generate_rounded_polygon(rd_map["routing"] / 1000, 1)
+    v$routing_river_sf <- strm_sf
+    v$routing_map_stars <- rd_map
+    print("generate subcathments")
+    withProgress(message = 'Generate subcathments', value = 0, {
+      subc_map <- generate_subcathments(
+        isolate(v$dem_direction_terra),
+        rd_map,
+        order = 2,
+        min_sub_area = min_sub_area,
+        progress = setProgress
+      )
+    })
+    subc_map$rel_area <- as.numeric(subc_map$area_m2 / v$genriver_cfg$total_area_m2)
+    subc_map <- subc_map[order(subc_map$distance), ]
+    subc_map$color <-  grad_color(nrow(subc_map))
+    subc_map$ws_id <- subc_map$out_id
+    # reset the correlated vars
+    v$subc_lc_df <- NULL
+    v$subcatchment_map_sf <- NULL
+    default_outlet_map_sf(subc_map)
+    v$outlet_map_sf <- subc_map
+    update_subcatchment_outlet()
+  }
+  
+  crop_land_cover_map <- function() {
+    print("crop_land_cover_map")
+    lc_ms <- isolate(v$lc_map_stars_list)
+    if (is.null(lc_ms))
+      return()
+    wsb <- isolate(v$ws_boundary_stars)
+    lc_crop_ms <- list()
+    withProgress(message = 'Cropping land cover maps', value = 0, {
+      ids <- names(lc_ms)
+      p <- 1 / (length(ids) + 1)
+      for (m_id in ids) {
+        incProgress(p)
+        cm <- crop_raster(lc_ms[[m_id]], wsb)
+        lc_crop_ms[[m_id]] <- stars_to_proxy(cm, m_id)
+      }
+    })
+    v$lc_map_crop_stars_list <- lc_crop_ms
+  }
+  
+  output$ws_area <- renderText(f_number(v$genriver_cfg$total_area_m2 / 10000, digits = 5))
+  
+  output$ws_unclassified_area <- renderText({
+    df <- as.data.frame(v$subcatchment_map_sf)
+    a <- v$genriver_cfg$total_area_m2 / 10000 - sum(df[df$ws_id != 999, "area"])
+    f_number(a, digits = 5)
+  })
+  
+  default_outlet_map_sf <- reactiveVal()
   
   #### Calculate land cover area by subcathment ####################
   
-  # observe({
-  #   subc <- v$subcatchment_map_sf
-  #   if (is.null(subc))
-  #     return()
-  #   if(!is.null(v$subc_lc_df))
-  #     return()
-  #   print("Calculate land cover area by subcathment")
-  #   lc_map_list <- v$lc_map_crop_stars_list
-  #   dim <- st_dimensions(lc_map_list[[1]])
-  #   map_ids <- names(lc_map_list)
-  #   ws_id_list <- unique(subc$ws_id)
-  #   df <- NULL
-  #   pinc <- 1 / length(ws_id_list)
-  #   withProgress(message = 'Calculating land cover area by subcatchment', value = 0, {
-  #     suppressMessages(for (ws_id in ws_id_list) {
-  #       incProgress(pinc)
-  #       sc_sf <- subc[subc$ws_id == ws_id,]
-  #       ssf <- sc_sf["ws_id"]
-  #       # ssf_m <- st_rasterize(ssf, dx = dim$x$delta, dy = dim$y$delta)
-  #       ssf_m <- st_rasterize(ssf, lc_map_list[[1]])
-  #       for (map_id in map_ids) {
-  #         lc_sub_map <- crop_raster(lc_map_list[[map_id]], ssf_m)
-  #         lc_df <- as.data.frame(table(lc_sub_map))
-  #         names(lc_df) <- c("lc_id", "area")
-  #         lc_df$area_ratio <- lc_df$area/sum(lc_df$area)
-  #         lc_df$area <- lc_df$area_ratio * sc_sf$area 
-  #         lc_df$map_id <- map_id
-  #         lc_df$ws_id <- ws_id
-  #         if (is.null(df)) {
-  #           df = lc_df
-  #         } else {
-  #           df <- rbind(df, lc_df)
-  #         }
-  #       }
-  #     })
-  #   })
-  #   v$subc_lc_df <- df
-  # })
-  observe({
+  check_subcatchment_map_sf <- function() {
     subc <- v$subcatchment_map_sf
-    if (is.null(subc))
+    if (is.null(subc) || is.null(v$ws_boundary_sf))
       return()
-    if(is.null(v$subc_lc_df))
-      v$subc_lc_df <- calculate_subcatchment_land_cover_area(v$subcatchment_map_sf, v$lc_map_crop_stars_list)
-    
-    if(is.null(v$ground_par_df) || nrow(v$ground_par_df) == 0)
-      initialize_ground_par_df() 
-  })
+    sf999 <- subc[subc$ws_id == 999, ]
+    subc_sf <- subc[subc$ws_id != 999, ]
+    a <- v$genriver_cfg$total_area_m2 / 10000
+    rem_a <- a - sum(subc_sf$area)
+    if (nrow(sf999) == 0 || sf999$area != rem_a) {
+      sf_use_s2(FALSE)
+      suppressMessages({
+        sg <- st_union(st_geometry(subc_sf))
+        g <- st_union(st_difference(st_geometry(v$ws_boundary_sf), sg))
+      })
+      sf <- st_sf(geometry = st_sfc(g))
+      sf$ws_id <- 999
+      sf$color <- "green"
+      sf$area <- rem_a
+      sf$rel_area <- rem_a / a
+      sf$distance <- 0
+      sf$n_outlet <- 0
+      sf$uncheck <- 1
+      sf$label <- "unclassified"
+      v$subcatchment_map_sf <- rbind(subc_sf, sf)
+    }
+  }
   
-  calculate_subcatchment_land_cover_area <- function(subc, lc_map_list){
+  calculate_subcatchment_land_cover_area <- function() {
     print("Calculate land cover area by subcathment")
+    check_subcatchment_map_sf()
+    subc <- v$subcatchment_map_sf
+    lc_map_list <- v$lc_map_crop_stars_list
     lc_ids <- v$lc_df$lc_id
-    # ws_area <- as.numeric(v$ws_boundary_outlet_cfg$area_m2)/10000
-    ws_area_m2 <- as.numeric(v$ws_boundary_outlet_cfg$area_m2)
+    ws_area <- v$genriver_cfg$total_area_m2 / 10000
     lc_m <- st_as_stars(lc_map_list[[1]])
     subc_stars <- st_rasterize(subc["ws_id"], lc_m, align = T)
     subc_stars <- crop_raster(subc_stars, lc_m)
     map_ids <- names(lc_map_list)
     subc_df <- as.data.frame(subc)
+    print("area")
     #TODO: this should be aggregated if it has multiple outlets
-    subc_df$area_m2 <- as.numeric(subc_df$area_m2)
-    subc_df$I_RelArea <- subc_df$area_m2/ws_area_m2
-    subc_df$subc_area <- subc_df$area_m2/10000
-    subc_df <- subc_df[c("ws_id", "subc_area", "I_RelArea")]
+    subc_df$I_RelArea <- subc_df$area / ws_area
+    subc_df <- subc_df[c("ws_id", "area", "I_RelArea")]
     
     subcell_df <- as.data.frame(table(subc_stars))
     names(subcell_df) <- c("ws_id", "ncell_sub")
-    subcell_df <- merge(subcell_df, subc_df[c("ws_id", "subc_area", "I_RelArea")], by = "ws_id")
-    # ws_id_list <- unique(subc_df$ws_id)
-    # df <- NULL
-    # pinc <- 1 / length(ws_id_list)
+    subcell_df <- merge(subcell_df, subc_df[c("ws_id", "area", "I_RelArea")], by = "ws_id")
+    
     pinc <- 1 / length(map_ids)
     all_df <- NULL
+    print("progress")
     withProgress(message = 'Calculating land cover area by subcatchment', value = 0, {
-      # suppressMessages(
-      #   for (ws_id in ws_id_list) {
-      #   incProgress(pinc)
-      #   subc_r <- subc_df[subc_df$ws_id == ws_id,]
-      #   area <- as.numeric(subc_r$area_m2)/10000 # area in ha
-      #   
-      #   I_RelArea <-  area/ws_area
-      #   for (map_id in map_ids) {
-      #     # lc_sub_map <- crop_raster(lc_map_list[[map_id]], ssf_m)
-      #     lc_m <- st_as_stars(lc_map_list[[map_id]])
-      #     lc_sub_map <- lc_m[subc_stars == ws_id]
-      #     lc_df <- as.data.frame(table(lc_sub_map))
-      #     names(lc_df) <- c("lc_id", "area")
-      #     lc_df$area_ratio <- lc_df$area/sum(lc_df$area)
-      #     lc_df$area <- lc_df$area_ratio * area 
-      #     lc_df$subc_area <- area
-      #     lc_df$I_RelArea <- I_RelArea
-      #     lc_df$map_id <- map_id
-      #     lc_df$ws_id <- ws_id
-      #     if (is.null(df)) {
-      #       df = lc_df
-      #     } else {
-      #       df <- rbind(df, lc_df)
-      #     }
-      #   }
-      # })
-      
-      
       for (map_id in map_ids) {
         incProgress(pinc)
         lc_m <- st_as_stars(lc_map_list[[map_id]])
         subc_lc_m <- c(subc_stars, lc_m)
-        names(subc_lc_m) <- c("ws_id", "lc_id") 
+        names(subc_lc_m) <- c("ws_id", "lc_id")
         df <- as.data.frame(table(subc_lc_m))
         names(df) <- c("ws_id", "lc_id", "ncell")
         df$ws_id <- as.integer(levels(df$ws_id))[df$ws_id]
         df$lc_id <- as.integer(levels(df$lc_id))[df$lc_id]
-
         dif <- setdiff(lc_ids, unique(df$lc_id))
         dif_df <- data.frame(
           ws_id = rep(subc_df$ws_id, length(dif)),
@@ -1124,174 +1080,73 @@ server <- function(input, output, session) {
           ncell = 0
         )
         df <- rbind(df, dif_df)
-        
         agg_df <- aggregate(df["ncell"], by = df["ws_id"], sum, na.rm = T)
         names(agg_df) <- c("ws_id", "ncell_sub")
-        # df <- df[df$ncell > 0,]
-        # subcell_df <- as.data.frame(table(subc_stars))
-        # names(subcell_df) <- c("ws_id", "ncell_sub")
-        # subcell_df <- merge(subcell_df, subc_df[c("ws_id", "subc_area", "I_RelArea")], by = "ws_id")
-        # df <- merge(df, subcell_df, by = "ws_id")
         df <- merge(df, agg_df, by = "ws_id")
-        df <- merge(df, subc_df[c("ws_id", "subc_area")], by = "ws_id")
+        df <- merge(df, subc_df[c("ws_id", "area")], by = "ws_id")
         df$area_ratio <- df$ncell / df$ncell_sub
-        df$area <- df$area_ratio * df$subc_area
+        df$area <- df$area_ratio * df$area
         df$map_id <- map_id
-        if(is.null(all_df)) {
+        if (is.null(all_df)) {
           all_df <- df
         } else {
           all_df <- rbind(all_df, df)
         }
       }
-      
     })
     return(all_df)
   }
   
   
-  #### Plot Subcatchment ####################
   
-  plot_subcathment <- function(lf) {
-    sc <- v$subcatchment_map_sf
-    if (is.null(sc))
-      return(lf)
-    label <- map_label(paste(
-      "ID:",
-      sc$ws_id,
-      "<br>Area size:",
-      # f_number(as.numeric(sc$area) / 10000, nsmall = 0),
-      sprintf("%0.1f", sc$area/10000),
-      "ha<br>Routing distance:",
-      sprintf("%0.1f", sc$distance/1000),
-      "km"
-    ),
-    "Sub-Catchment")
-    
-    lf |>
-      clearShapes() |>
-      clearMarkers() |>
-      clearControls() |>
-      fit_map_view(sc) |>
-      plot_watershed_boundary() |>
-      show_stream(v$dem_stream_sf, opacity = 1) |>
-      addFeatures(
-        sc,
-        group = "subcatchment",
-        color = "#000",
-        fillColor = ~ color,
-        fillOpacity = 0.6,
-        opacity = 0.8,
-        weight = 1,
-        label = label,
-        labelOptions = labelOptions(
-          className = "map_label",
-          offset = c(0, -10),
-          direction = "top"
-        ),
-        highlightOptions = highlightOptions(fillOpacity = 0.8, fillColor = "#fb8500")
-      )
-  }
   
-  plot_watershed_boundary <- function(lf, color = color_theme$secondary) {
-    if (is.null(v$ws_boundary_sf)) return(lf) 
-    lf |> addFeatures(
-        v$ws_boundary_sf,
-        layerId = 'ws_boundary',
-        color = color,
-        label = "Watershed area",
-        labelOptions = labelOptions(className = "map_label", offset = c(0, -5)),
-        # highlightOptions = highlightOptions(fillOpacity = 0.8),
-        fillOpacity = 0.4,
-        weight = 0
-        # opacity = 0.4
-      ) 
-    
-  }
   
-
   
-  crop_land_cover_map <- function() {
-    print("crop_land_cover_map")
-    lc_ms <- isolate(v$lc_map_stars_list)
-    if(is.null(lc_ms)) return()
-    wsb <- isolate(v$ws_boundary_stars)
-    lc_crop_ms <- list() 
-    withProgress(message = 'Cropping land cover maps', value = 0, {
-      ids <- names(lc_ms)
-      p <- 1/(length(ids) + 1)
-      for(m_id in ids) {
-        incProgress(p)
-        cm <- crop_raster(lc_ms[[m_id]], wsb)
-        # f <- paste0(tempfile(m_id), ".tif")
-        # write_stars(cm, f)
-        # lc_crop_ms[[m_id]] <- read_stars(f, proxy = T)
-        lc_crop_ms[[m_id]] <- stars_to_proxy(cm, m_id)
-      }
-    })
-    v$lc_map_crop_stars_list <- lc_crop_ms
-  }
+  # observe({
+  #   mlist <- v$lc_map_crop_stars_list
+  #   if(is.null(mlist) || is.null(vd$cell_size)) return()
+  #   ids <- names(mlist)
+  #   dflist <- list()
+  #   for(id in ids) {
+  #     m <- st_as_stars(mlist[[id]])
+  #     df <- as.data.frame(table(m))
+  #     colnames(df) <- c("lc_id", "area")
+  #     df$area <- df$area * vd$cell_size
+  #     dflist[[id]] <- df
+  #   }
+  #   vd$lc_df_crop_list <- dflist
+  # })
   
-  observe({
-    mlist <- v$lc_map_crop_stars_list
-    if(is.null(mlist) || is.null(vd$cell_size)) return()
-    ids <- names(mlist)
-    dflist <- list()
-    for(id in ids) {
-      m <- st_as_stars(mlist[[id]])
-      df <- as.data.frame(table(m))
-      colnames(df) <- c("lc_id", "area")
-      df$area <- df$area * vd$cell_size
-      dflist[[id]] <- df
-    }
-    vd$lc_df_crop_list <- dflist
-  })
-  
-
-  
-  # lcm <- read_stars("Lc1973cr.tif")
-  # m <- st_transform(lcm, crs = st_crs(raster_boundary))
-  # 
-  # m2 <- crop_raster(m, raster_boundary)
-  # plot(m2)
-  # plot(st_crop())
-  # # boundary_sf <- read_sf("b.shp")
-  # # raster_map <- read_stars("ras.tif")
-  # raster_boundary <- read_stars("ws_b.tif")
-  # raster_map <- read_stars("dem_sbj.tif")
-  
-  # m <- read_stars("dem_crop.tif")
-  # 
-  # m <- crop_raster(raster_map, raster_boundary)
-  # 
   ### GENERATE STREAM MAP #########################
   
   is_update_dem <- reactiveVal(T)
   
-  observeEvent(input$process_dem, {
-    toggle_popover("stream_pop1", F)
-    toggle_popover("stream_pop2", F)
-    removeModal()
-    generate_dem_flow()
-  })
+  # observeEvent(input$process_dem, {
+  #   removeModal()
+  #   t <- isolate(input$dem_flow_threshold)
+  #   v$genriver_cfg$flow_threshold <- t
+  #   generate_dem_flow(t)
+  # })
+  #
+  # observe({
+  #   if (is.null(v$dem_map_stars))
+  #     return()
+  #   generate_dem_flow()
+  # })
   
-  generate_dem_flow <- function() {
+  generate_dem_flow <- function(flow_threshold = 20) {
     if (is.null(v$dem_map_stars))
       return()
     withProgress(message = 'Processing DEM', value = 0, {
-      if (is_update_dem()) {
-        is_update_dem(F)
-        v$stream_render <- NULL
-        setProgress(0.1, detail = "Generating contour")
-        # v$dem_contour_bb_sf <- generate_contour_sf(v$dem_map_stars)
-        dem_out <- flowdem(v$dem_map_stars)
-        v$dem_direction_terra <- dem_out$dem_direction_terra
-        v$dem_flow_bb_stars <- dem_out$dem_flow_stars
-      }
+      # if (is_update_dem()) {
+      #   is_update_dem(F)
+      dem_out <- flowdem(v$dem_map_stars)
+      v$dem_direction_terra <- dem_out$dem_direction_terra
+      v$dem_flow_bb_stars <- dem_out$dem_flow_stars
+      # }
       setProgress(0.9, detail = "Generating stream path")
-      t <- isolate(input$dem_flow_threshold)
-      v$genriver_cfg$flow_threshold <- t
       print("DEM -> stream")
-      v$dem_stream_bb_sf <- generate_stream(isolate(v$dem_flow_bb_stars), t)
+      v$dem_stream_bb_sf <- generate_stream(isolate(v$dem_flow_bb_stars), flow_threshold)
       # write_sf(v$dem_stream_bb_sf, "stream.shp")
       setProgress(1, detail = "Done!")
       print("DEM -> done!")
@@ -1301,26 +1156,8 @@ server <- function(input, output, session) {
       clearShapes() |>
       clearImages() |>
       clearControls() |>
-      # show_contour(v$dem_contour_bb_sf) |>
       show_stream(v$dem_stream_bb_sf)
-    
   }
-  
-  # generate_contour_sf <- function(dem, n_legend = 5) {
-  #   dem <- st_as_stars(dem)
-  #   dem_min <- min(dem[[1]], na.rm = T)
-  #   dem_max <- max(dem[[1]], na.rm = T)
-  #   dem_n <- n_legend
-  #   dem_d <- (dem_max - dem_min) / dem_n
-  #   mdem <- (round((dem - dem_min) / dem_d) * dem_d) + dem_min
-  #   pdem <- st_as_sf(mdem,
-  #                    as_points = F,
-  #                    merge = T,
-  #                    connect8 = T)
-  #   ps <- st_transform(pdem, crs = 4326)
-  #   ps <- st_sf(geometry = ps)
-  #   return(ps)
-  # }
   
   #### FLOWDEM process ###########################################
   # https://github.com/KennethTM/flowdem
@@ -1352,31 +1189,43 @@ server <- function(input, output, session) {
     ))
   }
   
-  ### WATERSHED LEAFLET ########################################
+  ### WATERSHED MAP LEAFLET ########################################
   
   is_watershed_leaflet_base <- F
   base_tiles <- "Esri.WorldTopoMap"
   active_watershed_lf <- "watershed_map_leaflet"
+  update_subcatchment <- reactiveVal(F)
   
   base_leaflet <- function() {
     leaflet(options = leafletOptions(attributionControl = FALSE)) |>
       addProviderTiles(base_tiles)
   }
   
+  repaint_subcatchment_map <- function() {
+    leafletProxy(active_watershed_lf, session) |>
+      clearMarkers() |>
+      clearControls() |>
+      clearShapes() |>
+      fit_map_view(isolate(v$dem_stream_sf)) |>
+      addHomeButton(
+        ext = st_bbox(v$dem_stream_sf),
+        group = "Home",
+        position = "topleft"
+      ) |>
+      plot_watershed_boundary() |>
+      show_stream(isolate(v$dem_stream_sf), opacity = 1) |>
+      plot_subcatchment()
+  }
+  
   output$watershed_map_leaflet <- renderLeaflet({
     lf <- base_leaflet()
     is_watershed_leaflet_base <<- T
-    
-    # if (isolate(is_repaint_watershed())) {
-    #   lf <- reset_watershed_panel_display(lf)
-    #   is_repaint_watershed(F)
-    # }
     
     if (!is.null(v$map_boundary_sf) && is.null(v$dem_stream_sf)) {
       lf <- lf |> addFeatures(
         v$map_boundary_sf,
         layerId = 'dem_boundary',
-        color = color_theme$secondary,
+        color = theme_color$secondary,
         label = "Click here to add DEM map",
         labelOptions = labelOptions(className = "map_label", offset = c(0, -5)),
         highlightOptions = highlightOptions(fillOpacity = 0.8),
@@ -1385,72 +1234,135 @@ server <- function(input, output, session) {
       ) |>
         addHomeButton(
           ext = st_bbox(v$map_boundary_sf),
-          group = "Watershed Area",
+          group = "Home",
           position = "topleft"
         )
-    } else if(!is.null(v$subcatchment_map_sf)) {
-      lf <- plot_subcathment(lf)
     }
     return(lf)
   })
   
-  reset_watershed_panel_display <- function(lf) {
-    if (is.null(v$map_boundary_sf))
+  plot_subcatchment <- function(lf,
+                                ws_id = NULL,
+                                color = NULL,
+                                fillOpacity = 0.6) {
+    sf <- v$subcatchment_map_sf
+    if (is.null(sf))
       return(lf)
-    print("reset watershed panel")
-    lf <- lf |>
-      clearShapes() |>
-      clearMarkers() |>
-      clearControls() |>
-      # show_contour(v$dem_contour_sf) |>
-      show_contour(v$dem_crop_stars) |>
-      show_stream(v$dem_stream_sf) |>
-      repaint_all_watershed_map() |>
-      repaint_outlet() |>
-      fit_map_view(v$map_boundary_sf) |>
-      addHomeButton(
-        ext = st_bbox(v$map_boundary_sf),
-        group = "Watershed Area",
-        position = "topleft"
+    sf <- sf[sf$ws_id != 999, ]
+    if (!is.null(ws_id)) {
+      layer_id <- paste0("ws_", ws_id)
+      lf <- lf |> removeShape(layer_id)
+      sf <- sf[sf$ws_id %in% ws_id, ]
+    }
+    if (!is.null(color)) {
+      sf$color <- color
+    }
+    label <- map_label(
+      paste(
+        "ID:",
+        sf$ws_id,
+        "<br>Area size:",
+        sprintf("%0.1f", sf$area),
+        "ha<br>Routing distance:",
+        sprintf("%0.1f", sf$distance),
+        "km"
+      ),
+      "Sub-Catchment"
+    )
+    sf$layer_id <- paste0("ws_", sf$ws_id)
+    lf |>
+      addFeatures(
+        sf,
+        group = "subcatchment",
+        layerId = ~ layer_id,
+        color = "#000",
+        fillColor = ~ color,
+        fillOpacity = fillOpacity,
+        opacity = 0.8,
+        weight = 1,
+        label = label,
+        labelOptions = labelOptions(
+          className = "map_label",
+          offset = c(0, -10),
+          direction = "top"
+        ),
+        highlightOptions = highlightOptions(fillOpacity = 0.8, fillColor = "#fb8500")
       )
-    return(lf)
   }
   
-  ### WATERSHED map panel click #########################
+  plot_watershed_boundary <- function(lf,
+                                      color = theme_color$secondary,
+                                      opacity = 0.2) {
+    if (is.null(v$ws_boundary_sf))
+      return(lf)
+    lf |> addFeatures(
+      v$ws_boundary_sf,
+      layerId = 'ws_boundary',
+      color = color,
+      label = "Watershed area",
+      labelOptions = labelOptions(className = "map_label", offset = c(0, -5)),
+      fillOpacity = opacity,
+      stroke = F
+    )
+  }
+  
+  ### WATERSHED map click #########################
   
   observeEvent(input$watershed_map_leaflet_shape_click, {
     click_inp <- input$watershed_map_leaflet_shape_click
+    # print(click_inp)
     if (!is.null(click_inp$id)) {
       if (click_inp$id == "dem_boundary") {
         is_spinner(T)
         inplist <- as.list(opentopo_dataset_df$var)
         names(inplist) <- opentopo_dataset_df$label
-        showModal(modalDialog(
-          title = "Add DEM Map",
-          selectInput(
+        
+        show_input_dialog(
+          title = "Get Digital Elevation Model (DEM) Data",
+          desc = dem_info,
+          confirm_id = "get_dem_open_topo",
+          confirm_label = "Get DEM Data",
+          custom_input = selectInput(
             "demtype_inp",
-            "Choose the dataset:",
+            "Choose the dataset",
             inplist,
             selected = "SRTMGL1",
             width = "100%"
           ),
-          footer = tagList(
-            actionButton("cancel_button_dialog", "Cancel"),
-            actionButton("get_dem_open_topo", "Get DEM")
-          )
-        ))
-      } else if (click_inp$id == "dem_map") {
-        input_dialog(
-          title = "Generate stream flows",
-          confirm_id = "process_dem",
-          confirm_label = "Generate",
-          input_var = c("dem_flow_threshold"),
+          input_var = c("user_api_key", "dem_flow_threshold"),
           input_label = c(
-            "Minimum watershed area coverage (ha)"
+            "OpenTopography API key",
+            "Minimum contributing area of delineated streams (ha)"
           ),
-          input_def = c(20),
-          input_type = c("numeric")
+          input_def = c(NA, 50),
+          input_type = c("character", "numeric"),
+          input_info = c(dem_api_info, "")
         )
+      } else {
+        if (is_set_ws_boundary) {
+          show_input_dialog(
+            "Watershed Boundary",
+            "Set this subcathment area as watershed boundary?",
+            "set_watershed_btn",
+            "Yes"
+          )
+          return()
+        }
+        ws_df <- v$subcatchment_map_sf
+        ws_id <- as.numeric(suffix(click_inp$id))
+        s <- which(ws_df$ws_id == ws_id)
+        state <- req(getReactableState("watershed_list"))
+        rows <- as.vector(state$selected)
+        if (ws_id %in% selected_ws_ids) {
+          selected <- rows[rows != s]
+        } else {
+          selected <- c(s, rows)
+        }
+        ws_df$uncheck <- 1
+        ws_df[selected, "uncheck"] <- 0
+        updateReactable("watershed_list",
+                        selected = selected,
+                        data = ws_df)
       }
     }
     if (!is.null(click_inp$group)) {
@@ -1458,85 +1370,36 @@ server <- function(input, output, session) {
         active_watershed_lf <<- "watershed_map_leaflet"
         leafletProxy(active_watershed_lf, session) |>
           add_outlet_dialog(click_inp$lng, click_inp$lat)
-      } else if (click_inp$group == "watershed") {
-        if (is_set_ws_boundary) {
-          df <- isolate(v$watershed_df)
-          selected_ws_outlet_id <<- df[df$ws_id == click_inp$id, "out_id"]
-          input_dialog(
-            "Watershed Boundary",
-            "Set this subcathment area as watershed boundary?",
-            "set_watershed_btn",
-            "Yes"
-          )
-        }
       }
     }
   })
   
-  observeEvent(input$watershed_map_leaflet_marker_click, {
-    click_inp <- input$watershed_map_leaflet_marker_click
-    if (!is.null(click_inp$group)) {
-      if (click_inp$group == "outlet") {
-        delete_outlet_dialog(click_inp$id)
-      }
-    }
-  })
-  
-  
-  
-  show_contour <- function(lf, m) {
-    # if (is.null(contour_f))
-    #   return(lf)
-    # dem <- contour_f
-    # names(dem) <- c("val", "geometry")
-    # col_list <- data.frame(val = sort(unique(dem$val)))
-    # col_list$color <- terrain.colors(nrow(col_list))
-    # dem <- merge(dem, col_list, by = "val")
-    # print("* add contour")
-    # lf <- lf |>
-    #   addFeatures(
-    #     dem,
-    #     stroke = F,
-    #     fillColor = ~ color,
-    #     fillOpacity = 0.2,
-    #     label = map_label("Watershed area"),
-    #     labelOptions = labelOptions(className = "map_label", offset = c(0, -5))
-    #   ) |>
-    #   fit_map_view(dem)
-    
-    lf <- lf |> addGeoRaster(
-      m,
-      colorOptions = colorOptions(palette = grad_color(200)),
-      opacity = 0.5,
-      layerId = 'dem_crop_map'
-    ) |> fit_map_view(m)
-    return(lf)
-  }
-  
-  map_label <- function(desc = "",
-                        title = "",
-                        footer = "") {
-    title_div <- ""
-    if (title != "")
-      title_div <- paste("<strong>",
-                         title,
-                         "</strong><hr style='margin:2px auto;'>")
-    footer_div <- "</div>"
-    if (footer != "")
-      footer_div <- paste("<hr style='margin:2px auto;'><strong><em>", footer, "</em></strong></div>")
-    paste("<div style='font-size:1.2em;'>",
-          title_div,
-          "<div>",
-          desc,
-          "</div>",
-          footer_div) |>
-      lapply(htmltools::HTML)
-  }
+  # map_label <- function(desc = "",
+  #                       title = "",
+  #                       footer = "") {
+  #   title_div <- ""
+  #   if (title != "")
+  #     title_div <- paste(title,
+  #                        "<hr style='margin:2px auto;font-size:1.5em;'>")
+  #   footer_div <- "</div>"
+  #   if (footer != "")
+  #     footer_div <- paste("<hr style='margin:2px auto;'><strong><em>",
+  #                         footer,
+  #                         "</em></strong></div>")
+  #   paste("<div style='font-size:1.2em;'>",
+  #         title_div,
+  #         "<div>",
+  #         desc,
+  #         "</div>",
+  #         footer_div) |>
+  #     lapply(htmltools::HTML)
+  # }
   
   show_stream <- function(lf,
                           stream_f,
                           is_show_label = T,
-                          opacity = 0.8, group = "stream") {
+                          opacity = 0.8,
+                          group = "stream") {
     m <- stream_f
     if (is.null(m)) {
       return(lf)
@@ -1551,9 +1414,13 @@ server <- function(input, output, session) {
     m <- merge(m, s_list, by = "val")
     if (is_show_label) {
       labels <- map_label(
-        paste("Watershed contributing area: &plusmn;", f_number(m$val, nsmall = 0), "ha"),
+        paste(
+          "Watershed contributing area: &plusmn;",
+          f_number(m$val, nsmall = 0),
+          "ha"
+        ),
         "Stream Path",
-        "* Click here to add the outlet"
+        "* Click here to add a stream outlet"
       )
       
       #stream path
@@ -1595,10 +1462,6 @@ server <- function(input, output, session) {
     return(lf)
   }
   
-  
-  
-  ### ADD OUTLET AND SUBCATCHMENT AREA #########################
-  
   add_outlet_dialog <- function(lf, lon, lat) {
     selected_point[["lon"]] <<- lon
     selected_point[["lat"]] <<- lat
@@ -1617,14 +1480,14 @@ server <- function(input, output, session) {
       )
     showModal(modalDialog(
       title = span(icon("droplet"), "Subcathment outlet"),
-      h5("The selected location is:"),
+      h6("The selected location is:"),
       p(tags$b(
         "Lon:",
         f_number(lon, nsmall = 5),
         "Lat:",
         f_number(lat, nsmall = 5)
       )),
-      h4("Add subcatchment outlet here?"),
+      h5("Add subcatchment outlet here?"),
       footer = tagList(
         actionButton("outlet_cancel", "Cancel"),
         actionButton("outlet_add", "Add", icon = icon("plus"))
@@ -1633,8 +1496,6 @@ server <- function(input, output, session) {
     return(lf)
   }
   
-
-  
   observeEvent(input$outlet_cancel, {
     removeModal()
     leafletProxy(active_watershed_lf, session) |> removeMarker("selected_point")
@@ -1642,8 +1503,8 @@ server <- function(input, output, session) {
   
   observeEvent(input$outlet_add, {
     removeModal()
-    leafletProxy(active_watershed_lf, session) |> removeMarker("selected_point") |>
-      add_outlet(selected_point$lon, selected_point$lat)
+    leafletProxy(active_watershed_lf, session) |> removeMarker("selected_point")
+    suppressMessages(add_outlet(selected_point$lon, selected_point$lat))
   })
   
   outlet_radius <- 10
@@ -1659,546 +1520,444 @@ server <- function(input, output, session) {
       add_outlet_dialog(o$lng, o$lat)
   })
   
-  ws_id_last <- 0
-  
-  add_outlet <- function(lf, lon, lat) {
-    id <- ws_id_last + 1
-    ws_id_last <<- id
-    
-    print(paste("Watershed -> outlet", id))
+  add_outlet <- function(lon, lat) {
+    print(paste("add outlet (lon, lat):", lon, lat))
     m <- generate_watershed(isolate(v$dem_direction_terra), lon, lat)
-    
-    # #create outlet shape
-    # pt.df   <- data.frame(pt = 1, x = lon, y = lat)
-    # p   <- st_as_sf(pt.df, coords = c("x", "y"))
-    # st_crs(p) <- 4326
-    # p <- st_transform(p, crs = 7801)
-    # circle <-  st_buffer(p, outlet_radius)
-    # circle <- st_transform(circle, crs = 4326)
-    # print("Watershed -> generate")
-    # #generate watershed
-    # dem_dir <- isolate(v$dem_direction_terra)
-    # ws <- watershed(dem_dir, circle)
-    # m <- st_as_stars(ws)
-    ps <- st_union(st_as_sf(
-      m,
-      as_points = F,
-      merge = T,
-      connect8 = T
-    ))
+    suppressMessages({
+      ps <- st_union(st_as_sf(
+        m,
+        as_points = F,
+        merge = T,
+        connect8 = T
+      ))
+    })
     ps <- st_transform(ps, crs = 4326)
-    ps <- st_sf(geometry = ps)
     area_list <- as.numeric(st_area(ps))
     if (length(area_list) == 0 || area_list == 0) {
       showModal(modalDialog(
-        title = span(icon("circle-exclamation"), "Outlet point error"),
+        title = span(icon("circle-exclamation"), "Outlet Point Error"),
         tags$li("Make sure the point location is on the stream path"),
         tags$li("Zoom in the map to get accurate position")
       ))
       leafletProxy(active_watershed_lf, session) |> removeMarker("selected_point")
       return()
     }
-    #show and list the valid watershed
-    ws_id <- ws_id(id)
-    out_id <- out_id(id)
-    area <- sum(as.vector(area_list)) / 10000 #convert area m2 to ha
-    df <- data.frame(ws_id = ws_id)
-    df$color <- chart_color[id]
-    df$area <- area
-    df$out_id <- out_id
-    df$out_lon <- lon
-    df$out_lat <- lat
-    ws_df <- isolate(v$watershed_df)
-    if (is.null(ws_df)) {
-      ws_df <- df
-    } else {
-      ws_df <- rbind(ws_df, df)
+    new_subcatchment <<- list("shape" = ps,
+                              "lon" = lon,
+                              "lat" = lat)
+    ws_sf <- isolate(v$subcatchment_map_sf)
+    if (is.null(ws_sf)) {
+      confirm_add_subcacthment()
+      return()
     }
-    v$watershed_df <- ws_df
-    # watershed list
-    if (is.null(v$watershed_map_list))
-      v$watershed_map_list <- list()
-    v$watershed_map_list[[ws_id]] <- ps
-    # outlet list
-    if (is.null(v$outlet_map_list))
-      v$outlet_map_list <- list()
-    v$outlet_map_list[[out_id]] <- list("lon" = lon,
-                                        "lat" = lat,
-                                        "map" = ps)
-    #paint the watershed
-    paint_watershed_map(lf, ws_id)
-    paint_outlet(lf, out_id)
-    print(paste("Watershed -> done!"))
-    return(lf)
-  }
-  
-
-  
-  get_watershed_color <- function(ws_id) {
-    df <- isolate(v$watershed_df)
-    return(df[df$ws_id == ws_id, "color"][1])
-  }
-  
-  get_watershed_label <- function(ws_id) {
-    return(paste("Subcathment", ws_id))
-  }
-  
-  get_outlet_color <- function(out_id) {
-    df <- isolate(v$watershed_df)
-    return(df[df$out_id == out_id, "color"][1])
-  }
-  
-  get_outlet_label <- function(out_id) {
-    return(paste("Outlet", out_id))
-  }
-  
-  paint_watershed_map <- function(lf, ws_id) {
-    m <- isolate(v$watershed_map_list[[ws_id]])
-    df <- isolate(v$watershed_df)
-    a <- sum(df[df$ws_id == ws_id, "area"])
-    label <- map_label(paste(
-      "ID:",
-      ws_id,
-      "<br>",
-      "Area size:",
-      f_number(a, digits = 5), "ha"
-    ),
-    "Subcatchment Area")
-    lf <- lf |> removeShape(ws_id) |>
-      addFeatures(
-        m,
-        group = "watershed",
-        color = get_watershed_color(ws_id),
-        fillOpacity = 0.4,
-        opacity = 0.8,
-        weight = 3,
-        layerId = ws_id,
-        label = label,
-        labelOptions = labelOptions(className = "map_label", offset = c(0, -5)),
-        highlightOptions = highlightOptions(fillOpacity = 0.8)
+    ws_sf <- ws_sf[ws_sf$ws_id != 999, ]
+    suppressMessages({
+      ints <- unlist(st_intersects(ps, ws_sf))
+      toc <- unlist(st_touches(ps, ws_sf))
+    })
+    overlapped_subc <<- sort(ws_sf$ws_id[ints[!ints %in% toc]])
+    
+    if (length(overlapped_subc) > 0) {
+      ids <- paste(as.vector(overlapped_subc), collapse = ", ")
+      show_input_dialog(
+        title = span(icon("circle-exclamation"), "Sub-Catchment Overlaps"),
+        desc = div(
+          div(
+            "The newly added sub-catchment area overlaps with sub-catchments (ID):",
+            tags$b(ids)
+          ),
+          h5("Replace the overlapped sub-catchment?", style = "margin-top:20px")
+        ),
+        confirm_id = "confirm_replace_subcathment"
       )
-    return(lf)
-  }
-  
-  is_repaint_watershed <- reactiveVal(F)
-  
-  repaint_all_watershed_map <- function(lf) {
-    l <- isolate(v$watershed_map_list)
-    if (is.null(l))
-      return(lf)
-    ws_ids <- names(l)
-    for (ws_id in ws_ids) {
-      lf <- paint_watershed_map(lf, ws_id)
+      leafletProxy(active_watershed_lf, session) |> removeMarker("selected_point")
+    } else {
+      confirm_add_subcacthment()
     }
-    return(lf)
   }
+  
+  overlapped_subc <- c()
+  new_subcatchment <- NULL
+  
+  observeEvent(input$confirm_replace_subcathment, {
+    removeModal()
+    ws_sf <- isolate(v$subcatchment_map_sf)
+    ws_sf <- ws_sf[!ws_sf$ws_id %in% overlapped_subc, ]
+    v$subcatchment_map_sf <- ws_sf
+    layer_id <- paste0("ws_", overlapped_subc)
+    leafletProxy(active_watershed_lf, session) |> removeShape(layer_id)
+    confirm_add_subcacthment()
+  })
+  
+  confirm_add_subcacthment <- function() {
+    df <- st_sf(geometry = new_subcatchment$shape)
+    area_list <- as.numeric(st_area(df))
+    id <- 1
+    ws_sf <- isolate(v$outlet_map_sf)
+    if (!is.null(ws_sf) && !is_set_ws_boundary) {
+      id <- max(ws_sf$out_id) + 1
+    }
+    df$ws_id <- id
+    df$color <- get_color(id)
+    df$area_m2 <- sum(as.vector(area_list))
+    df$out_id <- id
+    df$out_lon <- new_subcatchment$lon
+    df$out_lat <- new_subcatchment$lat
+    # TODO: temp
+    df$rel_area <- 0
+    df$distance <- 0
+    
+    df$area <- as.numeric(df$area_m2) / 10000 # m2 to ha
+    df$n_outlet <- 1
+    df$uncheck <- 1
+    df$label <- paste("Subc", id)
+    
+    if (is.null(ws_sf) || is_set_ws_boundary) {
+      ws_sf <- df[outlet_columns]
+    } else {
+      ws_sf <- rbind(ws_sf, df[outlet_columns])
+    }
+    
+    v$outlet_map_sf <- ws_sf
+    if (is_set_ws_boundary) {
+      v$subcatchment_map_sf <- df[subcathment_columns]
+      v$genriver_cfg$total_area_m2 <- df$area_m2
+    } else {
+      v$subcatchment_map_sf <- rbind(v$subcatchment_map_sf, df[subcathment_columns])
+    }
+    plot_subcatchment(leafletProxy(active_watershed_lf, session), id)
+  }
+  
+  subcathment_columns <- c("ws_id",
+                           "color",
+                           "area",
+                           "rel_area",
+                           "distance",
+                           "n_outlet",
+                           "uncheck",
+                           "label")
+  outlet_columns <- c("out_id",
+                      "out_lon",
+                      "out_lat",
+                      "area_m2",
+                      "rel_area",
+                      "distance",
+                      "ws_id",
+                      "color")
+  
   
   paint_outlet <- function(lf, out_id) {
-    m <- isolate(v$outlet_map_list[[out_id]])
-    if (is.null(m))
-      return()
-    df <- isolate(v$watershed_df)
-    a <- sum(df[df$out_id == out_id, "area"])
+    sf <- isolate(v$outlet_map_sf)
+    if (is.null(sf))
+      return(lf)
+    sf <- sf[sf$out_id %in% out_id, ]
     label <- map_label(
       paste(
         "ID:",
-        out_id,
-        "<br>",
-        "Subcatchment area:",
-        f_number(a, digits = 5), "ha"
+        sf$out_id,
+        "<br>Lon:",
+        f_number(sf$out_lon, digits = 8),
+        "<br>Lat:",
+        f_number(sf$out_lat, digits = 8),
+        "<br>Contributed Area:",
+        f_number(sf$area_m2 / 10000, digits = 3),
+        "ha"
       ),
-      "Outlet Point",
-      "* Click to remove this outlet"
+      "Outlet Point"
     )
     lf <- lf |> removeMarker(out_id) |>
       addAwesomeMarkers(
-        m$lon,
-        m$lat,
+        sf$out_lon,
+        sf$out_lat,
         label = label,
         labelOptions = labelOptions(className = "map_label", offset = c(0, -5)),
-        icon = awesomeIcons("tint", iconColor = get_outlet_color(out_id)),
-        layerId = out_id,
+        icon = awesomeIcons(
+          "tint",
+          markerColor = "pink",
+          iconColor = theme_color$danger
+        ),
+        layerId = paste0("out_", out_id),
         group = "outlet"
       )
     return(lf)
   }
   
-  repaint_outlet <- function(lf) {
-    l <- isolate(v$outlet_map_list)
-    if (is.null(l))
-      return(lf)
-    ou_ids <- names(l)
-    for (ou_id in ou_ids) {
-      lf <- paint_outlet(lf, ou_id)
+  ### WATERSHED TABLE #########################
+  
+  is_update_watershed_table <- reactiveVal(F)
+  
+  update_watershed_table <- function() {
+    print("upddate table")
+    default_outlet_map_sf(v$outlet_map_sf)
+    is_update_watershed_table(T)
+    update_subcatchment_outlet()
+  }
+  
+  update_subcatchment_outlet <- function() {
+    print("upddate outlet")
+    
+    sf <- v$outlet_map_sf
+    if (is.null(sf) || nrow(sf) == 0) {
+      v$subcatchment_map_sf <- NULL
+    } else {
+      sf$area <- as.numeric(sf$area_m2) / 10000 # m2 to ha
+      sf$distance <- as.numeric(sf$distance) / 1000 # m to km
+      sf$n_outlet <- 1
+      sf$uncheck <- 1
+      sf$label <- paste("Subc", sf$ws_id)
+      v$subcatchment_map_sf <- sf[subcathment_columns]
     }
-    return(lf)
+    leafletProxy(active_watershed_lf, session) |>
+      clearGroup(group = "subcatchment") |>
+      clearMarkers() |>
+      plot_subcatchment()
+    
+    # updateReactable("watershed_list", selected = NA)
   }
   
-  delete_outlet_dialog <- function(out_id) {
-    deleted_outlet_id <<- out_id
-    id <- as.numeric(tail(unlist(strsplit(out_id, "_")), 1))
-    input_dialog(
-      "Remove Outlet",
-      paste("Outlet ID:", id, "<br>Remove this outlet?"),
-      "delete_outlet_confirm_btn",
-      "Remove"
-    )
-  }
-  
-  deleted_outlet_id <- NULL
-  
-  observeEvent(input$delete_outlet_confirm_btn, {
-    removeModal()
-    delete_outlet(out_id = deleted_outlet_id)
+  observe({
+    check_subcatchment_map_sf()
+    sf <- v$subcatchment_map_sf
+    updateReactable("watershed_list", data = sf[sf$ws_id != 999, ])
   })
   
-  ### WATERSHED TABLE LIST UI #########################
-  
-  watershed_col <- c("ws_id", "color", "area", "distance")
-  outlet_col <- c("out_id", "color", "out_lon", "out_lat", "area")
-  ws_df <- NULL
-  
   output$watershed_list <- renderReactable({
-    # df <- v$watershed_df
-    df <- v$subcatchment_map_sf
-    if (is.null(df) || nrow(df) == 0)
+    print("build table")
+    # if(is.null(default_outlet_map_sf())) return()
+    if (isolate(is_update_watershed_table())) {
+      ws_df <- isolate(as.data.frame(v$subcatchment_map_sf)[subcathment_columns])
+      ws_df <- ws_df[ws_df$ws_id != 999, ]
+      is_update_watershed_table(F)
+    } else {
       return()
-    df <- as.data.frame(df)
-    # df <- df[order(df$ws_id),]
-    df$area <- df$area/10000 # m2 to ha
-    df$distance <- df$distance/1000 # m to km 
-    ws_df <<- aggregate(df$area, list(df$ws_id, df$color), FUN = sum)
-    colnames(ws_df) <<- c("ws_id", "color", "area")
-    ws_df2 <- aggregate(df$distance, list(df$ws_id), FUN = mean)
-    colnames(ws_df2) <- c("ws_id", "distance")
-    ws_df <<- merge(ws_df, ws_df2, by = "ws_id")
-    
-    # colnames(ws_df) <<- watershed_col
-    # ws_df$idx <<- get_numeric_id(ws_df$ws_id)
-    # ws_df <<- ws_df[order(ws_df$idx), ]
+    }
+    isolate(repaint_subcatchment_map())
     reactable(
-      ws_df[watershed_col],
+      ws_df,
       pagination = F,
       compact = TRUE,
       wrap = FALSE,
       rownames = F,
       selection = "multiple",
-      onClick = "select",
+      defaultSorted = c("uncheck", "ws_id"),
+      # onClick = "select",
       theme = reactableTheme(
         backgroundColor = "#FFFFFF00",
-        headerStyle = list(backgroundColor = "rgba(240, 240, 240)")
+        headerStyle = list(backgroundColor = "rgba(255, 255, 255)")
       ),
       columns = list(
+        uncheck = colDef(width = 0),
+        n_outlet = colDef(width = 0),
+        rel_area = colDef(width = 0),
+        
         ws_id = colDef(name = "ID", width = 40),
         color = colDef(
           name = "",
-          width = 35,
+          width = 30,
           html = TRUE,
-          cell = function(value) {
-            div(
-              style = paste0(
-                "margin:auto;width:20px;height:20px;border-radius:10px 0px 10px 10px;border:2px solid ",
-                value,
-                ';background-color:',
-                substring(value, 1, 7),
-                "bf"
-              )
-            )
-          }
+          cell = JS(
+            "function(cellInfo) {
+              return `<div style='margin:auto;width:20px;height:20px; border-radius:10px 0px 10px 10px;
+              border:1px solid black; background-color:${cellInfo.value}'><div>`}"
+          )
         ),
         distance = colDef(
           name = "Distance (km)",
           format = colFormat(digits = 1, separators = T),
-          width = 120
+          width = 0
         ),
-        area = area_coldef
-      ),
-      details = function(index) {
-        outlet_data <- df[df$ws_id == ws_df$ws_id[index], outlet_col]
-        outlet_data$idx <- get_numeric_id(outlet_data$out_id)
-        outlet_data <- outlet_data[order(outlet_data$idx), ]
-        div(
-          style = "padding: 1rem",
-          reactable(
-            outlet_data[outlet_col],
-            rownames = F,
-            pagination = F,
-            compact = TRUE,
-            outlined = TRUE,
-            columns = list(
-              area = area_coldef,
-              color = colDef(
-                name = "",
-                width = 35,
-                html = TRUE,
-                cell = function(value) {
-                  div(
-                    style = paste0(
-                      "width:12px;height:12px;border-radius:6px;margin:auto;background-color:",
-                      value
-                    )
-                  )
-                }
-              ),
-              out_id = colDef(name = "Outlet", width = 60),
-              out_lon = colDef(
-                name = "Lon",
-                format = colFormat(digits = 5),
-                width = 90
-              ),
-              out_lat = colDef(
-                name = "Lat",
-                format = colFormat(digits = 5),
-                width = 90
-              )
-            )
-          )
+        area = colDef(
+          name = "Area (ha)",
+          format = colFormat(digits = 1, separators = T),
+          width = 100
         )
-      }
+      ),
+      details = colDef(
+        html = TRUE,
+        #TODO: add more detail info if necessary
+        details = JS(
+          "function(rowInfo) {
+            return `<div style='margin:10px'>
+            Routing distance: <b>${Number(rowInfo.values.distance).toFixed(2)}</b> km` +
+            `<br>Number of outlets: <b>${rowInfo.values.n_outlet}</b><div>`
+          }"
+        )
+      )
+      
     )
   })
   
-  area_coldef <- colDef(
-    name = "Area (ha)",
-    format = colFormat(digits = 1, separators = T),
-    width = 100
-  )
+  
+  observeEvent(input$reset_subcathment, {
+    print("reset outlet")
+    toggle_popover("subcatchment_popover", F)
+    # updateReactable("watershed_list", selected = NA, data = v$subcatchment_map_sf)
+    v$outlet_map_sf <- default_outlet_map_sf()
+    update_subcatchment_outlet()
+  })
+  
+  observeEvent(input$regenerate_subcathment, {
+    toggle_popover("subcatchment_popover", F)
+    show_input_dialog(
+      title = "Regenerate Sub-Catchment",
+      confirm_id = "confirm_generate_subc",
+      confirm_label = "Generate",
+      input_var = c("subc_area_threshold"),
+      input_label = c("Minimum sub-catchment area (ha)"),
+      input_def = c(v$genriver_cfg$flow_threshold),
+      input_type = c("numeric")
+    )
+  })
+  
+  observeEvent(input$confirm_generate_subc, {
+    removeModal()
+    process_generate_subcatchment(input$subc_area_threshold)
+    leafletProxy(active_watershed_lf, session) |>
+      clearGroup(group = "subcatchment") |>
+      plot_subcatchment()
+    updateReactable("watershed_list", selected = NA)
+  })
+  
+  # output$download_subcathment <- downloadHandler(
+  #   filename = function() {
+  #     paste("subcatchment_map.zip")
+  #   },
+  #   content = function(fname) {
+  #     setwd(tempdir())
+  #     ws_f <- "subcathments"
+  #     ws_m <- isolate(v$subcatchment_map_sf)
+  #     st_write(ws_m,
+  #              paste0(ws_f, ".shp"),
+  #              append = F,
+  #              quiet = T)
+  #     ws_f <- paste0(ws_f, shp_ext)
+  #     ou_f <- "outlets"
+  #     ou_m <- isolate(v$outlet_map_sf)
+  #     st_write(ou_m,
+  #              paste0(ou_f, ".shp"),
+  #              append = F,
+  #              quiet = T)
+  #     ou_f <- paste0(ou_f, shp_ext)
+  #     return(zip::zip(zipfile = fname, files = c(ws_f, ou_f)))
+  #   },
+  #   contentType = "application/zip"
+  # )
+  #
+  output$download_subcathment <- download_as_zip("subcatchment_map.zip",
+                                                 c("subcatchment_map_sf", "outlet_map_sf"),
+                                                 v)
+  output$download_stream <- download_as_zip("stream_map.zip", "dem_stream_sf", v)
+  output$download_dem <- download_as_zip("dem_map.zip", "dem_map_stars", v)
+  
+  #### Subcatchment selection #####
+  
+  selected_ws_ids <- c()
+  selected_deleted_ws_ids <- F
+  
+  observe({
+    state <- req(getReactableState("watershed_list"))
+    rows <- as.vector(state$selected)
+    ws_df <- isolate(v$subcatchment_map_sf)
+    if (selected_deleted_ws_ids) {
+      selected_ws_ids <<- c()
+      selected_deleted_ws_ids <<- F
+      updateReactable("watershed_list", selected = NA, data = ws_df)
+      return()
+    }
+    if (is.null(rows)) {
+      # deselect last selection
+      if (length(selected_ws_ids) > 0) {
+        out_df <- as.data.frame(isolate(v$outlet_map_sf))
+        out_df <- out_df[out_df$ws_id %in% selected_ws_ids, ]
+        # print(out_df$out_id)
+        leafletProxy(active_watershed_lf, session) |>
+          plot_subcatchment(selected_ws_ids) |>
+          removeMarker(paste0("out_", out_df$out_id))
+        selected_ws_ids <<- c()
+      } else {
+        return()
+      }
+    } else {
+      selids <- ws_df$ws_id[rows]
+      ids <- setdiff(selids, selected_ws_ids)
+      if (length(ids) > 0) {
+        out_df <- as.data.frame(isolate(v$outlet_map_sf))
+        out_df <- out_df[out_df$ws_id %in% ids, ]
+        leafletProxy(active_watershed_lf, session) |>
+          plot_subcatchment(ids, theme_color$danger, fillOpacity = 0.9) |>
+          paint_outlet(out_df$out_id)
+        
+      } else {
+        ids <- setdiff(selected_ws_ids, selids)
+        if (length(ids) > 0) {
+          # deselect
+          out_df <- as.data.frame(isolate(v$outlet_map_sf))
+          out_df <- out_df[out_df$ws_id %in% ids, ]
+          leafletProxy(active_watershed_lf, session) |>
+            plot_subcatchment(ids) |>
+            removeMarker(paste0("out_", out_df$out_id))
+        }
+      }
+      selected_ws_ids <<- selids
+      ws_df[rows, "uncheck"] <- 0
+      updateReactable("watershed_list", selected = rows, data = ws_df)
+    }
+    # updateReactable("watershed_list", selected = rows, data = ws_df)
+  })
+  
+  #### Delete subcatchment #######################################
   
   observeEvent(input$delete_outlet_btn, {
     state <- req(getReactableState("watershed_list"))
     rows <- as.vector(state$selected)
     if (length(rows) == 0)
       return()
-    df <- isolate(v$watershed_df)
-    for (i in rows) {
-      ws_id <- ws_df[i, "ws_id"]
-      delete_outlet(ws_id = ws_id)
-    }
+    selected_deleted_ws_ids <<- T
+    df <- v$subcatchment_map_sf
+    ids <- df$ws_id[rows]
+    v$subcatchment_map_sf <- df[!df$ws_id %in% ids, ]
+    out_ids <- v$outlet_map_sf[v$outlet_map_sf$ws_id %in% ids, "out_id"]
+    v$outlet_map_sf <- v$outlet_map_sf[!v$outlet_map_sf$ws_id %in% ids, ]
+    # remove subc paint
+    layer_id <- paste0("ws_", ids)
+    leafletProxy(active_watershed_lf, session) |> removeShape(layer_id) |>
+      clearMarkers()
   })
   
-  #### Delete outlet and watershed #######################################
-  delete_outlet <- function(out_id = NULL, ws_id = NULL) {
-    if (is.null(out_id) && is.null(ws_id))
-      return()
-    df <- isolate(v$watershed_df)
-    if (is.null(ws_id)) {
-      ws_id <- df[df$out_id == out_id, "ws_id"]
-    }
-    sdf <- df[df$ws_id == ws_id, ]
-    if (nrow(sdf) == 1) {
-      if (is.null(out_id))
-        out_id <- df[df$ws_id == ws_id, "out_id"]
-      leafletProxy(active_watershed_lf, session) |> removeShape(ws_id) |> removeMarker(out_id)
-      v$outlet_map_list[[out_id]] <- NULL
-      v$watershed_map_list[[ws_id]] <- NULL
-      
-      v$watershed_df <- df[df$ws_id != ws_id, ]
-    } else {
-      if (is.null(out_id)) {
-        out_id_list <- df[df$ws_id == ws_id, "out_id"]
-        lf <- leafletProxy(active_watershed_lf, session) |> removeShape(ws_id)
-        v$watershed_map_list[[ws_id]] <- NULL
-        for (id in out_id_list) {
-          lf <- lf |> removeMarker(id)
-          v$outlet_map_list[[id]] <- NULL
-        }
-        v$watershed_df <- df[df$ws_id != ws_id, ]
-      } else {
-        m <- isolate(v$watershed_map_list[[ws_id]])
-        o <- isolate(v$outlet_map_list[[out_id]]$map)
-        #TODO: it is better to re-union the rest of outlets
-        m_dif <- st_difference(st_union(m), st_union(o))
-        v$outlet_map_list[[out_id]] <- NULL
-        sf_use_s2(FALSE)
-        v$watershed_map_list[[ws_id]] <- st_union(m_dif)
-        lf <- leafletProxy(active_watershed_lf, session)
-        removeMarker(lf, out_id)
-        paint_watershed_map(lf, ws_id)
-        v$watershed_df <- df[df$out_id != out_id, ]
-      }
-    }
-  }
+  #### Merge subcatchment #############################
   
-  #### Merge outlet #############################
   observeEvent(input$merge_outlet_btn, {
     sf_use_s2(FALSE)
     state <- req(getReactableState("watershed_list"))
     rows <- as.vector(state$selected)
-    df <- isolate(v$watershed_df)
-    
-    ws_ids <- unique(as.vector(ws_df[rows, "ws_id"]))
-    new_id <- ws_ids[1]
-    new_color <- get_watershed_color(new_id)
-    if (length(ws_ids) <= 1)
+    if (length(rows) == 0)
       return()
-    m1 <- NULL
-    for (ws_id in ws_ids) {
-      m2 <- isolate(v$watershed_map_list[[ws_id]])
-      if (is.null(m1)) {
-        m1 <- m2
-      } else {
-        m1 <- st_union(m1, m2) #st_combine()
-      }
-      print(paste("remove", ws_id))
-      leafletProxy(active_watershed_lf, session) |> removeShape(ws_id)
-      v$watershed_map_list[[ws_id]] <- NULL
-    }
-    v$watershed_map_list[[new_id]] <- m1
-    df[df$ws_id %in% ws_ids, "ws_id"] <- new_id
-    df[df$ws_id == new_id, "color"] <- get_watershed_color(new_id)
-    v$watershed_df <- df
-    lf <- leafletProxy(active_watershed_lf, session)
-    out_ids <- df[df$ws_id == new_id, "out_id"]
-    for (out_id in out_ids) {
-      paint_outlet(lf, out_id)
-    }
-    paint_watershed_map(lf, new_id)
-  })
-  
-  ### ROUTING MAP #######################################
-  
-  update_routing_time_map <- function() {
-    if(is.null(v$routing_map_stars)) return(NULL)
-    vel <- v$stream_par_cfg$stream_velocity #m/sec
-    if(is.null(vel)) vel <- 0.4 #default
-    
-    rm <- st_as_stars(v$routing_map_stars)
-    
-    rtm <- rm/(vel * seconds_in_day)
-    rtm <- round(rtm)
-    msf <- st_as_sf(rtm,
-                    as_points = F,
-                    merge = T,
-                    connect8 = T)
-    msf <- st_transform(msf, crs = st_crs(rm))
-    names(msf) <- c("val", "geometry")
-    v$routing_time_map_sf <- msf
-  }
-  
-  output$routing_map_leaflet <- renderLeaflet({
-    if(is.null(v$routing_map_stars)) return()
-    lf <- base_leaflet()
-    m <- st_as_stars(v$routing_map_stars)
-    val <- sort(unique(as.vector(m[[1]]))) / 1000
-    pal <- colorNumeric(grad_color(10), val, na.color = "transparent")
-    
-    rt_map <- v$routing_time_map_sf
-    if(is.null(rt_map)) {
-      update_routing_time_map()
-      rt_map <- v$routing_time_map_sf
-    }
-    labels <- map_label(
-      paste(
-        "<div>Routing time:",
-        f_number(rt_map$val, digits = 2),
-        "days</div>"
-      ),
-      "Routing Time Map"
-    )
-    
-    if (!is.null(m)) {
-      lf <- lf |>
-        addGeoRaster(
-          m,
-          colorOptions = colorOptions(palette = grad_color(200)),
-          opacity = 0.6,
-          layerId = 'routing_map'
-        ) |>
-        addFeatures(
-          rt_map,
-          color = "#000",
-          fillOpacity = 0.01,
-          opacity = 0.01,
-          weight = 3,
-          group = "routing_time_map",
-          label = ~ labels,
-          labelOptions = labelOptions(
-            className = "map_label",
-            offset = c(0, -10),
-            direction = "top"
-          ),
-          highlightOptions = highlightOptions(color  = "#9a130e", fillColor = "#9a130e", opacity = 0.8, fillOpacity = 0.3)
-        ) |>
-        addLegend(
-          pal = pal,
-          values = val,
-          opacity = 0.6,
-          title = "Distance (km)"
-        ) |>
-        addHomeButton(ext = st_bbox(m),
-                      group = "Home",
-                      position = "topleft") |>
-        show_stream(v$dem_stream_sf, F) |>
-        show_routing_stream()
-    }
-    return(lf)
-  })
-  
-  show_routing_stream <- function(lf) {
-    m <- v$routing_river_sf
-    if (is.null(m)) {
-      return(lf)
-    }
-    names(m) <- c("val", "geometry")
-    s_list <- data.frame(val = sort(unique(m$val)))
-    s_list$days <- routing_time_days(s_list$val * 1000)
-    nr <- nrow(s_list)
-    m <- merge(m, s_list, by = "val")
-    labels <- map_label(
-      paste(
-        "<div>Routing distance: &plusmn;",
-        f_number(m$val, digits = 2),
-        "km</div>",
-        "<div>Routing time:",
-        f_number(m$days, digits = 2),
-        "days</div>"
-      ),
-      "Stream Routing Path"
-    )
-    lf <- lf |>
-      addFeatures(
-        m,
-        color = "#000",
-        fillOpacity = 0.01,
-        opacity = 0.01,
-        weight = 3,
-        group = "routing",
-        label = ~ labels,
-        labelOptions = labelOptions(
-          className = "map_label",
-          offset = c(0, -10),
-          direction = "top"
-        ),
-        highlightOptions = highlightOptions(color  = "red", fillColor = "red", opacity = 1, fillOpacity = 1)
-      )
-    return(lf)
-  }
-  
-  update_routing_map <- function() {
-    leafletProxy("routing_map_leaflet", session) |>
-      clearGroup("routing") |> show_routing_stream()
-  }
-  
-  
-  
-  routing_time_days <- function(dist_m) {
-    vel <- v$stream_par_cfg$stream_velocity #m/sec
-    if(is.null(vel)) vel <- 0.4 #default
-    t <- (dist_m/vel)/seconds_in_day
-    return(t)
-  }
-  
-  observeEvent(input$stream_velocity_input, {
-    p <- isolate(v$stream_par_cfg)
-    if(is.null(p)) p <- list()
-    p$stream_velocity <- input$stream_velocity_input
-    v$stream_par_cfg <- p
-    update_routing_time_map()
-    update_routing_map()
+    selected_deleted_ws_ids <<- T
+    sf <- v$subcatchment_map_sf[rows, ]
+    df <- as.data.frame(v$subcatchment_map_sf[rows, ])
+    ws_id <- min(df$ws_id)
+    ws_color <- df$color[1]
+    #TODO: harusnya bikin satu row aja
+    sf$ws_id <- ws_id
+    sf$color <- df$color[1]
+    sf$distance <- df$distance * df$n_outlet
+    ws_df <- aggregate(sf[c("area", "distance", "n_outlet")], as.data.frame(sf)[c("ws_id", "color")], sum)
+    ws_df$distance <- ws_df$distance / ws_df$n_outlet
+    ws_df$uncheck <- 1
+    #TODO: hitung
+    ws_df$rel_area <- ws_df$area * 10000 / v$genriver_cfg$total_area_m2
+    ws_df$label <- paste("Subc", ws_df$ws_id)
+    v$subcatchment_map_sf <- rbind(v$subcatchment_map_sf[-rows, ], ws_df[subcathment_columns])
+    v$outlet_map_sf[v$outlet_map_sf$ws_id %in% df$ws_id, "ws_id"] <- ws_id
+    # remove paint
+    layer_id <- paste0("ws_", df$ws_id)
+    leafletProxy(active_watershed_lf, session) |> removeShape(layer_id) |>
+      clearMarkers() |>
+      plot_subcatchment(ws_id)
   })
   
   ### LAKE PARAMETERS ###############################
-
+  
   output$lake_map_leaflet <- renderLeaflet({
     sc <- v$subcatchment_map_sf
     if (is.null(sc))
@@ -2214,7 +1973,8 @@ server <- function(input, output, session) {
   })
   
   paint_subcatchment <- function(lf, sc, color, highlight_color, label = "") {
-    label <- map_label(paste("ID:", sc$ws_id, "<p>", label, "</p>"), "Sub-Catchment")
+    label <- map_label(paste("ID:", sc$ws_id, "<p>", label, "</p>"),
+                       "Sub-Catchment")
     ids <- paste0("ws_", sc$ws_id)
     lf |> removeShape(ids) |>
       addFeatures(
@@ -2243,7 +2003,7 @@ server <- function(input, output, session) {
     selected_subc_id(ws_id)
     b1 <- nrow(v$lake_df[v$lake_df$ws_id == ws_id, ]) > 0
     b2 <- nrow(v$dam_df[v$dam_df$ws_id == ws_id, ]) > 0
-    input_dialog(
+    show_input_dialog(
       title = paste("Sub-Catchment ID", ws_id),
       desc = "Please confirm the following options:",
       confirm_id = "confirm_lake_selection",
@@ -2294,7 +2054,7 @@ server <- function(input, output, session) {
           label = paste("DAM", id)
         )
         dam_df <- rbind(dam_df, df)
-        if(input$lake_select) {
+        if (input$lake_select) {
           desc <- paste("<p><b>Lake</b> and <b>DAM</b> is in this sub-catchment</p>")
         } else {
           desc <- paste("<p><b>DAM</b> is in this sub-catchment</p>")
@@ -2305,13 +2065,11 @@ server <- function(input, output, session) {
     }
     v$dam_df <- dam_df
     
-    if(input$lake_select || input$dam_select) {
+    if (input$lake_select || input$dam_select) {
       paint_subcatchment(lf, sc, "#034464", "#9a130e", paste(desc, mod_label))
     } else {
       paint_subcatchment(lf, sc, "#ffb703", "#9a130e", add_label)
     }
-    # dam_edited <- dam_table_display()
-    # print(dam_df)
     removeModal()
   })
   
@@ -2335,7 +2093,7 @@ server <- function(input, output, session) {
         "function(rowInfo, column) {
             if (column.id !== 'label') {return}
             if (window.Shiny) {
-              Shiny.setInputValue('table_edit_label', 
+              Shiny.setInputValue('table_edit_label',
               {row: rowInfo.index + 1, table:'lake_df'}, {priority: 'event'})
             }
           }"
@@ -2380,24 +2138,31 @@ server <- function(input, output, session) {
   })
   
   
-
+  
   ### GROUND WATER PARAMETERS ###############################
   
-  initialize_ground_par_df <- function() {
+  # initialize_ground_par_df <- function() {
+  observe({
+    #TODO: only if the IDs changing, otherwise ignore!
+    if (is.null(v$subcatchment_map_sf) ||
+        is.null(v$lc_map_df))
+      return()
+    print("initialize_ground_par_df")
     ws_ids <- as.data.frame(v$subcatchment_map_sf)$ws_id
     ws_ids <- sort(unique(ws_ids))
     map_ids <- v$lc_map_df$map_id
     map_ids_col <- rep(map_ids, each = length(ws_ids))
     ws_ids_col <- rep(ws_ids, length(map_ids))
     df <- data.frame(map_id = map_ids_col, ws_id = ws_ids_col)
-    df[ground_prop_cols$var] <- NA
+    df[ground_prop_cols$var[1]] <- ground_prop_cols$default[1]
+    df[ground_prop_cols$var[2]] <- ground_prop_cols$default[2]
+    df[ground_prop_cols$var[3]] <- ground_prop_cols$default[3]
     v$ground_par_df <- df
-    print("ground")
-    ground_par_df_edited <- ground_par_df_display()
-  }
+  })
   
   ground_prop_cols <- data.frame(
     var = c("I_RivFlowTime", "I_MaxDynGWSub", "I_GWRelFrac"),
+    default = c(1, 300, 0.1),
     label = c(
       "Relative flow velocity",
       "Max dynamic GW store (mm)",
@@ -2405,135 +2170,148 @@ server <- function(input, output, session) {
     )
   )
   
-  
-  ground_par_df_display <- function() {
-    pdf <- isolate(v$ground_par_df)
-    # adf <- isolate(v$lc_df)[c("lc_id", "land_cover")]
-    # pdf <- merge(adf, pdf, by = "lc_id", all.x = T)
-    table_edit_server(
-      "ground_water_table",
-      pdf,
-      col_title = c("map_id", "ws_id", ground_prop_cols$label),
-      col_type = c("character",rep("numeric", 4)),
-      col_width = c(50, 50, 250, 250, 250),
-      col_disable = c(T, T, F, F, F)
-    )
-  }
-  
-  ground_par_df_edited <- ground_par_df_display()
+  ground_par_df_edited <- table_edit_server(
+    "ground_water_table",
+    reactive(v$ground_par_df),
+    col_title = c("map_id", "ws_id", ground_prop_cols$label),
+    col_type = c("character", rep("numeric", 4)),
+    col_width = c(50, 50, 250, 250, 250),
+    col_disable = c(T, T, F, F, F)
+  )
   
   observe({
     v$ground_par_df <- ground_par_df_edited()
   })
-
+  
   ### 3D VIEW ####################################
   
-  observeEvent(input$generate_3d_button, {
-    is_show_3d(T)
+  output$ws3d_plot <- renderPlotly({
+    dem_ws <- v$dem_crop_stars
+    if (is.null(dem_ws))
+      return()
+    delta_m <- log(cellSize.stars(dem_ws))
+    plot_ly(
+      z = dem_ws[[1]],
+      colorscale = 'Portland',
+      colorbar = list(title = "<b>Elevation</b>", x = 0.9, y = 0.9),
+      hoverinfo = "z",
+      name = "ASL",
+      hovertemplate =  "Elevation: %{z} m"
+    ) |> add_surface() |>
+      layout(
+        scene = list(
+          aspectratio = list(x = delta_m, y = delta_m, z = 1),
+          camera = list(eye = list(
+            x = 4, y = 4, z = 4
+          ))
+        ),
+        margin = list(
+          l = 0,
+          r = 0,
+          b = 0,
+          t = 0,
+          pad = 0
+        )
+      )
   })
   
-  output$plot3d <- renderRglwidget({
-    dem <- v$dem_crop_stars
-    if (is.null(dem))
-      return()
-    try(close3d())
-    
-    showPageSpinner(caption = "Please wait while rendering 3D view")
-    dem <- st_as_stars(dem)
-    # stream <- v$dem_stream_sf
-    m_mat <- dem[[1]]
-    m_mat[is.na(m_mat)] <- min(m_mat, na.rm = T)
-    m_mat %>%
-      sphere_shade(texture = "desert") %>%
-      add_shadow(ray_shade(m_mat, zscale = 3), 0.5) %>%
-      add_shadow(ambient_shade(m_mat), 0) %>%
-      
-      
-      # add_overlay(
-      #   generate_polygon_overlay(
-      #     stream,
-      #     extent = raster::extent(st_bbox(dem)),
-      #     palette = terrain.colors,
-      #     heightmap = m_mat
-      #   ),
-      #   alphalayer = 0.7
-      # ) %>%
-      
-      plot_3d(
-        m_mat,
-        zscale = 10,
-        fov = 60,
-        theta = 135,
-        zoom = 0.75,
-        phi = 45,
-        triangulate = T,
-        max_tri = 15000
-      )
-    hidePageSpinner()
-    rglwidget()
-  })
+  # observeEvent(input$generate_3d_button, {
+  #   is_show_3d(T)
+  # })
+  # 
+  # output$plot3d <- renderRglwidget({
+  #   dem <- v$dem_crop_stars
+  #   if (is.null(dem))
+  #     return()
+  #   try(close3d())
+  #   showPageSpinner(caption = "Please wait while rendering 3D view")
+  #   dem <- st_as_stars(dem)
+  #   m_mat <- dem[[1]]
+  #   m_mat[is.na(m_mat)] <- min(m_mat, na.rm = T)
+  #   m_mat %>%
+  #     sphere_shade(texture = "desert") %>%
+  #     add_shadow(ray_shade(m_mat, zscale = 3), 0.5) %>%
+  #     add_shadow(ambient_shade(m_mat), 0) %>%
+  #     plot_3d(
+  #       m_mat,
+  #       zscale = 10,
+  #       fov = 60,
+  #       theta = 135,
+  #       zoom = 0.75,
+  #       phi = 45,
+  #       triangulate = T,
+  #       max_tri = 15000
+  #     )
+  #   hidePageSpinner()
+  #   rglwidget()
+  # })
   
   ### SOIL PROPERTIES ####################################
   
-  observe({
-    if (is.null(v$dem_crop_stars))
-      return()
-    generate_slope_classes()
-    
-    # qfc <- v[[soil_water_vdf$soil_water_v[1]]]
-    # paw <- v[[soil_water_vdf$soil_water_v[2]]]
-    # pwp <- v[[soil_water_vdf$soil_water_v[3]]]
-    # if (is.null(qfc) || is.null(paw) || is.null(pwp)) {
-    #   calculate_soil_water()
-    #   calculate_sub_soil_water()
-    # }
-    # print(v$subc_soil_water_df)
-    # if (is.null(v$subc_soil_water_df))
-    #   calculate_sub_soil_water()
-  })
+  # observe({
+  #   if (is.null(v$dem_crop_stars))
+  #     return()
+  #   generate_slope_classes()
+  # })
   
-  generate_slope_classes <- function(filter_width = 25, noise_removal = 1) {
+  
+  
+  
+  generate_slope_classes <- function(filter_width = 25,
+                                     noise_removal = 1) {
     print("generate_slope_classes")
     dem <- v$dem_crop_stars
+    if (is.null(dem))
+      return()
     slope <- terrain(stars_to_terra(dem))
     #TODO: convert to proxy
     vd$slope_stars <- stars_to_proxy(st_as_stars(slope))
     #smoothing the slope map
-    slope2 <- focal(slope, w=filter_width, fun = "mean", na.policy="omit", na.rm=T)
+    slope2 <- focal(
+      slope,
+      w = filter_width,
+      fun = "mean",
+      na.policy = "omit",
+      na.rm = T
+    )
     slope2 <- st_as_stars(slope2)
     min <- min(slope2[[1]], na.rm = T)
     max <- max(slope2[[1]], na.rm = T)
     #standardize slope factor in reverse
-    vd$slope_factor_stars <- 1-((slope2-min)/(max - min)) 
+    vd$slope_factor_stars <- 1 - ((slope2 - min) / (max - min))
     #get available soil types
     sdf <- v$soil_layer_df[c("SMU_ID", "SOIL", "SHARE", "TOPDEP", "ORG_CARBON")]
-    sdf <- sdf[sdf$TOPDEP == 0,]
+    sdf <- sdf[sdf$TOPDEP == 0, ]
     # sdf <- sdf[order(sdf$SHARE, sdf$ORG_CARBON, decreasing = T),]
     # sdf <- sdf[c(1:nd), ]
-    sdf <- sdf[order(sdf$ORG_CARBON, decreasing = T),]
+    sdf <- sdf[order(sdf$ORG_CARBON, decreasing = T), ]
     #generate slope classes
     del_elv <- max - min
     nd <- nrow(sdf)
     #class range in power scale, by default
     #TODO: to be user defined scale
-    d <- min + del_elv * c(1:nd)^2/nd^2
+    d <- min + del_elv * c(1:nd) ^ 2 / nd ^ 2
     slope_class <- slope2
     slope_class[!is.na(slope_class)] <- 1
-    for(i in 1:(nd-1)) {
-      slope_class[slope2 >= d[i]] <- i+1
+    for (i in 1:(nd - 1)) {
+      slope_class[slope2 >= d[i]] <- i + 1
     }
     slope_class2 <- slope_class
-    for(i in 1:noise_removal) {
-      slope_class2 <- focal(stars_to_terra(slope_class2), w=filter_width, fun = "modal", na.policy="omit", na.rm=T)
+    for (i in 1:noise_removal) {
+      slope_class2 <- focal(
+        stars_to_terra(slope_class2),
+        w = filter_width,
+        fun = "modal",
+        na.policy = "omit",
+        na.rm = T
+      )
     }
     slope_class2 <- st_as_stars(slope_class2)
     
-    sc_sf <- st_as_sf(slope_class2,
-                    merge = T,
-                    connect8 = T)
+    sc_sf <- st_as_sf(slope_class2, merge = T, connect8 = T)
     sc_sf <- st_transform(sc_sf, crs = st_crs(slope_class))
     names(sc_sf) <- c("class", "geometry")
-    #create class label and associated soil types 
+    #create class label and associated soil types
     d <- c(min, d)
     d <- sprintf("%0.1f\u00B0", d)
     angle <- paste(head(d, -1), "-", d[-1])
@@ -2543,35 +2321,97 @@ server <- function(input, output, session) {
     sc_sf <- merge(sc_sf, df, by = "class")
     color <- soil_color(nd)
     sc_sf$color <- color[sc_sf$class]
-    v$slope_class_sf <- sc_sf
-
+    # print("done slope")
+    # print(sc_sf)
+    # v$slope_class_sf <- sc_sf
   }
   
+  #### Soil Type Leaflet ####################
+  
   output$soil_type_leaflet <- renderLeaflet({
-    m <- v$slope_class_sf
+    m <- v$dem_stream_sf
     if (is.null(m))
       return()
+    print("soil_type_leaflet")
+    bb <- st_bbox(m)
+    s <- (bb[["xmax"]] - bb[["xmin"]]) / 5
+    bb <- st_bbox(c(
+      xmin = bb[["xmin"]] + s,
+      xmax = bb[["xmax"]] + s,
+      ymax = bb[["ymax"]],
+      ymin = bb[["ymin"]]
+    ), crs = st_crs(bb))
+    base_leaflet() |> fit_map_view(bb) |>
+      addHomeButton(st_bbox(bb), "Home", "topleft") |>
+      show_stream(m, opacity = 0.6, is_show_label = F) |> repaint_segments()
+  })
+  
+  
+  repaint_segments <- function(lf = NULL, segment_id = NULL) {
+    if (isolate(v$soil_cfg$soil_type_select) == "soil_type_user") {
+      m <- isolate(v$soil_segments_sf)
+      st_df <- isolate(v$soil_type_df)
+    } else {
+      m <- isolate(v$soil_segments_global_sf)
+      st_df <- isolate(vd$soil_type_global_df)
+    }
+    if (is.null(m))
+      return()
+    print("repaint_segments")
+    if (is.null(lf))
+      lf <- leafletProxy("soil_type_leaflet", session)
+    if (!is.null(segment_id)) {
+      m <- m[m$segment_id %in% segment_id, ]
+      lf <- lf |> removeShape(paste0("segment_", segment_id))
+      # print(m)
+    } else {
+      lf <- lf |> clearGroup("segment")
+    }
     
-    label <- map_label(paste(
-      "Class ID:",
-      m$class,
-      "<br>Slope:",
-      m$angle,
-      "<br>Soil type:",
-      m$soil
-    ),
-    "Soil Type Map")
+    st_df$soil_color <- st_df$color
+    # print(st_df)
+    m <- merge(m, st_df[c("soil_id", "soil_color", "SOIL")], by = "soil_id", all.x = T)
+    m[is.na(m$soil_color), "soil_color"] <-  ""
+    m[!is.na(m$soil_id), "color"] <-  ""
+    m$color <- paste(m$color, m$soil_color)
+    get_soil <- function(x) {
+      if (is.na(x["soil_id"])) {
+        return("<div class='highlight_label'>Click here to set the soil type</div>")
+      }
+      paste0("Soil type: <div style='font-size:1.5em;'>[",
+             x["soil_id"],
+             "] ",
+             x["SOIL"],
+             "</div>")
+    }
     
-    base_leaflet() |>
-      show_stream(v$dem_stream_sf, opacity = 0.6, is_show_label = F) |>
+    label <- map_label(
+      paste(
+        "<div>Segment ID:",
+        m$segment_id,
+        "<br>Class ID:",
+        m$class,
+        "<br>Area:",
+        lapply(m$area, function(x) {
+          f_number(x, digits = 3)
+        }),
+        "ha</div>",
+        apply(m[c("soil_id", "SOIL")], 1, get_soil)
+      ),
+      "Soil Map"
+    )
+    ids <- paste0("segment_", m$segment_id)
+    
+    lf |>
       addFeatures(
         m,
         color = "#000",
         fillColor = ~ color,
         fillOpacity = 0.8,
-        opacity = 0.8,
+        opacity = 0.5,
         weight = 1,
-        group = "soil",
+        group = "segment",
+        layerId = ids,
         label = label,
         labelOptions = labelOptions(
           className = "map_label",
@@ -2579,15 +2419,116 @@ server <- function(input, output, session) {
           direction = "top"
         ),
         highlightOptions = highlightOptions(fillColor = "#fb8500")
-        
-      ) |>
-      fit_map_view(v$ws_boundary_sf) |>
-      addHomeButton(
-        ext = st_bbox(v$ws_boundary_sf),
-        group = "Home",
-        position = "topleft"
       )
+  }
+  
+  
+  selected_segment <- NULL
+  
+  observeEvent(input$soil_type_leaflet_shape_click, {
+    inp <- input$soil_type_leaflet_shape_click
+    if (inp$group == "segment" &&
+        input$soil_type_select == "soil_type_user") {
+      df <- v$soil_type_df
+      if (nrow(df) == 0) {
+        showModal(
+          modalDialog(
+            title = "The Soil Type List Is Empty!",
+            "Please fill in the soil type including its properties on the provided tabel"
+          )
+        )
+        nav_select("soil_type_panel", "Soil Type List")
+        return()
+      }
+      selected_segment <<- suffix(inp$id)
+      
+      ops <- as.list(df$soil_id)
+      names(ops) <- df$SOIL
+      show_input_dialog(
+        "Set Soil Type",
+        custom_input = selectInput(
+          "soil_segment_select",
+          paste("Select soil type for segment", selected_segment),
+          ops
+        ),
+        confirm_id = "confirm_soil_type"
+      )
+    }
   })
+  
+  observeEvent(input$confirm_soil_type, {
+    removeModal()
+    soil_id <- input$soil_segment_select
+    # print(soil_id)
+    
+    v$soil_segments_df[v$soil_segments_df$segment_id == selected_segment, "soil_id"] <- soil_id
+    v$soil_segments_sf[v$soil_segments_sf$segment_id == selected_segment, "soil_id"] <- soil_id
+    repaint_segments(segment_id = selected_segment)
+  })
+  
+  #"Slope (\u00B0)"
+  output$slope_map_plot_title <- renderText({
+    m <- st_as_stars(vd$slope_stars)
+    min <- min(m[[1]], na.rm = T)
+    max <- max(m[[1]], na.rm = T)
+    paste0("Slope Map (", f_number(min, digits = 3),"\u00B0 - ", f_number(max, digits = 3), "\u00B0)")
+  })
+  
+  output$slope_map_plot <- renderPlot({
+    if (is.null(vd$slope_stars))
+      return()
+    suppressMessages(plot(
+      vd$slope_stars,
+      main = NULL,
+      col = slope_color(100),
+      breaks = "equal"
+    ))
+  }, bg = "transparent")
+  
+  output$elevation_map_plot_title <- renderText({
+    m <- st_as_stars(v$dem_crop_stars)
+    min <- min(m[[1]], na.rm = T)
+    max <- max(m[[1]], na.rm = T)
+    paste0("Elevation Map (", f_number(min, digits = 3)," - ", f_number(max, digits = 3), " m)")
+  })
+  
+  output$elevation_map_plot <- renderPlot({
+    if (is.null(v$dem_crop_stars))
+      return()
+    suppressMessages(plot(
+      v$dem_crop_stars,
+      main = NULL,
+      col = terrain.colors(100),
+      breaks = "equal"
+    ))
+  }, bg = "transparent")
+  
+  output$depth_map_plot_title <- renderText({
+    min <- input$min_soil_depth_input
+    max <- input$max_soil_depth_input
+    paste0("Soil Depth Map (", f_number(min, digits = 3)," - ", f_number(max, digits = 3), " cm)")
+  })
+  
+  output$depth_map_plot <- renderPlot({
+    m <- vd$soil_depth_stars
+    if (is.null(m))
+      return()
+    if (mean(m[[1]], na.rm = T) == isolate(v$soil_cfg$depth_max)) {
+      suppressMessages(plot(
+        m,
+        main = NULL,
+        col = depth_color(3)[3],
+        breaks = "equal"
+      ))
+    } else {
+      suppressMessages(plot(
+        m,
+        main = NULL,
+        col = depth_color(100),
+        breaks = "equal"
+      ))
+    }
+  }, bg = "transparent")
   
   output$soil_map_leaflet <- renderLeaflet({
     lf <- base_leaflet()
@@ -2596,7 +2537,7 @@ server <- function(input, output, session) {
         lf <- lf |> addFeatures(
           v$ws_boundary_sf,
           layerId = 'ws_boundary',
-          color = color_theme$secondary,
+          color = theme_color$secondary,
           label = "Click here to query soil properties",
           labelOptions = labelOptions(className = "map_label", offset = c(0, -5)),
           highlightOptions = highlightOptions(fillOpacity = 0.8),
@@ -2660,74 +2601,673 @@ server <- function(input, output, session) {
   
   #### Soil Depth Map ###############################
   
-  update_soil_legend <- reactiveVal(F)
+  observe({
+    v$soil_cfg$nclass <- input$n_class_input
+    v$soil_cfg$depth_min <- max(0, input$min_soil_depth_input)
+    v$soil_cfg$depth_max <- max(10, input$max_soil_depth_input)
+    v$soil_cfg$depth_coe <- input$depth_coe_segment_input
+    v$soil_cfg$depth_exp <- input$depth_exp_segment_input
+    v$soil_cfg$slope_filter_width <- input$slope_filter_input
+    v$soil_cfg$slope_coe <- input$slope_coe_input
+    v$soil_cfg$slope_exp <- input$slope_exp_input
+    v$soil_cfg$elevation_filter_width <- input$elevation_filter_input
+    v$soil_cfg$elevation_coe <- input$elevation_coe_input
+    v$soil_cfg$elevation_exp <- input$elevation_exp_input
+    v$soil_cfg$noise_removal <- input$soil_noise_input
+  })
+  
+  
+  update_soil_ui <- function() {
+    updateNumericInput(session, "n_class_input", value = v$soil_cfg$nclass)
+    updateNumericInput(session,
+                       "min_soil_depth_input",
+                       value = v$soil_cfg$depth_min)
+    updateNumericInput(session,
+                       "max_soil_depth_input",
+                       value = v$soil_cfg$depth_max)
+    updateNumericInput(session,
+                       "top_soil_prop_input",
+                       value = v$soil_cfg$top_soil_prop * 100)
+    updateNumericInput(session,
+                       "depth_coe_segment_input",
+                       value = v$soil_cfg$depth_coe)
+    updateNumericInput(session,
+                       "depth_exp_segment_input",
+                       value = v$soil_cfg$depth_exp)
+    updateNumericInput(session,
+                       "slope_filter_input",
+                       value = v$soil_cfg$slope_filter_width)
+    updateNumericInput(session, "slope_coe_input", value = v$soil_cfg$slope_coe)
+    updateNumericInput(session, "slope_exp_input", value = v$soil_cfg$slope_exp)
+    updateNumericInput(session,
+                       "elevation_filter_input",
+                       value = v$soil_cfg$elevation_filter_width)
+    updateNumericInput(session,
+                       "elevation_coe_input",
+                       value = v$soil_cfg$elevation_coe)
+    updateNumericInput(session,
+                       "elevation_exp_input",
+                       value = v$soil_cfg$elevation_exp)
+    updateNumericInput(session,
+                       "soil_noise_input",
+                       value = v$soil_cfg$noise_removal)
+    updateSelectInput(session,
+                      "soil_type_select",
+                      selected = v$soil_cfg$soil_type_select)
+  }
+  
   
   observe({
-    if (update_soil_legend())
-      update_soil_legend(F)
-    min_d <- input$min_soil_depth_input
-    max_d <- input$max_soil_depth_input
-    v$genriver_cfg$min_soil_depth <- min_d
-    v$genriver_cfg$max_soil_depth <- max_d
-    
-    val <- c(min_d:max_d) 
-    pal <- colorNumeric(rev(soil_color(10)), val, na.color = "transparent")
-    leafletProxy("soil_depth_leaflet", session) |>
-      removeControl("soil_depth_legend") |>
-      addLegend(layerId = "soil_depth_legend",
-        pal = pal,
-        values = val,
-        opacity = 0.8,
-        title = "Soil Depth (cm)"
-      ) 
+    dem <- v$dem_crop_stars
+    if (is.null(dem))
+      return()
+    slope <- terrain(stars_to_terra(dem))
+    vd$slope_stars <- stars_to_proxy(st_as_stars(slope))
   })
   
-  output$soil_depth_leaflet <- renderLeaflet({
-    m <- vd$slope_factor_stars
-    if (is.null(m))
+  observe({
+    if (is.null(vd$slope_stars))
       return()
-    lf <- base_leaflet() |>
-      addGeoRaster(
-        m,
-        colorOptions = colorOptions(palette = rev(soil_color(256))),
-        opacity = 0.8,
-        layerId = 'soil_depth_map'
-      ) |>
-      fit_map_view(m) |>
-      addHomeButton(ext = st_bbox(m),
-                    group = "Home",
-                    position = "topleft")
-    update_soil_legend(T)
-    return(lf)
-  })
-  
-  output$slope_map_leaflet <- renderLeaflet({
-    m <- vd$slope_stars
-    if (is.null(m))
+    slope <- stars_to_terra(vd$slope_stars)
+    #smoothing the slope map
+    w <- input$slope_filter_input
+    if (is.na(w))
       return()
-    m <- st_as_stars(m)
-    val <- range(m[[1]], na.rm = T)
-    pal <- colorNumeric(map_color(10), val, na.color = "transparent")
-    lf <- base_leaflet() |>
-      addGeoRaster(
-        m,
-        colorOptions = colorOptions(palette = map_color(256)),
-        opacity = 0.8,
-        layerId = 'slope_map'
-      ) |>
-      fit_map_view(m) |>
-      addHomeButton(ext = st_bbox(m),
-                    group = "Home",
-                    position = "topleft") |>
-      addLegend(
-        layerId = "slope_legend",
-        pal = pal,
-        values = val,
-        opacity = 0.8,
-        title = "Slope (deg)"
+    if (w <= 1) {
+      slope2_stars <- st_as_stars(vd$slope_stars)
+    } else {
+      if (w %% 2 == 0)
+        w <- w + 1
+      w <- max(w, 3)
+      slope2 <- focal(
+        slope,
+        w = w,
+        fun = "mean",
+        na.policy = "omit",
+        na.rm = T
       )
-    return(lf)
+      slope2_stars <- st_as_stars(slope2)
+    }
+    min <- min(slope2_stars[[1]], na.rm = T)
+    max <- max(slope2_stars[[1]], na.rm = T)
+    vd$slope_std_stars <- ((slope2_stars - min) / (max - min))
   })
+  
+  output$slope_std_plot <- renderPlot({
+    if (is.null(vd$slope_std_stars))
+      return()
+    suppressMessages(plot(
+      vd$slope_std_stars,
+      main = NULL,
+      breaks = "equal",
+      key.pos = NULL
+    ))
+  }, bg = "transparent")
+  
+  observe({
+    if (is.null(v$dem_crop_stars))
+      return()
+    m <- stars_to_terra(v$dem_crop_stars)
+    w <- input$elevation_filter_input
+    if (is.na(w))
+      return()
+    if (w <= 1) {
+      m2_stars <- st_as_stars(v$dem_crop_stars)
+    } else {
+      if (w %% 2 == 0)
+        w <- w + 1
+      w <- max(w, 3)
+      m2 <- focal(
+        m,
+        w = w,
+        fun = "mean",
+        na.policy = "omit",
+        na.rm = T
+      )
+      m2_stars <- st_as_stars(m2)
+    }
+    min <- min(m2_stars[[1]], na.rm = T)
+    max <- max(m2_stars[[1]], na.rm = T)
+    vd$elevation_std_stars <- ((m2_stars - min) / (max - min))
+  })
+  
+  output$elevation_std_plot <- renderPlot({
+    if (is.null(vd$elevation_std_stars))
+      return()
+    suppressMessages(plot(
+      vd$elevation_std_stars,
+      main = NULL,
+      breaks = "equal",
+      key.pos = NULL
+    ))
+  }, bg = "transparent")
+  
+  observe({
+    if (is.null(vd$slope_std_stars) ||
+        is.null(vd$elevation_std_stars))
+      return()
+    sf <- 1 - vd$slope_std_stars
+    ef <- 1 - vd$elevation_std_stars
+    st_dimensions(ef) <- st_dimensions(sf)
+    d <- input$slope_coe_input * sf ^ input$slope_exp_input + input$elevation_coe_input * ef ^ input$elevation_exp_input
+    if (sum(d[[1]], na.rm = T) > 0) {
+      min <- min(d[[1]], na.rm = T)
+      max <- max(d[[1]], na.rm = T)
+      m <- ((d - min) / (max - min))
+      min_d <- input$min_soil_depth_input
+      m2 <- min_d + m * (input$max_soil_depth_input - min_d)
+      vd$soil_depth_std_stars <- m
+      vd$soil_depth_stars <- m2
+    } else {
+      d[!is.na(d)] <- 1
+      vd$soil_depth_std_stars <- d
+      vd$soil_depth_stars <- d * input$max_soil_depth_input
+    }
+  })
+  
+  #### Soil Segments ################
+  
+  # classify_map <- function(m, nclass, name = "class") {
+  #   sd <- c(1:nclass)/nclass
+  #   mc <- m
+  #   mc[!is.na(mc)] <- 1
+  #   for (i in 2:nclass) {
+  #     mc[m > sd[i-1]] <- i
+  #   }
+  #   sf <- st_as_sf(mc, merge = T, connect8 = T)
+  #   sf <- st_transform(sf, crs = st_crs(m))
+  #   names(sf) <- c(name, "geometry")
+  #   return(sf)
+  # }
+  
+  observe({
+    sm <- vd$slope_std_stars
+    em <- vd$elevation_std_stars
+    dm <- vd$soil_depth_std_stars
+    if (is.null(sm) || is.null(em) || is.null(dm))
+      return()
+    print("update soil_segments_sf")
+    dm <- 1 - dm
+    
+    st_dimensions(em) <- st_dimensions(sm)
+    st_dimensions(dm) <- st_dimensions(sm)
+    
+    a_s <- input$slope_coe_segment_input
+    b_s <- input$slope_exp_segment_input
+    a_e <- input$elevation_coe_segment_input
+    b_e <- input$elevation_exp_segment_input
+    a_d <- input$depth_coe_segment_input
+    b_d <- input$depth_exp_segment_input
+    nclass <- input$n_class_input
+    
+    noise_removal <- input$noise_rep_input
+    filter_width <- input$noise_filter_input
+    
+    if (is.na(filter_width) || is.na(noise_removal))
+      return()
+    
+    d <- a_s * sm ^ b_s  + a_e * em ^ b_e + a_d * dm ^ b_d
+    min <- min(d[[1]], na.rm = T)
+    max <- max(d[[1]], na.rm = T)
+    m <- ((d - min) / (max - min))
+    
+    nclass <- max(1, nclass)
+    sd <- c(1:nclass) / nclass
+    mc <- m
+    mc[!is.na(mc)] <- 1
+    if (nclass > 1) {
+      for (i in 2:nclass) {
+        mc[m > sd[i - 1]] <- i
+      }
+    }
+
+    if (filter_width > 1 && noise_removal > 0) {
+      mc2 <- stars_to_terra(mc)
+      if (filter_width %% 2 == 0)
+        filter_width <- filter_width + 1
+      for (i in 1:noise_removal) {
+        mc2 <- focal(
+          mc2,
+          w = filter_width,
+          fun = "modal",
+          na.policy = "omit",
+          na.rm = T
+        )
+      }
+      mc <- st_as_stars(mc2)
+    }
+    
+    sf <- st_as_sf(mc, merge = T, connect8 = T)
+    sf <- st_transform(sf, crs = st_crs(m))
+    names(sf) <- c("class", "geometry")
+    color <- gray.colors(nclass, 0.1)
+    sf$color <- color[sf$class]
+    sf$area <- as.numeric(st_area(sf) / 10000)
+    sf <- sf[order(sf$area, decreasing = T), ]
+    sf$segment_id <- c(1:nrow(sf))
+    sf$soil_id <- NA
+    print("update soil_segments_sf")
+    v$soil_segments_sf <- sf
+    update_soil_segment_table()
+    update_soil_map_global()
+    repaint_segments()
+  })
+  
+  update_soil_segment_table <- function() {
+    print("update_soil_segment_table")
+    sf <- isolate(v$soil_segments_sf)
+    if (is.null(sf))
+      return()
+    df <- isolate(v$soil_segments_df)
+    if (is.null(df) || nrow(df) == 0) {
+      sf <- sf[c("segment_id", "class", "area", "soil_id")]
+      sf$soil_id <- NA
+    } else {
+      sf <- merge(sf[c("segment_id", "color", "class", "area")], df[c("segment_id", "soil_id")], by = c("segment_id"), all.x = T)
+      v$soil_segments_sf <- sf
+    }
+    v$soil_segments_df <- as.data.frame(sf)[c("segment_id", "class", "area", "soil_id")]
+  }
+  
+  soil_mapped_table_edit <- table_edit_server(
+    "soil_mapped_table_user",
+    reactive(v$soil_segments_df),
+    col_type = rep("numeric", 4),
+    col_disable = c(T, T, T, F)
+  )
+  
+  observe({
+    v$soil_segments_df <- soil_mapped_table_edit()
+  })
+  
+  observe({
+    v$soil_segments_sf$soil_id <- v$soil_segments_df$soil_id
+  })
+
+  output$soil_mapped_table_global <- renderReactable({
+    df <- as.data.frame(v$soil_segments_global_sf)
+    reactable(
+      df[c("segment_id", "class", "area", "soil_id")],
+      columns = list(
+        segment_id = colDef(name = "ID", width = 40),
+        class = colDef(name = "Class ID"),
+        area = colDef(name = "Area (ha)", format = colFormat(digit = 0)),
+        soil_id = colDef(name = "Soil ID")
+      ),
+      pagination = F
+    )
+  })
+  
+  update_soil_map_global <- function() {
+    print("update_soil_map_global")
+    sf <- isolate(v$soil_segments_sf)
+    if (is.null(sf))
+      return()
+    msf <- isolate(v$soil_map_sf)
+    sid <- sort(unique(msf$smu_id))
+    suppressWarnings(suppressMessages(intsf <- st_intersection(sf, msf)))
+    sl_df <- v$soil_layer_df
+    s1 <- sl_df[sl_df$LAYER == "D1", c("SMU_ID", "SOIL", "SHARE", "ORG_CARBON")]
+    s1 <- s1[, colSums(!is.na(s1)) > 0]
+    s1 <- s1[!duplicated(s1), ]
+    s1 <- merge(s1,
+                vd$soil_type_global_df[c("soil_id", "color", "SOIL")],
+                by = "SOIL",
+                all.x = T)
+    prevseg <- c()
+    for (smu_id in sid) {
+      sdf <- s1[s1$SMU_ID == smu_id, ]
+      sdf <- sdf[order(sdf$SHARE, sdf$ORG_CARBON, decreasing = T), ]
+      map <- intsf[intsf$smu_id == smu_id, ]
+      # intersected area
+      map$area_x <- as.numeric(st_area(map) / 10000)
+      map$a_ratio <- map$area_x / map$area
+      # get only intersected segment with more than 50% of original area
+      map <- map[map$a_ratio > 0.5, ]
+      map <- map[!map$segment_id %in% prevseg, ]
+      map <- map[order(map$class, map$segment_id), ]
+      map$cumsum <- cumsum(map$area)
+      prevseg <- c(prevseg, map$segment_id)
+      tot_area <- sum(map$area)
+      prevshare <- 0
+      for (soil_id in sdf$soil_id) {
+        totshare <- prevshare + tot_area * sdf[sdf$soil_id == soil_id, "SHARE"] /
+          100
+        m2 <- map[map$cumsum > prevshare &
+                    map$cumsum <= totshare + 0.00001, ]
+        sf[sf$segment_id %in% m2$segment_id, "soil_id"] <- soil_id
+        sf[sf$segment_id %in% m2$segment_id, "color"] <- sdf[sdf$soil_id == soil_id, "color"]
+        prevshare <- totshare
+      }
+    }
+    v$soil_segments_global_sf <- sf
+  }
+  
+  #### Soil Type Table ###############
+  
+  get_soil_db_metadata <- function() {
+    db <- dbConnect(RSQLite::SQLite(), soil_db_path)
+    qm <- paste("SELECT * FROM HWSD2_LAYERS_METADATA")
+    metadata_df <- dbGetQuery(db, qm)
+    metadata_df$FIELD <- trimws(metadata_df$FIELD)
+    dbDisconnect(db)
+    return(metadata_df)
+  }
+  
+  soil_db_metadata <- get_soil_db_metadata()
+  
+  get_soil_db_header <- function(x) {
+    df <- soil_db_metadata[soil_db_metadata$FIELD %in% x, ]
+    df[match(x, df$FIELD), ]
+    paste0(df$DESCRIPTION, ifelse(
+      is.na(df$UNIT) |
+        df$UNIT == "",
+      "",
+      paste0(
+        " <span style='color:#BBBBBB;font-weight: normal;'>[",
+        gsub("\\s", "", df$UNIT),
+        "]</span>"
+      )
+    ))
+  }
+  
+  div_h_style <- "<div style='font-weight:bold;text-align:center;background-color:#ECF9FC;color:#219ebc;padding:5px 0'>"
+  hydro_prop_h <- unlist(lapply(hydro_prop, get_soil_db_header))
+  soil_type_h <- c("ID", "-", "Soil", hydro_prop_h, hydro_prop_h)
+  
+  soil_type_table_edit <- table_edit_server(
+    "soil_type_table",
+    reactive(v$soil_type_df),
+    col_title = soil_type_h,
+    col_type = c("numeric", "character", "character", rep("numeric", 16)),
+    allowRowModif = T,
+    nrow = 10,
+    digits = 2,
+    nestedHeaders = list(data.frame(
+      title = paste0(
+        div_h_style,
+        c("Soil Type</div>", "Top Soil Properties</div>", "Sub Soil Properties</div>")
+      ),
+      colspan = c(3, 8, 8)
+    ))
+  )
+  
+  observe({
+    v$soil_type_df <- soil_type_table_edit()
+  })
+  
+  observe({
+    top_soil <- min(1, max(0, input$top_soil_prop_input / 100))
+    v$soil_cfg$top_soil_prop <- top_soil
+    vd$soil_water_content_user_df <- calculate_soil_water_table(v$soil_type_df, top_soil)
+    isolate(update_soil_water_content())
+  })
+  
+  soil_type_top_cols <- c("soil_id", "color", "SOIL", hydro_prop)
+  soil_type_sub_cols <- c("soil_id", "color", "SOIL", paste0("SUB_", hydro_prop))
+  soil_type_cols <- c(soil_type_top_cols, paste0("SUB_", hydro_prop))
+  
+  observe({
+    if (is.null(v$soil_type_df)) {
+      v$soil_type_df <- setNames(data.frame(matrix(ncol = 19, nrow = 0)), soil_type_cols)
+    }
+  })
+  
+  output$soil_type_global_table <- renderReactable({
+    df <- vd$soil_type_global_df
+    if (is.null(df))
+      return()
+    h1 <- hydro_prop_coldef(hydro_prop)
+    h2 <- h1
+    names(h2) <- paste0("SUB_", hydro_prop)
+    
+    reactable(
+      df,
+      columns = c(
+        list(
+          soil_id = colDef(name = "ID", format = colFormat(digit = 0), width = 40),
+          SOIL = colDef(name = "Soil", width = 160),
+          color = colDef(
+            name = "",
+            width = 30,
+            html = TRUE,
+            cell = JS(
+              "function(cellInfo) {
+              return `<div style='margin:auto;width:20px;height:20px; border-radius:3px;
+              background-color:${cellInfo.value}'><div>`}"
+            )
+          )
+        ),
+        h1,
+        h2
+      ),
+      columnGroups = list(
+        colGroup(name = "Soil Type", columns = c("soil_id", "color", "SOIL"), headerClass = "soil_group"),
+        colGroup(name = "Top Soil Properties", columns = hydro_prop, headerClass = "soil_group"),
+        colGroup(name = "Sub Soil Properties", columns = paste0("SUB_", hydro_prop), headerClass = "soil_group")
+      ),
+      defaultColDef = colDef(format = colFormat(digit = 2))
+    )
+  })
+  
+  observeEvent(input$import_soil_button, {
+    v$soil_type_df <- vd$soil_type_global_df
+  })
+  
+  
+  observe({
+    sl_df <- v$soil_layer_df
+    if (is.null(sl_df) || nrow(sl_df) == 0)
+      return()
+    #Soil properties
+    sdf <- sl_df[c(hydro_id, hydro_prop)]
+    sdf <- sdf[!duplicated(sdf), ]
+    sdf[sdf < 0] <- NA
+    if (any(is.na(sdf))) {
+      agg_type_df <- aggregate(sdf[hydro_prop], list(
+        SMU_ID = sdf$SMU_ID,
+        soil_type = sdf$soil_type
+      ), function(x)
+        mean(x, na.rm = T))
+      for (id in unique(agg_type_df$SMU_ID)) {
+        for (st in agg_type_df$soil_type) {
+          if (any(is.na(sdf[sdf$SMU_ID == id & sdf$soil_type == st, ]))) {
+            for (coln in hydro_prop) {
+              vdf <- sdf[sdf$SMU_ID == id & sdf$soil_type == st, coln]
+              vdf[is.na(vdf)] <- agg_type_df[agg_type_df$SMU_ID == id &
+                                               agg_type_df$soil_type == st, coln]
+              sdf[sdf$SMU_ID == id &
+                    sdf$soil_type == st, coln] <- vdf
+            }
+          }
+        }
+      }
+    }
+    
+    sdf$layer_share <- (sdf$BOTDEP - sdf$TOPDEP) / max(sdf$BOTDEP)
+    
+    data_top <- sdf[sdf$soil_depth == "0-20", c("SOIL", hydro_prop)]
+    data_sub <- sdf[sdf$soil_depth != "0-20", c("SOIL", hydro_prop, "layer_share")]
+    
+    data_sub[hydro_prop] <- data_sub[hydro_prop] *  data_sub$layer_share
+    data_sub <- aggregate(data_sub[c(hydro_prop, "layer_share")], by = data_sub["SOIL"], sum, na.rm = T)
+    data_sub[hydro_prop] <- data_sub[hydro_prop] / data_sub$layer_share
+    data_sub <- data_sub[c("SOIL", hydro_prop)]
+    
+    # data_sub <- aggregate(data_sub[hydro_prop], by = data_sub["SOIL"], mean, na.rm = T)
+    names(data_sub) <- c("SOIL", paste0("SUB_", hydro_prop))
+    df <- merge(data_top, data_sub, by = c("SOIL"))
+    df$soil_id <- c(1:nrow(data_top))
+    df$color <- get_color(df$soil_id)
+    vd$soil_type_global_df <- df[soil_type_cols]
+    vd$soil_water_content_global_df <- calculate_soil_water_table(vd$soil_type_global_df, sdf[sdf$soil_depth == "0-20", "layer_share"])
+    update_soil_water_content()
+  })
+  
+  
+  calculate_soil_water_table <- function(soil_df, top_depth) {
+    if (is.null(soil_df))
+      return()
+    soil_df <- soil_df[complete.cases(soil_df), ]
+    if (nrow(soil_df) == 0)
+      return()
+    print("calculate_soil_water_table")
+    #LC properties
+    lc_par_df <- v$lc_par_df
+    #Calculate hydraulic properties of top soil
+    top_soil_df <- soil_df[soil_type_top_cols]
+    nsid <- nrow(top_soil_df)
+    nlc <- nrow(lc_par_df)
+    rep_lc <- lc_par_df[rep(seq_len(nrow(lc_par_df)), nsid), ]
+    rep_s <- top_soil_df[rep(seq_len(nrow(top_soil_df)), each = nlc), ]
+    df <- cbind(rep_lc, rep_s)
+    df$bulk_density <- df$I_BD_BDRefVegNow * df$REF_BULK
+    df$part <- "top"
+    
+    sub_soil_df <- soil_df[soil_type_sub_cols]
+    colnames(sub_soil_df) <- soil_type_top_cols
+    sub_soil_df$bulk_density <- sub_soil_df$BULK
+    sub_soil_df$part <- "sub"
+    sub_soil_df$lc_id <- ""
+    scols <- c(soil_type_top_cols, "bulk_density", "lc_id", "part")
+    df <- rbind(df[scols], sub_soil_df[scols])
+    
+    df$soil_saturation <- pt.thetaSat.tropic(df$CLAY,
+                                             df$SAND,
+                                             df$bulk_density,
+                                             df$CEC_SOIL,
+                                             df$PH_WATER)
+    df$field_capacity <- pt.theta.tropic(-33,
+                                         df$CLAY,
+                                         df$bulk_density,
+                                         df$SILT,
+                                         df$ORG_CARBON,
+                                         df$CEC_SOIL,
+                                         df$PH_WATER)
+    df$permanent_wilting_point <- pt.theta.tropic(
+      -1500,
+      df$CLAY,
+      df$bulk_density,
+      df$SILT,
+      df$ORG_CARBON,
+      df$CEC_SOIL,
+      df$PH_WATER
+    )
+    # I_SoilSatMinFC
+    df["soil_quick_flow_capacity"] <- df["soil_saturation"] - df["field_capacity"]
+    # I_PlantAvWat
+    df["plant_available_water"] <- df["field_capacity"] - df["permanent_wilting_point"]
+    # I_PWP
+    df["inaccessible_water"] <- df["permanent_wilting_point"]
+    
+    swt <- c("soil_quick_flow_capacity",
+             "plant_available_water",
+             "inaccessible_water")
+    
+    top_df <- df[df$part == "top", c("soil_id", "SOIL", "lc_id", swt)]
+    names(top_df) <- c("soil_id", "soil", "lc_id", paste0("top_", swt))
+    sub_df <- df[df$part == "sub", c("soil_id", swt)]
+    names(sub_df) <- c("soil_id", paste0("sub_", swt))
+    
+    all_df <- merge(top_df,
+                    sub_df,
+                    by = c("soil_id"),
+                    all.x = T)
+    all_df[swt] <- all_df[paste0("top_", swt)] * top_depth + all_df[paste0("sub_", swt)] * (1 -
+                                                                                              top_depth)
+    return(all_df[c("soil_id", "soil", "lc_id", swt)])
+  }
+  
+  observeEvent(input$soil_type_select, {
+    v$soil_cfg$soil_type_select <- input$soil_type_select
+    update_soil_water_content()
+    repaint_segments()
+  })
+  
+  update_soil_water_content <- function() {
+    s <- isolate(v$soil_cfg$soil_type_select)
+    if (is.null(s))
+      return()
+    if (s == "soil_type_user") {
+      v$soil_water_content_df <- vd$soil_water_content_user_df
+    } else {
+      v$soil_water_content_df <- vd$soil_water_content_global_df
+    }
+  }
+  
+  
+  
+  
+  
+  update_soil_legend <- reactiveVal(F)
+  
+  # observe({
+  #   if (update_soil_legend())
+  #     update_soil_legend(F)
+  #   min_d <- input$min_soil_depth_input
+  #   max_d <- input$max_soil_depth_input
+  #   v$genriver_cfg$min_soil_depth <- min_d
+  #   v$genriver_cfg$max_soil_depth <- max_d
+  #
+  #   val <- c(min_d:max_d)
+  #   pal <- colorNumeric(rev(soil_color(10)), val, na.color = "transparent")
+  #   leafletProxy("soil_depth_leaflet", session) |>
+  #     removeControl("soil_depth_legend") |>
+  #     addLegend(
+  #       layerId = "soil_depth_legend",
+  #       pal = pal,
+  #       values = val,
+  #       opacity = 0.8,
+  #       title = "Soil Depth (cm)"
+  #     )
+  # })
+  
+  # output$soil_depth_leaflet <- renderLeaflet({
+  #   m <- vd$slope_factor_stars
+  #   if (is.null(m))
+  #     return()
+  #   lf <- base_leaflet() |>
+  #     addGeoRaster(
+  #       m,
+  #       colorOptions = colorOptions(palette = rev(soil_color(256))),
+  #       opacity = 0.8,
+  #       layerId = 'soil_depth_map'
+  #     ) |>
+  #     fit_map_view(m) |>
+  #     addHomeButton(ext = st_bbox(m),
+  #                   group = "Home",
+  #                   position = "topleft")
+  #   update_soil_legend(T)
+  #   return(lf)
+  # })
+  #
+  # output$slope_map_leaflet <- renderLeaflet({
+  #   m <- vd$slope_stars
+  #   if (is.null(m))
+  #     return()
+  #   m <- st_as_stars(m)
+  #   val <- range(m[[1]], na.rm = T)
+  #   pal <- colorNumeric(grad_color(10), val, na.color = "transparent")
+  #   lf <- base_leaflet() |>
+  #     addGeoRaster(
+  #       m,
+  #       colorOptions = colorOptions(palette = grad_color(256)),
+  #       opacity = 0.8,
+  #       layerId = 'slope_map'
+  #     ) |>
+  #     fit_map_view(m) |>
+  #     addHomeButton(ext = st_bbox(m),
+  #                   group = "Home",
+  #                   position = "topleft") |>
+  #     addLegend(
+  #       layerId = "slope_legend",
+  #       pal = pal,
+  #       values = val,
+  #       opacity = 0.8,
+  #       title = "Slope (deg)"
+  #     )
+  #   return(lf)
+  # })
   
   
   # observeEvent(input$soil_map_leaflet_shape_click, {
@@ -2736,14 +3276,13 @@ server <- function(input, output, session) {
   #     if (click_inp$id == "ws_boundary") {
   #       withProgress(message = 'Please wait while generating soil map',
   #                    value = 0,
-  #                    
+  #
   #                    generate_soil_map())
   #     }
   #   }
   # })
   
-  soil_db_path <- "soil/HWSD2.sqlite"
-  soil_map_path <- "/vsizip/soil/HWSD2_RASTER.zip/HWSD2.bil"
+  
   
   
   generate_soil_db <- function(smu_ids) {
@@ -2784,6 +3323,10 @@ server <- function(input, output, session) {
     v$soil_layer_df <- s
     dbDisconnect(db)
   }
+  
+  
+  
+  
   
   #by sequence in layer D1
   c1 <- c(
@@ -2828,6 +3371,22 @@ server <- function(input, output, session) {
     "GYPSUM",
     "ELEC_COND"
   )
+  
+  # get_soil_header <- function(x) {
+  #   df <- v$soil_metadata_df[v$soil_metadata_df$FIELD %in% x, ]
+  #   df[match(x, df$FIELD), ]
+  #   paste0(df$DESCRIPTION, ifelse(
+  #     is.na(df$UNIT) |
+  #       df$UNIT == "",
+  #     "",
+  #     paste0(
+  #       " <span style='color:#BBBBBB;font-weight: normal;'>[",
+  #       gsub("\\s", "", df$UNIT),
+  #       "]</span>"
+  #     )
+  #   ))
+  # }
+  
   ### soil info by ID ###
   generate_soil_info <- function(smu_id) {
     s <- v$soil_layer_df[v$soil_layer_df$SMU_ID == smu_id, ]
@@ -2852,20 +3411,21 @@ server <- function(input, output, session) {
     hlist <- list(general = cg,
                   physical = c2[-1],
                   chemical = c3[-1])
-    d$header <- lapply(hlist, function(x) {
-      df <- v$soil_metadata_df[v$soil_metadata_df$FIELD %in% x, ]
-      df[match(x, df$FIELD), ]
-      paste0(df$DESCRIPTION, ifelse(
-        is.na(df$UNIT) |
-          df$UNIT == "",
-        "",
-        paste0(
-          " <span style='color:#BBBBBB;font-weight: normal;'>[",
-          gsub("\\s", "", df$UNIT),
-          "]</span>"
-        )
-      ))
-    })
+    d$header <- lapply(hlist, get_soil_db_header)
+    # d$header <- lapply(hlist, function(x) {
+    #   df <- v$soil_metadata_df[v$soil_metadata_df$FIELD %in% x, ]
+    #   df[match(x, df$FIELD), ]
+    #   paste0(df$DESCRIPTION, ifelse(
+    #     is.na(df$UNIT) |
+    #       df$UNIT == "",
+    #     "",
+    #     paste0(
+    #       " <span style='color:#BBBBBB;font-weight: normal;'>[",
+    #       gsub("\\s", "", df$UNIT),
+    #       "]</span>"
+    #     )
+    #   ))
+    # })
     d$header$general <- c("Soil Type", d$header$general)
     d$header$physical <- c("Soil Depth", d$header$physical)
     d$header$chemical <- c("Soil Depth", d$header$chemical)
@@ -2973,207 +3533,171 @@ server <- function(input, output, session) {
   
   ### SOIL HYDRAULIC ##############################
   
-  hydro_id <- c("SMU_ID", "SHARE", "soil_type","SOIL", "soil_depth", "TOPDEP", "BOTDEP")
-  hydro_prop <- c("SAND",
-                  "SILT",
-                  "CLAY",
-                  "BULK",
-                  "REF_BULK",
-                  "ORG_CARBON",
-                  "CEC_SOIL",
-                  "PH_WATER")
-  
-  observe({
-    sl_df <- v$soil_layer_df
-    if (is.null(sl_df) || nrow(sl_df) == 0)
-      return()
-    #Soil properties
-    sdf <- sl_df[c(hydro_id, hydro_prop)]
-    sdf <- sdf[!duplicated(sdf), ]
-    sdf[sdf < 0] <- NA
-    if (any(is.na(sdf))) {
-      agg_type_df <- aggregate(sdf[hydro_prop], list(
-        SMU_ID = sdf$SMU_ID,
-        soil_type = sdf$soil_type
-      ), function(x)
-        mean(x, na.rm = T))
-      for (id in unique(agg_type_df$SMU_ID)) {
-        for (st in agg_type_df$soil_type) {
-          if (any(is.na(sdf[sdf$SMU_ID == id & sdf$soil_type == st, ]))) {
-            for (coln in hydro_prop) {
-              vdf <- sdf[sdf$SMU_ID == id & sdf$soil_type == st, coln]
-              vdf[is.na(vdf)] <- agg_type_df[agg_type_df$SMU_ID == id &
-                                               agg_type_df$soil_type == st, coln]
-              sdf[sdf$SMU_ID == id &
-                    sdf$soil_type == st, coln] <- vdf
-            }
-          }
-        }
-      }
-    }
-    
-    sdf$layer_share <- (sdf$BOTDEP - sdf$TOPDEP)/200
-    
-    # sdf[hydro_prop] <- sdf[hydro_prop] * sdf$SHARE / 100
-    # soil_df <- aggregate(
-    #   sdf[hydro_prop],
-    #   list(
-    #     SMU_ID = sdf$SMU_ID,
-    #     soil_depth = sdf$soil_depth,
-    #     TOPDEP = sdf$TOPDEP
-    #   ),
-    #   sum
-    # )
-    
-    soil_df <- sdf
-    #Calculate hydraulic properties of all layers
-    soil_df$soil_saturation <- pt.thetaSat.tropic(soil_df$CLAY,
-                                                  soil_df$SAND,
-                                                  soil_df$BULK,
-                                                  soil_df$CEC_SOIL,
-                                                  soil_df$PH_WATER)
-    soil_df$field_capacity <- pt.theta.tropic(
-      -33,
-      soil_df$CLAY,
-      soil_df$BULK,
-      soil_df$SILT,
-      soil_df$ORG_CARBON,
-      soil_df$CEC_SOIL,
-      soil_df$PH_WATER
-    )
-    soil_df$permanent_wilting_point <- pt.theta.tropic(
-      -1500,
-      soil_df$CLAY,
-      soil_df$BULK,
-      soil_df$SILT,
-      soil_df$ORG_CARBON,
-      soil_df$CEC_SOIL,
-      soil_df$PH_WATER
-    )
-    
-    sw_types <- unlist(soil_water_types)
-    
-    soil_df[sw_types] <-  soil_df[sw_types] * soil_df$layer_share
-    swsub_df <- soil_df[soil_df$soil_depth != "0-20",]
-    swsub_df <- aggregate(swsub_df[c("layer_share",sw_types)], list(soil = swsub_df$SOIL), sum)
-    
-    swsub_df["soil_quick_flow_capacity"] <- swsub_df["soil_saturation"] - swsub_df["field_capacity"]
-    swsub_df["plant_available_water"] <- swsub_df["field_capacity"] - swsub_df["permanent_wilting_point"]
-    
-    #convert to mm of depth
-    # soil_df[paste0(sw_types, "_ws")] <- soil_df[paste0(sw_types)] * 200 
-    # swsub_df <- aggregate(soil_df[soil_df$SMU_ID != "0-20", paste0(sw_types, "_ws")], list(SMU_ID = soil_df$SMU_ID), sum)
-    # 
-    
-    #LC properties
-    lc_par_df <- v$lc_par_df
-    #Calculate hydraulic properties of top soil
-    top_soil_df <- soil_df[soil_df$soil_depth == "0-20", ]
-    nsid <- nrow(top_soil_df)
-    nlc <- nrow(lc_par_df)
-    rep_lc <- lc_par_df[rep(seq_len(nrow(lc_par_df)), nsid), ]
-    rep_s <- top_soil_df[rep(seq_len(nrow(top_soil_df)), each = nlc), ]
-    df <- cbind(rep_lc, rep_s)
-    df$bulk_density <- df$I_BD_BDRefVegNow * df$REF_BULK
-    df$soil_saturation <- pt.thetaSat.tropic(df$CLAY,
-                                             df$SAND,
-                                             df$bulk_density,
-                                             df$CEC_SOIL,
-                                             df$PH_WATER)
-    df$field_capacity <- pt.theta.tropic(-33,
-                                         df$CLAY,
-                                         df$bulk_density,
-                                         df$SILT,
-                                         df$ORG_CARBON,
-                                         df$CEC_SOIL,
-                                         df$PH_WATER)
-    df$permanent_wilting_point <- pt.theta.tropic(
-      -1500,
-      df$CLAY,
-      df$bulk_density,
-      df$SILT,
-      df$ORG_CARBON,
-      df$CEC_SOIL,
-      df$PH_WATER
-    )
-    df[sw_types] <- df[sw_types] * df$layer_share 
-    # top_cols <- c("lc_id", "SMU_ID", sw_types, "bulk_density", "I_BD_BDRefVegNow")
-    top_cols <- c("lc_id", "SOIL", sw_types, "bulk_density", "I_BD_BDRefVegNow")
-    topsoil_df <- df[top_cols]
-    
-    # def_df <- soil_df[soil_df$soil_depth == "0-20", c("SMU_ID", sw_types, "BULK", "REF_BULK")]
-    def_df <- soil_df[soil_df$soil_depth == "0-20", c("SOIL", sw_types, "BULK", "REF_BULK")]
-    def_df$lc_id <- -999
-    def_df$bulk_density <- def_df$BULK
-    def_df$I_BD_BDRefVegNow <- def_df$BULK/def_df$REF_BULK
-    topsoil_df <- rbind(topsoil_df, def_df[top_cols])  
-    v$soil_hydraulic_top_df <- topsoil_df
-    v$soil_hydraulic_sub_df <- soil_df
-    
-    topsoil_df["soil_quick_flow_capacity"] <- topsoil_df["soil_saturation"] - topsoil_df["field_capacity"]
-    topsoil_df["plant_available_water"] <- topsoil_df["field_capacity"] - topsoil_df["permanent_wilting_point"]
-    
-    
-    wcol <- c("soil_quick_flow_capacity", "plant_available_water", "permanent_wilting_point")
-    w <- swsub_df[wcol]
-    colnames(w) <- paste0(wcol, "_sub")
-    w$soil <- swsub_df$soil
-    
-    sw_df <- topsoil_df[c("lc_id", wcol)]
-    sw_df$soil <- topsoil_df$SOIL
-    sw_df <- merge(sw_df, w, by = "soil")
-    sw_av_df <- sw_df[c("soil", "lc_id")]
-    #### calculate water availability ####
-    # I_SoilSatMinFC
-    sw_av_df["soil_quick_flow_capacity"] <- sw_df["soil_quick_flow_capacity"] + sw_df["soil_quick_flow_capacity_sub"]
-    # I_PlantAvWat
-    sw_av_df["plant_available_water"] <- sw_df["plant_available_water"] + sw_df["plant_available_water_sub"] 
-    #  I_PWP
-    sw_av_df["inaccessible_water"] <- sw_df["permanent_wilting_point"] + sw_df["permanent_wilting_point_sub"]
-    # v$soil_water_content_df <- sw_df[c("SMU_ID", "lc_id", sw_types)]
-    
-    
-    # #calculate soil water
-    # sw_df <- topsoil_df[c("SMU_ID", "lc_id", sw_types)]
-    # #convert to mm of depth
-    # sw_df[paste0(sw_types, "_wt")] <- sw_df[paste0(sw_types)] * 200
-    # sw_df <- merge(sw_df, swsub_df, by = "SMU_ID")
-    # # sw_df[sw_types] <- sw_df[paste0(sw_types, "_w")] + sw_df[paste0(sw_types, "_ws")]
-    # sw_av_df <- sw_df[c("SMU_ID", "lc_id")]
-
-    # # I_SoilSatMinFC
-    # sw_av_df["soil_quick_flow_capacity"] <- sw_df["soil_saturation_wt"] - sw_df["field_capacity_wt"] +
-    #   sw_df["soil_saturation_ws"] - sw_df["field_capacity_ws"]
-    # # I_PlantAvWat
-    # sw_av_df["plant_available_water"] <- sw_df["field_capacity_wt"] - sw_df["permanent_wilting_point_wt"] +
-    #   sw_df["field_capacity_ws"] - sw_df["permanent_wilting_point_ws"]
-    # #  I_PWP
-    # sw_av_df["inaccessible_water"] <- sw_df["permanent_wilting_point_wt"] + sw_df["permanent_wilting_point_ws"]
-    # v$soil_water_content_df <- sw_df[c("SMU_ID", "lc_id", sw_types)]
-    v$soil_water_content_df <- sw_av_df
-  })
+  # hydro_id <- c("SMU_ID",
+  #               "SHARE",
+  #               "soil_type",
+  #               "SOIL",
+  #               "soil_depth",
+  #               "TOPDEP",
+  #               "BOTDEP")
+  # hydro_prop <- c("SAND",
+  #                 "SILT",
+  #                 "CLAY",
+  #                 "BULK",
+  #                 "REF_BULK",
+  #                 "ORG_CARBON",
+  #                 "CEC_SOIL",
+  #                 "PH_WATER")
   
   # observe({
-  #   wfield <- input$soil_water_select
-  #   soil_df <- v$soil_water_content_df
-  #   if(all(is.na(soil_df[soil_df$lc_id != -999, wfield]))) {
-  #     vd$soil_water_map_stars_list <- NULL
+  #   sl_df <- v$soil_layer_df
+  #   if (is.null(sl_df) || nrow(sl_df) == 0)
   #     return()
+  #   #Soil properties
+  #   sdf <- sl_df[c(hydro_id, hydro_prop)]
+  #   sdf <- sdf[!duplicated(sdf), ]
+  #   sdf[sdf < 0] <- NA
+  #   if (any(is.na(sdf))) {
+  #     agg_type_df <- aggregate(sdf[hydro_prop], list(
+  #       SMU_ID = sdf$SMU_ID,
+  #       soil_type = sdf$soil_type
+  #     ), function(x)
+  #       mean(x, na.rm = T))
+  #     for (id in unique(agg_type_df$SMU_ID)) {
+  #       for (st in agg_type_df$soil_type) {
+  #         if (any(is.na(sdf[sdf$SMU_ID == id & sdf$soil_type == st, ]))) {
+  #           for (coln in hydro_prop) {
+  #             vdf <- sdf[sdf$SMU_ID == id & sdf$soil_type == st, coln]
+  #             vdf[is.na(vdf)] <- agg_type_df[agg_type_df$SMU_ID == id &
+  #                                              agg_type_df$soil_type == st, coln]
+  #             sdf[sdf$SMU_ID == id &
+  #                   sdf$soil_type == st, coln] <- vdf
+  #           }
+  #         }
+  #       }
+  #     }
   #   }
-  #   # smu_ids <- unique(soil_df$SMU_ID)
-  #   soil_m <- isolate(v$soil_map_stars)
-  #   print("generate_soil_water_map")
-  #   lc_ms <- isolate(v$lc_map_crop_stars_list)
-  #   mlist <- list()
-  #   val_df <- soil_df[c("SMU_ID", "lc_id", wfield)]
-  #   colnames(val_df) <- c("SMU_ID", "lc_id", "value")
-  #   for(mid in names(lc_ms)) {
-  #     lc_m <- st_as_stars(lc_ms[[mid]])
-  #     
-  #     mlist[[mid]] <- lc_soil_value_map(lc_m, soil_m, val_df)
-  #   }
-  #   vd$soil_water_map_stars_list <- mlist
+  #   sdf$layer_share <- (sdf$BOTDEP - sdf$TOPDEP) / 200
+  #   soil_df <- sdf
+  #   #Calculate hydraulic properties of all layers
+  #   soil_df$soil_saturation <- pt.thetaSat.tropic(soil_df$CLAY,
+  #                                                 soil_df$SAND,
+  #                                                 soil_df$BULK,
+  #                                                 soil_df$CEC_SOIL,
+  #                                                 soil_df$PH_WATER)
+  #   soil_df$field_capacity <- pt.theta.tropic(
+  #     -33,
+  #     soil_df$CLAY,
+  #     soil_df$BULK,
+  #     soil_df$SILT,
+  #     soil_df$ORG_CARBON,
+  #     soil_df$CEC_SOIL,
+  #     soil_df$PH_WATER
+  #   )
+  #   soil_df$permanent_wilting_point <- pt.theta.tropic(
+  #     -1500,
+  #     soil_df$CLAY,
+  #     soil_df$BULK,
+  #     soil_df$SILT,
+  #     soil_df$ORG_CARBON,
+  #     soil_df$CEC_SOIL,
+  #     soil_df$PH_WATER
+  #   )
+  #
+  #   sw_types <- unlist(soil_water_types)
+  #   soil_df[sw_types] <-  soil_df[sw_types] * soil_df$layer_share
+  #   # print(head(soil_df))
+  #
+  #   swsub_df <- soil_df[soil_df$soil_depth != "0-20", ]
+  #   swsub_df <- aggregate(swsub_df[c("layer_share", sw_types)], list(soil = swsub_df$SOIL), sum)
+  #   swsub_df["soil_quick_flow_capacity"] <- swsub_df["soil_saturation"] - swsub_df["field_capacity"]
+  #   swsub_df["plant_available_water"] <- swsub_df["field_capacity"] - swsub_df["permanent_wilting_point"]
+  #
+  #   #LC properties
+  #   lc_par_df <- v$lc_par_df
+  #   #Calculate hydraulic properties of top soil
+  #   top_soil_df <- soil_df[soil_df$soil_depth == "0-20", ]
+  #   nsid <- nrow(top_soil_df)
+  #   nlc <- nrow(lc_par_df)
+  #   rep_lc <- lc_par_df[rep(seq_len(nrow(lc_par_df)), nsid), ]
+  #   rep_s <- top_soil_df[rep(seq_len(nrow(top_soil_df)), each = nlc), ]
+  #   df <- cbind(rep_lc, rep_s)
+  #   df$bulk_density <- df$I_BD_BDRefVegNow * df$REF_BULK
+  #   df$soil_saturation <- pt.thetaSat.tropic(df$CLAY,
+  #                                            df$SAND,
+  #                                            df$bulk_density,
+  #                                            df$CEC_SOIL,
+  #                                            df$PH_WATER)
+  #   df$field_capacity <- pt.theta.tropic(-33,
+  #                                        df$CLAY,
+  #                                        df$bulk_density,
+  #                                        df$SILT,
+  #                                        df$ORG_CARBON,
+  #                                        df$CEC_SOIL,
+  #                                        df$PH_WATER)
+  #   df$permanent_wilting_point <- pt.theta.tropic(
+  #     -1500,
+  #     df$CLAY,
+  #     df$bulk_density,
+  #     df$SILT,
+  #     df$ORG_CARBON,
+  #     df$CEC_SOIL,
+  #     df$PH_WATER
+  #   )
+  #   df[sw_types] <- df[sw_types] * df$layer_share
+  #   # print("--------")
+  #   # print(head(df))
+  #   # print("--------")
+  #   top_cols <- c("lc_id",
+  #                 "SOIL",
+  #                 sw_types,
+  #                 "bulk_density",
+  #                 "I_BD_BDRefVegNow")
+  #   topsoil_df <- df[top_cols]
+  #
+  #   def_df <- soil_df[soil_df$soil_depth == "0-20", c("SOIL", sw_types, "BULK", "REF_BULK")]
+  #   def_df$lc_id <- -999
+  #   def_df$bulk_density <- def_df$BULK
+  #   def_df$I_BD_BDRefVegNow <- def_df$BULK / def_df$REF_BULK
+  #   topsoil_df <- rbind(topsoil_df, def_df[top_cols])
+  #   v$soil_hydraulic_top_df <- topsoil_df
+  #   v$soil_hydraulic_sub_df <- soil_df
+  #
+  #   topsoil_df["soil_quick_flow_capacity"] <- topsoil_df["soil_saturation"] - topsoil_df["field_capacity"]
+  #   topsoil_df["plant_available_water"] <- topsoil_df["field_capacity"] - topsoil_df["permanent_wilting_point"]
+  #
+  #
+  #   wcol <- c(
+  #     "soil_quick_flow_capacity",
+  #     "plant_available_water",
+  #     "permanent_wilting_point"
+  #   )
+  #   w <- swsub_df[wcol]
+  #   colnames(w) <- paste0(wcol, "_sub")
+  #   w$soil <- swsub_df$soil
+  #
+  #   sw_df <- topsoil_df[c("lc_id", wcol)]
+  #   sw_df$soil <- topsoil_df$SOIL
+  #   sw_df <- merge(sw_df, w, by = "soil")
+  #   sw_av_df <- sw_df[c("soil", "lc_id")]
+  #   #### calculate water availability ####
+  #   # I_SoilSatMinFC
+  #   sw_av_df["soil_quick_flow_capacity"] <- sw_df["soil_quick_flow_capacity"] + sw_df["soil_quick_flow_capacity_sub"]
+  #   # I_PlantAvWat
+  #   sw_av_df["plant_available_water"] <- sw_df["plant_available_water"] + sw_df["plant_available_water_sub"]
+  #   #  I_PWP
+  #   sw_av_df["inaccessible_water"] <- sw_df["permanent_wilting_point"] + sw_df["permanent_wilting_point_sub"]
+  #   print("global")
+  #   print(head(sw_av_df))
+  #   vd$soil_water_content_global_df <- sw_av_df
   # })
+  #
+  
+  
+  
+  
+  
+  
   
   lc_soil_value_map <- function(lc_map, soil_map, val_df) {
     # LC map
@@ -3183,14 +3707,14 @@ server <- function(input, output, session) {
     soil_m <- st_as_stars(soil_map)
     smu_ids <- unique(as.vector(soil_m[[1]]))
     smu_ids <- smu_ids[!is.na(smu_ids)]
-    for(smu_id in smu_ids) {
+    for (smu_id in smu_ids) {
       wm <- lc_m
       df <- val_df[val_df$SMU_ID == smu_id, c("lc_id", "value")]
       defval <- df[df$lc_id == -999, "value"]
       df[is.na(df)] <- defval
       wm[soil_m != smu_id] <- NA
       wm <- reclassify_map(wm, df)
-      if(is.null(wmc)) {
+      if (is.null(wmc)) {
         wmc <- wm
       } else {
         wmc <- st_mosaic(wmc, wm)
@@ -3199,8 +3723,8 @@ server <- function(input, output, session) {
     return(wmc)
   }
   
-  #### Map soil water content by land cover################  
-
+  #### Map soil water content by land cover################
+  
   observe({
     wfield <- input$soil_water_select
     soil_df <- v$soil_water_content_df
@@ -3214,72 +3738,142 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$generate_soil_water_button, {
-    calculate_soil_water()
-    calculate_sub_soil_water()
+    # calculate_soil_water()
+    calculate_soil_water_map()
+    # calculate_sub_soil_water()
   })
-
-  soil_water_vdf <- data.frame(
-  soil_water_v = c("soil_quick_flow_capacity_stars_list",
-  "soil_plant_available_water_stars_list", 
-  "soil_inaccessible_water_stars_list"),
-  col_v = c("soil_quick_flow_capacity",
-  "plant_available_water",
-  "inaccessible_water"))
   
-  calculate_soil_water <- function() {
-    print("calculate_soil_water")
+  soil_water_vdf <- data.frame(
+    soil_water_v = c(
+      "soil_quick_flow_capacity_stars_list",
+      "soil_plant_available_water_stars_list",
+      "soil_inaccessible_water_stars_list"
+    ),
+    col_v = c(
+      "soil_quick_flow_capacity",
+      "plant_available_water",
+      "inaccessible_water"
+    )
+  )
+  
+  # calculate_soil_water <- function() {
+  #   print("calculate_soil_water")
+  #
+  #   soil_df <- v$soil_water_content_df
+  #   soil_sf <- v$slope_class_sf
+  #   slopef_m <- vd$slope_factor_stars
+  #   lc_ms <- v$lc_map_crop_stars_list
+  #   if (is.null(soil_df)) {
+  #     showNotification("Soil properties are not set", type = "error")
+  #     return()
+  #   }
+  #
+  #   if (is.null(soil_sf)) {
+  #     generate_slope_classes()
+  #     soil_sf <- v$slope_class_sf
+  #     slopef_m <- vd$slope_factor_stars
+  #     # return()
+  #   }
+  #   #soil depth
+  #   min_d <- v$genriver_cfg$min_soil_depth
+  #   max_d <- v$genriver_cfg$max_soil_depth
+  #   sd_m <- slopef_m * (max_d - min_d) +  min_d
+  #
+  #   lcmids <- names(lc_ms)
+  #   ss <- unique(soil_df$soil)
+  #   withProgress(value = 0, {
+  #     pinc <- 1 / (length(lcmids) * length(ss))
+  #     wflist <- as.vector(unlist(soil_water_availability))
+  #     for (i in 1:3) {
+  #       wf <- wflist[i]
+  #       setProgress(
+  #         0,
+  #         message = paste0("Calculating soil water (", i, " of 3):"),
+  #         detail = wf
+  #       )
+  #       mlist <- list()
+  #       for (map_id in lcmids) {
+  #         lc_m <- st_as_stars(lc_ms[[map_id]])
+  #         wm <- NULL
+  #         for (s in ss) {
+  #           incProgress(pinc)
+  #           ssf <- soil_sf[soil_sf$soil == s, "class"]
+  #           ssf_m <- st_rasterize(ssf, lc_m, align = T)
+  #           lcs_m <- crop_raster(lc_m, ssf_m)
+  #           val_df <- soil_df[soil_df$soil == s, c("lc_id", wf)]
+  #           val_m <- reclassify_map(lcs_m, val_df)
+  #           if (is.null(wm)) {
+  #             wm <- val_m
+  #           } else {
+  #             wm <- st_mosaic(wm, val_m)
+  #           }
+  #         }
+  #         wm2 <- crop_raster(wm, sd_m)
+  #         #multiply with soil depth in mm
+  #         mlist[[map_id]] <- wm2 * sd_m * 10
+  #       }
+  #       var <- soil_water_vdf[soil_water_vdf$col_v == wf, "soil_water_v"]
+  #       v[[var]] <- mlist
+  #     }
+  #   })
+  # }
+  
+  calculate_soil_water_map <- function() {
+    print("calculate_soil_water_map")
+    if (isolate(v$soil_cfg$soil_type_select) == "soil_type_user") {
+      soil_sf <- isolate(v$soil_segments_sf)
+    } else {
+      soil_sf <- isolate(v$soil_segments_global_sf)
+    }
+    soil_sf <- soil_sf[c("soil_id")]
     soil_df <- v$soil_water_content_df
-    soil_sf <- v$slope_class_sf
-    slopef_m <- vd$slope_factor_stars
+    
     lc_ms <- v$lc_map_crop_stars_list
-    if (is.null(soil_df))
-      return()
-    #soil depth
-    min_d <- v$genriver_cfg$min_soil_depth
-    max_d <- v$genriver_cfg$max_soil_depth
-    sd_m <- slopef_m * (max_d - min_d) +  min_d
+    lc_m <- st_as_stars(lc_ms[[1]])
+    sd_m <- vd$soil_depth_stars
+    soil_m <- st_rasterize(soil_sf, sd_m)
     
     lcmids <- names(lc_ms)
-    ss <- unique(soil_df$soil)
-    
-    withProgress(message = 'Generating soil water map', value = 0, {
+    ss <- unique(soil_df$soil_id)
+    withProgress(value = 0, {
       pinc <- 1 / (length(lcmids) * length(ss))
       wflist <- as.vector(unlist(soil_water_availability))
       for (i in 1:3) {
         wf <- wflist[i]
-        setProgress(0)
+        setProgress(
+          0,
+          message = paste0("Calculating soil water map (", i, " of 3):"),
+          detail = wf
+        )
         mlist <- list()
         for (map_id in lcmids) {
           lc_m <- st_as_stars(lc_ms[[map_id]])
+          lc_m <- crop_raster(lc_m, sd_m)
           wm <- NULL
           for (s in ss) {
-            incProgress(pinc, detail = wf)
-            ssf <- soil_sf[soil_sf$soil == s, "class"]
-            ssf_m <- st_rasterize(ssf, lc_m, align = T)
-            lcs_m <- crop_raster(lc_m, ssf_m)
-            
-            val_df <- soil_df[soil_df$soil == s, c("lc_id", wf)]
-            val_m <- reclassify_map(lcs_m, val_df)
-            
+            incProgress(pinc)
+            #get the LC water value list of each soil type
+            val_df <- soil_df[soil_df$soil_id == s, c("lc_id", wf)]
+            val_df$lc_id <- as.numeric(val_df$lc_id)
+            val_m <- reclassify_map(lc_m, val_df)
+            val_m[soil_m != s] <- 0
             if (is.null(wm)) {
               wm <- val_m
             } else {
-              wm <- st_mosaic(wm, val_m)
+              wm <- wm + val_m
             }
           }
-          wm2 <- crop_raster(wm, sd_m)
-          #multiply with soil depth in mm
-          mlist[[map_id]] <- wm2 * sd_m * 10
+          # multiply with soil depth in mm
+          mlist[[map_id]] <- wm * sd_m * 10
         }
         var <- soil_water_vdf[soil_water_vdf$col_v == wf, "soil_water_v"]
         v[[var]] <- mlist
       }
     })
-  }  
-
+    calculate_sub_soil_water()
+  }
+  
   #### Soil Water By Subcatchment ###################
-  
-  
   
   calculate_sub_soil_water <- function() {
     qfc <- v[[soil_water_vdf$soil_water_v[1]]]
@@ -3287,7 +3881,10 @@ server <- function(input, output, session) {
     pwp <- v[[soil_water_vdf$soil_water_v[3]]]
     if (is.null(qfc) || is.null(paw) || is.null(pwp))
       return()
-    print('Calculating subcatchment soil water')
+    if (is.null(v$subc_lc_df)) {
+      v$subc_lc_df <- calculate_subcatchment_land_cover_area()
+    }
+    print("Calculating subcatchment soil water")
     # print(qfc)
     qfc <- lapply(qfc, st_as_stars)
     paw <- lapply(paw, st_as_stars)
@@ -3296,7 +3893,6 @@ server <- function(input, output, session) {
     sw <- soil_water_vdf$col_v
     lc_map_list <- v$lc_map_crop_stars_list
     lc_map_list <- lapply(lc_map_list, st_as_stars)
-    # lc_m <- st_as_stars(lc_map_list[[1]])
     lc_m <- lc_map_list[[1]]
     subc <- v$subcatchment_map_sf
     subc_stars <- st_rasterize(subc["ws_id"], lc_m, align = T)
@@ -3304,66 +3900,45 @@ server <- function(input, output, session) {
     subc_lc <- v$subc_lc_df
     subc_lc[sw] <- NULL
     map_ids <- unique(subc_lc$map_id)
-    # ws_ids <- sort(unique(subc_lc$ws_id))
-
-    pinc <- 1/length(map_ids)
+    
+    pinc <- 1 / length(map_ids)
     all_wdf <- NULL
     
     withProgress(message = 'Calculating subcatchment soil water', value = 0, {
-      # suppressMessages(
+      for (map_id in map_ids) {
+        incProgress(pinc, detail = paste("LC Map:", map_id))
+        lc_m <- lc_map_list[[map_id]]
+        qfc_m <- qfc[[map_id]]
+        paw_m <- paw[[map_id]]
+        pwp_m <- pwp[[map_id]]
         
-        for(map_id in map_ids) {
-            incProgress(pinc,
-                        detail = paste("LC Map:", map_id))
-          lc_m <- lc_map_list[[map_id]]
-          qfc_m <- qfc[[map_id]]
-          paw_m <- paw[[map_id]]
-          pwp_m <- pwp[[map_id]]
-          
-          # setProgress(0)
-          # for (ws_id in ws_ids) {
-          #   incProgress(pinc,
-          #               detail = paste("LC Map:", map_id, "Subcatchment:", ws_id, "of", max(ws_ids)))
-          #   df <- subc_lc[subc_lc$map_id == map_id &
-          #                   subc_lc$ws_id == ws_id, ]
-          #   sub_qfc_m <- qfc_m[subc_stars == ws_id]
-          #   sub_paw_m <- paw_m[subc_stars == ws_id]
-          #   sub_pwp_m <- pwp_m[subc_stars == ws_id]
-          #   for (lc_id in df$lc_id) {
-          #     qfc_v <- mean(sub_qfc_m[lc_m == lc_id][[1]], na.rm = T)
-          #     paw_v <- mean(sub_paw_m[lc_m == lc_id][[1]], na.rm = T)
-          #     pwp_v <- mean(sub_pwp_m[lc_m == lc_id][[1]], na.rm = T)
-          #     
-          #     subc_lc[subc_lc$map_id == map_id &
-          #               subc_lc$ws_id == ws_id &
-          #               subc_lc$lc_id == lc_id, sw] <- c(qfc_v, paw_v, pwp_v)
-          #   }
-          # }
-          
-          wdf <- data.frame(
-            map_id = map_id,
-            ws_id = as.vector(subc_stars[[1]]),
-                            lc_id = as.vector(lc_m[[1]]))
-          wdf[sw[1]] = as.vector(qfc_m[[1]])
-          wdf[sw[2]] = as.vector(paw_m[[1]])
-          wdf[sw[3]] = as.vector(pwp_m[[1]])
-          wdf <- wdf[!is.na(wdf$lc_id) & !is.na(wdf$ws_id), ]
-          if(is.null(all_wdf)) {
-            all_wdf <- wdf
-          } else {
-            all_wdf <- rbind(all_wdf, wdf)
-          }
-
+        wdf <- data.frame(
+          map_id = map_id,
+          ws_id = as.vector(subc_stars[[1]]),
+          lc_id = as.vector(lc_m[[1]])
+        )
+        wdf[sw[1]] = as.vector(qfc_m[[1]])
+        wdf[sw[2]] = as.vector(paw_m[[1]])
+        wdf[sw[3]] = as.vector(pwp_m[[1]])
+        wdf <- wdf[!is.na(wdf$lc_id) & !is.na(wdf$ws_id), ]
+        if (is.null(all_wdf)) {
+          all_wdf <- wdf
+        } else {
+          all_wdf <- rbind(all_wdf, wdf)
         }
-      
-      # )
-      
+        
+      }
     })
+    
     agg_wdf <- aggregate(all_wdf[sw], by = all_wdf[c("map_id", "ws_id", "lc_id")], mean, na.rm = T)
-    subc_lc <- merge(subc_lc, agg_wdf, by = c("map_id", "ws_id", "lc_id"),
+    subc_lc <- merge(subc_lc,
+                     agg_wdf,
+                     by = c("map_id", "ws_id", "lc_id"),
                      all.x = T)
     # print(subc_lc)
     v$subc_lc_df <- subc_lc
+    
+    showNotification("Soil water calculation done!", type = "message")
   }
   
   
@@ -3371,63 +3946,63 @@ server <- function(input, output, session) {
   
   observe({
     lc_ms <- vd$soil_water_map_stars_list
-    if(is.null(lc_ms)) {
-      output$soil_water_content_ui <- renderUI(p("Please complete the land cover hydrological properties parameters"))
+    map_df <- v$lc_map_df
+    
+    if (is.null(lc_ms)) {
+      output$soil_water_content_ui <- renderUI(p(
+        "Please complete the land cover hydrological properties parameters"
+      ))
       return()
     }
     output$soil_water_content_ui <- renderUI({
       layout_column_wrap(width = 0.5, !!!lapply(names(lc_ms), function(x) {
-        card(card_header(paste("Year:", x), class = "bg_light2"),
-             plotOutput(paste0("lc_map_crop_", x)))
+        card(full_screen = T, plotOutput(paste0("lc_map_crop_", x)))
       }))
     })
     
     lapply(names(lc_ms), function(x, ms) {
       output[[paste0("lc_map_crop_", x)]] <- renderPlot({
-        suppressMessages(
-        plot(
+        suppressMessages(plot(
           ms[[x]],
           col = water_color,
           breaks = "equal",
-          main = NULL
+          main = map_df[map_df$map_id == x, "year"]
         ))
       })
     }, lc_ms)
   })
-
+  
   
   observe({
-    df <- v$subc_soil_water_df
-    if(is.null(df)) {
-      output$soil_water_subcathment_ui <- renderUI(p("Please complete the land cover hydrological properties parameters"))
+    df <- v$subc_lc_df
+    map_df <- v$lc_map_df
+    if (is.null(df)) {
+      output$soil_water_subcathment_ui <- renderUI(p(
+        "Please complete the land cover hydrological properties parameters"
+      ))
       return()
     }
     map_ids <- unique(df$map_id)
     output$soil_water_subcathment_ui <- renderUI({
-      tagList(
-        selectInput("sub_soil_water_select", NULL, soil_water_availability),
       layout_column_wrap(width = 0.5, !!!lapply(map_ids, function(x) {
-        card(card_header(paste("Year:", x), class = "bg_light2"),
-             plotOutput(paste0("sub_soil_water_", x)))
+        card(full_screen = T, plotOutput(paste0("sub_soil_water_", x)))
       }))
-      )
+      # )
     })
     
     lapply(map_ids, function(x) {
       output[[paste0("sub_soil_water_", x)]] <- renderPlot({
-        wfield <- input$sub_soil_water_select
+        wfield <- input$soil_water_select
         subc <- v$subcatchment_map_sf["ws_id"]
-        df <- v$subc_soil_water_df
+        df <- v$subc_lc_df
         df <- df[df$map_id == x, c("ws_id", wfield)]
         df[wfield] <- round(as.numeric(df[[wfield]]))
         subc <- merge(subc, df, by = "ws_id")
         m <- subc[wfield]
-        plot(
-          m,
-          pal = water_color,
-          main = NULL,
-          key.pos = 4
-        )
+        plot(m,
+             pal = water_color,
+             main = map_df[map_df$map_id == x, "year"],
+             key.pos = 4)
       })
     })
   })
@@ -3440,89 +4015,93 @@ server <- function(input, output, session) {
     return(df)
   }
   
-  hydro_prop_coldef <- function() {
-    d <- lapply(hydro_prop , function(x) {
-      colDef(name = soil_fieldnames(x), html = T)
+  hydro_prop_coldef <- function(prop) {
+    d <- lapply(prop , function(x) {
+      colDef(name = get_soil_db_header(x), html = T)
+      # colDef(name = soil_fieldnames(x), html = T)
     })
-    names(d) <- hydro_prop
+    names(d) <- prop
     return(d)
   }
-
-  output$soil_hydraulic_top_table <- renderReactable({
-    df <- v$soil_hydraulic_top_df
-    if (is.null(df))
-      return()
-    hdf <- v$soil_metadata_df
-    adf <- get_lc_with_default()
-    df <- merge(df, adf, by = "lc_id", all.x = T)
-    data <- v$soil_hydraulic_sub_df
-    data <- data[data$soil_depth == "0-20", c("SOIL", hydro_prop)]
-    
-    cn <- hydro_prop_coldef()
-    reactable(
-      data,
-      defaultExpanded = TRUE,
-      columns = cn,
-      onClick = "expand",
-      details = function(index) {
-        d_data <- df[df$SOIL == data$SOIL[index], ]
-        reactable(
-          d_data[c("lc_id",
-                   "land_cover",
-                   unlist(soil_water_types),
-                   "bulk_density")],
-          pagination = F,
-          striped = T,
-          borderless = TRUE,
-          compact = TRUE,
-          rownames = F,
-          columns = append(
-            list(
-              lc_id = colDef(format = colFormat(digit = 0)),
-              land_cover = colDef(name = "Land Cover"),
-              bulk_density = colDef(name = "Bulk Density")
-            ),
-            soil_water_coldef()
-          ),
-          defaultColDef = colDef(format = colFormat(digit = 3))
-        )
-      }
-    )
-  })
-
-  soil_water_coldef <- function(x) {
-    cd <- lapply(names(soil_water_types), function(x){
-      colDef(name = x)
-    })
-    names(cd) <- unlist(soil_water_types)
-    return(cd)
-  }
   
-  output$soil_hydraulic_sub_table <- renderReactable({
-    df <- v$soil_hydraulic_sub_df
-    if (is.null(df))
-      return()
-    hpcd <- hydro_prop_coldef()
-    hpcd <- append(hpcd, list(
-      SOIL = colDef(format = colFormat(digit = 0)),
-      soil_depth = colDef(name = "Soil Depth (cm)")
-    ))
-    data <- df[df$soil_depth != "0-20", c("SOIL", "soil_depth" , unlist(soil_water_types), hydro_prop)]
-    reactable(
-      data,
-      defaultExpanded = TRUE,
-      onClick = "expand",
-      groupBy = "SOIL",
-      pagination = F,
-      striped = T,
-      borderless = TRUE,
-      compact = TRUE,
-      rownames = F,
-      columns = append(soil_water_coldef(), hpcd),
-      defaultColDef = colDef(format = colFormat(digit = 3))
-    )
-  })
-
+  # output$soil_hydraulic_top_table <- renderReactable({
+  #   df <- v$soil_hydraulic_top_df
+  #   if (is.null(df))
+  #     return()
+  #   hdf <- v$soil_metadata_df
+  #   adf <- get_lc_with_default()
+  #   df <- merge(df, adf, by = "lc_id", all.x = T)
+  #   data <- v$soil_hydraulic_sub_df
+  #   data <- data[data$soil_depth == "0-20", c("SOIL", hydro_prop)]
+  #
+  #   cn <- hydro_prop_coldef()
+  #   reactable(
+  #     data,
+  #     defaultExpanded = TRUE,
+  #     columns = cn,
+  #     onClick = "expand",
+  #     details = function(index) {
+  #       d_data <- df[df$SOIL == data$SOIL[index], ]
+  #       reactable(
+  #         d_data[c("lc_id",
+  #                  "land_cover",
+  #                  unlist(soil_water_types),
+  #                  "bulk_density")],
+  #         pagination = F,
+  #         striped = T,
+  #         borderless = TRUE,
+  #         compact = TRUE,
+  #         rownames = F,
+  #         columns = append(
+  #           list(
+  #             lc_id = colDef(format = colFormat(digit = 0)),
+  #             land_cover = colDef(name = "Land Cover"),
+  #             bulk_density = colDef(name = "Bulk Density")
+  #           ),
+  #           soil_water_coldef()
+  #         ),
+  #         defaultColDef = colDef(format = colFormat(digit = 3))
+  #       )
+  #     }
+  #   )
+  # })
+  
+  # soil_water_coldef <- function(x) {
+  #   cd <- lapply(names(soil_water_types), function(x) {
+  #     colDef(name = x)
+  #   })
+  #   names(cd) <- unlist(soil_water_types)
+  #   return(cd)
+  # }
+  
+  # output$soil_hydraulic_sub_table <- renderReactable({
+  #   df <- v$soil_hydraulic_sub_df
+  #   if (is.null(df))
+  #     return()
+  #   hpcd <- hydro_prop_coldef(hydro_prop)
+  #   hpcd <- append(hpcd, list(
+  #     SOIL = colDef(format = colFormat(digit = 0)),
+  #     soil_depth = colDef(name = "Soil Depth (cm)")
+  #   ))
+  #   data <- df[df$soil_depth != "0-20", c("SOIL",
+  #                                         "soil_depth" ,
+  #                                         unlist(soil_water_types),
+  #                                         hydro_prop)]
+  #   reactable(
+  #     data,
+  #     defaultExpanded = TRUE,
+  #     onClick = "expand",
+  #     groupBy = "SOIL",
+  #     pagination = F,
+  #     striped = T,
+  #     borderless = TRUE,
+  #     compact = TRUE,
+  #     rownames = F,
+  #     columns = append(soil_water_coldef(), hpcd),
+  #     defaultColDef = colDef(format = colFormat(digit = 3))
+  #   )
+  # })
+  
   output$soil_water_content_table <- renderReactable({
     df <- v$soil_water_content_df
     if (is.null(df))
@@ -3530,7 +4109,7 @@ server <- function(input, output, session) {
     adf <- get_lc_with_default()
     df <- merge(adf, df, by = "lc_id")
     df$lc_id <- as.numeric(as.character(df$lc_id))
-    df <- df[order(df$lc_id),]
+    df <- df[order(df$lc_id), ]
     reactable(
       df,
       defaultExpanded = TRUE,
@@ -3553,6 +4132,8 @@ server <- function(input, output, session) {
   })
   
   stars_to_sf <- function(m) {
+    if (is.null(m))
+      return()
     msf <- st_as_sf(m,
                     as_points = F,
                     merge = T,
@@ -3561,8 +4142,10 @@ server <- function(input, output, session) {
     names(msf) <- c("val", "geometry")
     # merge polygon for each id
     sid <- sort(unique(msf$val))
-    a <- lapply(sid, function(x) {
-      st_as_sf(st_union(msf[msf$val == x, ]))
+    suppressMessages({
+      a <- lapply(sid, function(x) {
+        st_as_sf(st_union(msf[msf$val == x, ]))
+      })
     })
     m_a <- do.call(rbind, a)
     st_geometry(m_a) <- "geometry"
@@ -3570,13 +4153,8 @@ server <- function(input, output, session) {
     return(msf)
   }
   
-  
-  
-  
-  
-  
   ### SOIL AND PLANT WATER ##############################
-
+  
   infiltration_par <- numeric_input_server("infiltration_par_input", infiltration_par_df)
   observe({
     v$infiltration_par_cfg <- infiltration_par()
@@ -3601,21 +4179,17 @@ server <- function(input, output, session) {
   observe({
     v$soilplant_par_cfg <- soilplant_par()
   })
-
+  
   ### Evapotranspiration DATA ######################
   
-  update_evapotran_df_display <- function() {
-    table_edit_server(
-      "evapotran_df_table",
-      isolate(v$evapotran_df),
-      col_type = c("date", "numeric"),
-      nrow = 365,
-      allowRowModif = T,
-      pagination = 365
-    )
-  }
-  
-  evapotran_df_edited <- update_evapotran_df_display()
+  evapotran_df_edited <- table_edit_server(
+    "evapotran_df_table",
+    reactive(v$evapotran_df),
+    col_type = c("date", "numeric"),
+    nrow = 365,
+    allowRowModif = T,
+    pagination = 365
+  )
   
   observe({
     v$evapotran_df <- evapotran_df_edited()
@@ -3705,20 +4279,16 @@ server <- function(input, output, session) {
     v$rain_par_cfg <- rain_par()
   })
   
-  update_rain_df_display <- function() {
-    table_edit_server(
-      "rain_df_table",
-      isolate(v$rain_df),
-      col_type = c("date", "numeric"),
-      nrow = 365,
-      allowRowModif = T,
-      pagination = 365
-    )
-  }
-  
   date_format <- "%d-%b-%Y"
   
-  rain_df_edited <- update_rain_df_display()
+  rain_df_edited <- table_edit_server(
+    "rain_df_table",
+    reactive(v$rain_df),
+    col_type = c("date", "numeric"),
+    nrow = 365,
+    allowRowModif = T,
+    pagination = 365
+  )
   
   observe({
     v$rain_df <- rain_df_edited()
@@ -3806,18 +4376,14 @@ server <- function(input, output, session) {
     v$river_par_cfg <- river_par()
   })
   
-  update_river_df_display <- function() {
-    table_edit_server(
-      "river_df_table",
-      isolate(v$river_df),
-      col_type = c("date", "numeric"),
-      nrow = 365,
-      allowRowModif = T,
-      pagination = 365
-    )
-  }
-  
-  river_df_edited <- update_river_df_display()
+  river_df_edited <- table_edit_server(
+    "river_df_table",
+    reactive(v$river_df),
+    col_type = c("date", "numeric"),
+    nrow = 365,
+    allowRowModif = T,
+    pagination = 365
+  )
   
   observe({
     v$river_df <- river_df_edited()
@@ -3829,18 +4395,16 @@ server <- function(input, output, session) {
       vd$river_df <- NULL
       return()
     }
-    if (is.null(v$ws_boundary_outlet_cfg$area_m2) ||
-        v$ws_boundary_outlet_cfg$area_m2 <= 0)
+    if (is.null(v$genriver_cfg$total_area_m2) ||
+        v$genriver_cfg$total_area_m2 <= 0)
       return()
-    # print(df)
     df <- df[order(df$date), ]
     df$year <- year(df$date)
     df$month <- month(df$date)
     df$day <- yday(df$date)
-    df$flow_mm <- convert_flow_to_mmdaily(df$river_flow, v$ws_boundary_outlet_cfg$area_m2)
+    df$flow_mm <- convert_flow_to_mmdaily(df$river_flow, v$genriver_cfg$total_area_m2)
     df$river_cum <- ave(df$flow_mm, df$year, FUN = cumsum)
     vd$river_df <- df
-    # print(head(df, 10))
   })
   
   output$river_daily_plot <- renderPlotly({
@@ -3876,7 +4440,7 @@ server <- function(input, output, session) {
       p(
         "The observed watershed area is ",
         tags$b(
-          f_number(v$ws_boundary_outlet_cfg$area_m2 / 10000, nsmall = 2),
+          f_number(v$genriver_cfg$total_area_m2 / 10000, nsmall = 2),
           "ha",
           tags$sup(2, .noWS = c("before"))
         )
@@ -3921,7 +4485,7 @@ server <- function(input, output, session) {
       tagList(
         div(
           "The comparion of actual rainfall and river flow converted to mm unit in watershed area of:",
-          f_number(v$ws_boundary_outlet_cfg$area_m2 / 10000, nsmall = 2),
+          f_number(v$genriver_cfg$total_area_m2 / 10000, nsmall = 2),
           "ha",
           tags$sup(2, .noWS = c("before"))
         ),
@@ -3941,7 +4505,7 @@ server <- function(input, output, session) {
           ydf,
           x = ~ rain_cum,
           y = ~ river_cum,
-          color = I(color_theme$secondary),
+          color = I(theme_color$secondary),
           type = "scatter",
           mode = "markers",
           name = 'Rainfall vs River flows'
@@ -3954,7 +4518,7 @@ server <- function(input, output, session) {
           add_lines(
             x = ~ rain_cum,
             y = fitted(fit),
-            color = I(color_theme$info),
+            color = I(theme_color$warning),
             name = 'Regression Fit'
           )
       })
@@ -3962,8 +4526,6 @@ server <- function(input, output, session) {
   })
   
   ### DOWNLOAD PARAMETERS ######################
-  
-  
   
   output$download_params <- downloadHandler(
     filename = function() {
@@ -4033,15 +4595,6 @@ server <- function(input, output, session) {
     print(paste("Extracting the files:", input$upload_parameter$name))
     dpath <- input$upload_parameter$datapath
     upload_parameter(dpath)
-    is_repaint_watershed(T)
-    
-    # if (is_watershed_leaflet_base) {
-    #   lf <- leafletProxy(active_watershed_lf, session)
-    #   reset_watershed_panel_display(lf)
-    # } else {
-    #   is_repaint_watershed(T)
-    # }
-    # v$subc_lc_df <- NULL
   })
   
   show_alert_file_error <- function(file_error) {
@@ -4060,57 +4613,21 @@ server <- function(input, output, session) {
     }
     utils::unzip(dpath, exdir = data_dir, junkpaths = T)
     v <- upload_variables(io_file_df, data_dir, v)
-    
-    fpath <- paste0(data_dir, "/watershed.shp")
-    if (file.exists(fpath)) {
-      # ws_m <- st_read(paste0(data_dir, "/watershed.shp"), quiet = T)
-      ws_m <- st_read(fpath, quiet = T)
-      ls <- list()
-      for (i in c(1:nrow(ws_m))) {
-        ls[[ws_m[[i, "ws_id"]]]] <- ws_m[i, "geometry"]
-      }
-      v$watershed_map_list <- ls
-    }
-    
-    fpath <- paste0(data_dir, "/outlet.shp")
-    if (file.exists(fpath)) {
-      # ou_m <- st_read(paste0(data_dir, "/outlet.shp"), quiet = T)
-      ou_m <- st_read(fpath, quiet = T)
-      ou_l <- list()
-      for (i in c(1:nrow(ou_m))) {
-        l <- list(lon = ou_m[[i, "lon"]],
-                  lat = ou_m[[i, "lat"]],
-                  map = ou_m[i, "geometry"])
-        ou_l[[ou_m[[i, "ou_id"]]]] <- l
-      }
-      v$outlet_map_list <- ou_l
-    }
-    v$stream_render <- NULL
-    df <- isolate(v$watershed_df)
-    if (!is.null(df)) {
-      ids <- as.numeric(tail(unlist(strsplit(
-        df$out_id, "_"
-      )), 1))
-      ws_id_last <<- max(ids)
-    }
-    
     update_lc_prop()
-    evapotran_df_edited <- update_evapotran_df_display()
-    rain_df_edited <- update_rain_df_display()
-    river_df_edited <- update_river_df_display()
-    evapot_month_df_edited <- evapot_month_df_display()
-    ground_par_df_edited <- ground_par_df_display()
     # update map id counter
     map_df <- isolate(v$lc_map_df)
     map_idc <- as.numeric(unlist(lapply(map_df$map_id, suffix)))
     map_id_counter <<- max(map_idc)
     # update numeric parameters UI
     update_numeric_par()
+    update_watershed_table()
+    update_soil_ui()
     print("parameters uploaded!")
+    showNotification("Parameters uploaded!", type = "message")
   }
-
-### CALCULATION ##############
-
+  
+  ### CALCULATION ##############
+  
   waterbalance_input_pars <- list(
     I_RainYearStart = 0,
     I_Rain_GenSeed = 200,
@@ -4119,44 +4636,36 @@ server <- function(input, output, session) {
     I_RainIntercDripRt = 10,
     I_RainMaxIntDripDur = 0.5,
     I_RainMultiplier = 1,
-    
     I_MaxDynGWConst = 100,
     I_MaxInf = 700,
     I_MaxInfSSoil = 150,
-    
     I_PowerInfiltRed = 3.5,
-    
-    
     I_SoilPropConst = 0,
-    
     I_GWRelFracConst = 0.01,
     I_GWRelFracConst_is = 0,
     I_InitRelGW = 1,
     I_InitRelSoil = 1,
-    
     I_AvailWaterConst = 250,
     I_EvapotransMethod = 1,
     I_InterceptEffectonTransp = 0.1,
     I_MaxDynGWConst = 100,
     I_PercFracMultiplier = 0.05,
     I_SoilSatMinFCConst = 100,
-    I_SurfLossFrac = 0,
-    
-    I_SoilQflowFrac = 0.1
+    I_SoilQflowFrac = 0.1,
+    I_WarmUpTime = 730
   )
   
   stream_input_pars <- list(
     I_Tortuosity = 0.6,
     I_RiverflowDispersalFactor = 0.6,
-    I_RoutVeloc_m_per_s = 0.55
+    I_RoutVeloc_m_per_s = 0.55,
+    I_SurfLossFrac = 0
   )
   
   # Hydroelectric Power Plant (HEPP)
   
   lake_input_pars <- list(
     I_TotalArea = 0,
-    I_WarmUpTime = 730,
-    
     L_ResrDepth = 10000,
     L_HEPP_Active = 1,
     L_QmecsSanFlow = 3,
@@ -4168,13 +4677,12 @@ server <- function(input, output, session) {
     L_LakeOverFlowFrac = 0.1,
     L_LakeOverFlPostHEPP = 362.6,
     L_LakeOverFlPow = 4,
-    
     L_m3_per_kwh = 1.584,
     L_QmecsHEPP = 47.1,
     L_QmecsSanFlow = 3
   )
   
-
+  
   #' Calculate water balance
   #'
   #' @param ws_rain_df amount of rain in day on each sub catchments, its a pair of ws_id and rain in mm
@@ -4265,7 +4773,7 @@ server <- function(input, output, session) {
       rnorm(nrow(subc_df), 1, inp$I_Rain_IntensCoefVar)
     ),
     1 + 3 * inp$I_Rain_IntensCoefVar)
-
+    
     # I_RainTimeAvForInf[Subcatchement] = min(24,I_RainDuration[Subcatchement]+D_RainIntercDelay[Subcatchement] )
     subc_df$I_RainTimeAvForInf <- pmin(24, subc_df$I_RainDuration + subc_df$D_RainIntercDelay)
     subc_lc_df[c("I_RainTimeAvForInf", "I_GWRelFrac")] <- NULL
@@ -4294,7 +4802,7 @@ server <- function(input, output, session) {
     
     #I_MaxInfSubSAreaClass = I_MaxInfSSoil*I_RelArea[Subcatchement]*I_FracVegClassNow[VegClass,Subcatchement]
     subc_lc_df$I_MaxInfSubSAreaClass <- inp$I_MaxInfSSoil * subc_lc_df$I_FracVegClassNow * subc_lc_df$I_RelArea
-
+    
     #sum vars for all LC by subcatchment for each LC map
     sum_lc_vars1 <- c(
       "I_MaxInfArea",
@@ -4386,7 +4894,9 @@ server <- function(input, output, session) {
         subc_lc_df$I_RelDroughtFact > 0,
       pmin(
         1,
-        subc_lc_df$D_SoilWater / (subc_lc_df$I_RelDroughtFact * subc_lc_df$I_AvailWaterClass)
+        subc_lc_df$D_SoilWater / (
+          subc_lc_df$I_RelDroughtFact * subc_lc_df$I_AvailWaterClass
+        )
       ),
       1
     )
@@ -4466,15 +4976,17 @@ server <- function(input, output, session) {
   ### STREAM NETWORK #############################
   
   stream_network <- function(time,
+                             I_WarmUpTime,
                              I_Evapotrans,
                              I_DebitTime,
                              subc_df,
                              subc_lc_df,
                              stream_pars,
                              lake_pars,
-                             stock) {
+                             stock,
+                             stream_delay_df) {
     # I_Warmedup = if time = int(I_WarmUpTime) then 1 else 0
-    I_Warmedup <- ifelse(time == lake_pars$I_WarmUpTime, 1 , 0)
+    I_Warmedup <- ifelse(time == I_WarmUpTime, 1 , 0)
     
     # D_EvaporReservoir[Subcatchement] = I_Evapotrans*ARRAYSUM(L_Lake?[*])
     subc_df$D_EvaporReservoir <- I_Evapotrans * sum(subc_df$L_Lake)
@@ -4486,9 +4998,6 @@ server <- function(input, output, session) {
       0
     )
     
-    # D_SubcResVol[Subcatchement](t) = D_SubcResVol[Subcatchement](t - dt) + (D_Influx_to_Resr[Subcatchement] - D_EvaporReservoir[Subcatchement] - D_SubCResOutflow[Subcatchement]) * dt
-    subc_df$D_SubcResVol <- subc_df$D_SubcResVol
-    + (subc_df$D_Influx_to_Resr - subc_df$D_EvaporReservoir - subc_df$D_SubCResOutflow)
     
     D_SubCResUseFrac_graph <- c(
       0.01,
@@ -4512,15 +5021,26 @@ server <- function(input, output, session) {
       0.015,
       0.015
     )
-    D_SubCResUseFrac <- D_SubCResUseFrac_graph[1] #?
+    D_SubCResUseFrac <- D_SubCResUseFrac_graph[1] #TODO: of daily rain
     
     # D_SubCResOutflow[Subcatchement] = if D_SubcResVol[Subcatchement]/D_ReservoirVol[Subcatchement] > 1 then
     # D_SubcResVol[Subcatchement]-D_ReservoirVol[Subcatchement] else D_SubCResUseFrac*D_SubcResVol[Subcatchement]
+    # TODO: modified -> what if subc_df$D_ReservoirVol == 0?
     subc_df$D_SubCResOutflow <- ifelse(
-      subc_df$D_SubcResVol / subc_df$D_ReservoirVol > 1,
-      subc_df$D_SubcResVol - subc_df$D_ReservoirVol,
-      D_SubCResUseFrac * subc_df$D_SubcResVol
+      subc_df$D_ReservoirVol == 0,
+      0,
+      ifelse(
+        subc_df$D_SubcResVol / subc_df$D_ReservoirVol > 1,
+        subc_df$D_SubcResVol - subc_df$D_ReservoirVol,
+        D_SubCResUseFrac * subc_df$D_SubcResVol
+      )
     )
+    
+    # D_SubcResVol[Subcatchement](t) = D_SubcResVol[Subcatchement](t - dt) + (D_Influx_to_Resr[Subcatchement] - D_EvaporReservoir[Subcatchement] - D_SubCResOutflow[Subcatchement]) * dt
+    subc_df$D_SubcResVol <- subc_df$D_SubcResVol + (
+      subc_df$D_Influx_to_Resr - subc_df$D_EvaporReservoir - subc_df$D_SubCResOutflow
+    )
+    
     
     #sum vars for all LC by subcatchment for each LC map
     sum_lc_vars <- c("D_SoilDischarge")
@@ -4537,6 +5057,10 @@ server <- function(input, output, session) {
     # if I_Flag2 = 1 then I_RivFlowTime2[Subcatchement]+(I_RivFlowTime3[Subcatchement]-I_RivFlowTime2[Subcatchement])*(int(I_Simulation_Time/365)-I_InputDataYears[Trans1])/(I_InputDataYears[Trans2]-I_InputDataYears[Trans1]) else
     #   I_RivFlowTime3[Subcatchement]+(I_RivFlowTime4[Subcatchement]-I_RivFlowTime3[Subcatchement])*(int(I_Simulation_Time/365)-I_InputDataYears[Trans2])/(I_InputDataYears[End]-I_InputDataYears[Trans2])
     subc_df$I_RivFlowTimeNow <- 1 #TODO:?
+    # ini fraksi kecepatan 0-1 untuk masing2 tahun land cover map.. kalau lebih cepat < 1, kalau gak ada perubahan = 1
+    
+    
+    
     # D_RoutingTime[Subcatchement,ObsPoint] = I_RoutingDistance[Subcatchement,ObsPoint]/(I_RivFlowTimeNow[Subcatchement]*I_RoutVeloc_m_per_s*3.6*24*I_Tortuosity)
     subc_df$D_RoutingTime <- subc_df$I_RoutingDistance / (
       subc_df$I_RivFlowTimeNow *
@@ -4562,6 +5086,7 @@ server <- function(input, output, session) {
     )
     # D_RivInflLake[Subcatchement,ObsPoint] = I_ReleaseFrac[Subcatchement,InflowLake]*D_TotRiverFlowNoDelay[Subcatchement,InflowLake]*D_FeedingIntoLake?[Subcatchement]
     subc_df$D_RivInflLake <- subc_df$I_ReleaseFrac * subc_df$D_TotRiverFlowNoDelay * subc_df$D_FeedingIntoLake
+    
     # D_RiverFlowtoLake = ARRAYSUM(D_RivLakeSameDay[*,InflowLake])+ARRAYSUM(D_RivInflLake[*,InflowLake])
     D_RiverFlowtoLake <- sum(subc_df$D_RivLakeSameDay, na.rm = T) + sum(subc_df$D_RivInflLake, na.rm = T)
     # D_GWLakeSub[Subcatchement] = D_FracGWtoLake[Subcatchement]*D_GWaDisch[Subcatchement]
@@ -4605,17 +5130,52 @@ server <- function(input, output, session) {
       ) * (lake_pars$L_LakeOverFlowFrac) * (1 + L_Lakelevelexcess ^ lake_pars$L_LakeOverFlPow)
     )
     
+    #### Stream Delay ############################
+    
+    if (is.null(stream_delay_df)) {
+      stream_delay_df <- subc_df[c("ws_id", "D_TotalStreamInflow", "D_RoutingTime")]
+    } else {
+      df <- subc_df[c("ws_id", "D_TotalStreamInflow", "D_RoutingTime")]
+      stream_delay_df <- rbind(stream_delay_df, df)
+    }
+    
+    # print(head(stream_delay_df))
+    stream_now <-  stream_delay_df[stream_delay_df$D_RoutingTime < 1, ]
+    stream_delay_df <- stream_delay_df[stream_delay_df$D_RoutingTime >= 1, ]
+    stream_delay_df$D_RoutingTime <- stream_delay_df$D_RoutingTime - 1
+    # print(head(stream_now$ws_id))
+    # print(head(stream_delay_df))
+    
+    stream_now_agg <- aggregate(stream_now$D_TotalStreamInflow,
+                                list(stream_now$ws_id),
+                                sum,
+                                na.rm = T)
+    colnames(stream_now_agg) <- c("ws_id", "D_SurfFlowRiver")
+    
+    # print(stream_now_agg)
+    
+    subc_df$D_SurfFlowRiver <- NULL
+    subc_df <- merge(subc_df,
+                     stream_now_agg,
+                     by = c("ws_id"),
+                     all.x = T)
+    subc_df[is.na(subc_df$D_SurfFlowRiver), "D_SurfFlowRiver"] <- 0
     # D_SurfFlowRiver is D_SurfFlowObsPoint in delayed time?
-    subc_df$D_SurfFlowRiver <- 0
+    # subc_df$D_SurfFlowRiver <- 0
     
     # D_SurfFlowRiver[Subcatchement,ObsPoint] = CONVEYOR OUTFLOW
     # TRANSIT TIME = if D_RoutingTime[Subcatchement,ObsPoint]>1 then
     # D_RoutingTime[Subcatchement,ObsPoint] else 0
     
+    
+    # This isolated vars
     # D_SurfFlowObsPoint[Subcatchement,ObsPoint] = if D_RoutingTime[Subcatchement,ObsPoint]>=1 then D_TotalStreamInflow[Subcatchement,ObsPoint] else 0
     subc_df$D_SurfFlowObsPoint <- ifelse(subc_df$D_RoutingTime >= 1, subc_df$D_TotalStreamInflow, 0)
+    # TODO: Unknown correlation to this variable
     # D_StreamsSurfQ[Subcatchement,ObsPoint](t) = D_StreamsSurfQ[Subcatchement,ObsPoint](t - dt) + (D_SurfFlowObsPoint[Subcatchement,ObsPoint] - D_SurfFlowRiver[Subcatchement,ObsPoint]) * dt
     subc_df$D_StreamsSurfQ <- subc_df$D_StreamsSurfQ + (subc_df$D_SurfFlowObsPoint - subc_df$D_SurfFlowRiver)
+    
+    
     # D_DirectSurfFkowObsPoint[Subcatchement,ObsPoint] = if D_RoutingTime[Subcatchement,ObsPoint]>=0 and D_RoutingTime[Subcatchement,ObsPoint]<1  then D_TotalStreamInflow[Subcatchement,ObsPoint]*(1-I_ReleaseFrac[Subcatchement,ObsPoint])else 0
     subc_df$D_DirectSurfFkowObsPoint <- ifelse(
       subc_df$D_RoutingTime >= 0 & subc_df$D_RoutingTime < 1,
@@ -4624,9 +5184,26 @@ server <- function(input, output, session) {
       0
     )
     
+    # D_RiverDelay[Subcatchement,ObsPoint] = I_ReleaseFrac[Subcatchement,InflowLake]*D_TotRiverFlowNoDelay[Subcatchement,InflowLake]*(1-D_FeedingIntoLake?[Subcatchement])
+    subc_df$D_RiverDelay <- subc_df$I_ReleaseFrac * subc_df$D_TotRiverFlowNoDelay *
+      (1 - subc_df$D_FeedingIntoLake)
+    # print("before:")
+    # print(sum(subc_df$D_TotRiverFlowNoDelay))
     # D_TotRiverFlowNoDelay[Subcatchement,ObsPoint](t) = D_TotRiverFlowNoDelay[Subcatchement,ObsPoint](t - dt) + (D_SurfFlowRiver[Subcatchement,ObsPoint] + D_DirectSurfFkowObsPoint[Subcatchement,ObsPoint] - D_RiverDelay[Subcatchement,ObsPoint] - D_RivInflLake[Subcatchement,ObsPoint]) * dt
-    subc_df$D_TotRiverFlowNoDelay <- subc_df$D_TotRiverFlowNoDelay + subc_df$D_SurfFlowRiver
-    + subc_df$D_DirectSurfFkowObsPoint - subc_df$D_RiverDelay - subc_df$D_RivInflLake
+    subc_df$D_TotRiverFlowNoDelay <- subc_df$D_TotRiverFlowNoDelay + subc_df$D_SurfFlowRiver + subc_df$D_DirectSurfFkowObsPoint - subc_df$D_RiverDelay - subc_df$D_RivInflLake
+    # df <- subc_df[c("D_TotRiverFlowNoDelay", "D_SurfFlowRiver", "D_DirectSurfFkowObsPoint", "D_RiverDelay", "D_RivInflLake")]
+    # df$t <- time
+    # if(is.null(temp_df)) {
+    #   temp_df <<- df
+    # } else {
+    #   temp_df <<- rbind(temp_df, df)
+    # }
+    #
+    # print("after")
+    # print(sum(subc_df$D_TotRiverFlowNoDelay))
+    # print("---")
+    # print(sum(subc_df$D_SurfFlowRiver)+sum(subc_df$D_DirectSurfFkowObsPoint))
+    # print(sum(subc_df$D_RivInflLake))
     
     # O_EvapoTransAcc = if arraysum(I_PotEvapTransp_[*,*])>0 then (ARRAYSUM(D_ActEvapTransp[*,*])+ARRAYSUM(D_InterceptEvap[*,*]))*I_WarmEdUp? else 0
     O_EvapoTransAcc <- ifelse(sum(subc_lc_df$I_PotEvapTransp_, na.rm = T) > 0,
@@ -4644,7 +5221,7 @@ server <- function(input, output, session) {
       (I_RFlowDataQmecs * 24 * 3600 * 10 ^ 3) / (I_ContrSubcArea_sum * lake_pars$I_TotalArea),
       0
     )
-
+    
     # L_HEPP_Daily_Dem = L_QmecsHEPP*3600*24/I_TotalArea*10^-3
     L_HEPP_Daily_Dem <- lake_pars$L_QmecsHEPP * 3600 * 24 / lake_pars$I_TotalArea *
       10 ^ -3
@@ -4678,10 +5255,12 @@ server <- function(input, output, session) {
       0
     )
     # O_BYP = if O_LastYearHEPP>0 and O_LastYearHEPP>O_BestYyHEPP then -O_BestYyHEPP+O_LastYearHEPP else 0
-    O_BYP <- ifelse(O_LastYearHEPP > 0 &&
-                      O_LastYearHEPP > O_BestYyHEPP,
-                    -O_BestYyHEPP + O_LastYearHEPP,
-                    0)
+    O_BYP <- ifelse(
+      O_LastYearHEPP > 0 &&
+        O_LastYearHEPP > O_BestYyHEPP,
+      -O_BestYyHEPP + O_LastYearHEPP,
+      0
+    )
     # Yearly_Tick = if I_WarmEdUp? = 1 and mod(time,365) = 0 then 1 else 0
     Yearly_Tick <- ifelse(stock$I_WarmEdUp == 1 &&
                             (time %% 365) == 0, 1, 0)
@@ -4692,16 +5271,18 @@ server <- function(input, output, session) {
     # O_HeppUseF2 = Yearly_Tick*O_LastYHepp
     O_HeppUseF2 <- Yearly_Tick * stock$O_LastYHepp
     # I_WUcorrection = if time = int(I_WarmUpTime+1) then 1 else 0
-    I_WUcorrection <- ifelse(time == (lake_pars$I_WarmUpTime + 1), 1, 0)
+    I_WUcorrection <- ifelse(time == (I_WarmUpTime + 1), 1, 0)
     # O_Reset? = if I_Warmedup = 1 or I_WUcorrection = 1  then 1 else 0
     O_Reset <- ifelse(I_Warmedup == 1 && I_WUcorrection == 1, 1, 0)
     # L_RestartH = O_Reset?*L_CumHEPPUse
     L_RestartH <- O_Reset * stock$L_CumHEPPUse
     # O_WYP = if O_LastYearHEPP>0 and O_LastYearHEPP<O_WorstYHEPP then -O_WorstYHEPP+O_LastYearHEPP else 0
-    O_WYP <- ifelse(O_LastYearHEPP > 0 &&
-                      O_LastYearHEPP < O_WorstYHEPP,
-                    -O_WorstYHEPP + O_LastYearHEPP,
-                    0)
+    O_WYP <- ifelse(
+      O_LastYearHEPP > 0 &&
+        O_LastYearHEPP < O_WorstYHEPP,
+      -O_WorstYHEPP + O_LastYearHEPP,
+      0
+    )
     # O_SurfQFlowAcc = ARRAYSUM(D_SurfaceFlow[*])*I_WarmEdUp?
     O_SurfQFlowAcc <- sum(subc_df$D_SurfaceFlow, na.rm = T) * stock$I_WarmEdUp
     # O_BaseFlowAcc = ARRAYSUM(D_GWaDisch[*])*I_WarmEdUp?
@@ -4725,13 +5306,19 @@ server <- function(input, output, session) {
     # O_TotStreamFlow = O_CumBaseFlow+O_CumSoilQFlow+O_CumSurfQFlow
     O_TotStreamFlow <- stock$O_CumBaseFlow + stock$O_CumSoilQFlow + stock$O_CumSurfQFlow
     # O_FrBaseFlow = if O_TotStreamFlow > 0 then O_CumBaseFlow/O_TotStreamFlow   else 0
-    O_FrBaseFlow <- ifelse(O_TotStreamFlow > 0, stock$O_CumBaseFlow / O_TotStreamFlow, 0)
+    O_FrBaseFlow <- ifelse(O_TotStreamFlow > 0,
+                           stock$O_CumBaseFlow / O_TotStreamFlow,
+                           0)
     # O_FrSoilQuickFlow = if O_TotStreamFlow > 0 then O_CumSoilQFlow/O_TotStreamFlow   else 0
-    O_FrSoilQuickFlow <- ifelse(O_TotStreamFlow > 0, stock$O_CumSoilQFlow /
-                                  O_TotStreamFlow, 0)
+    O_FrSoilQuickFlow <- ifelse(O_TotStreamFlow > 0,
+                                stock$O_CumSoilQFlow /
+                                  O_TotStreamFlow,
+                                0)
     # O_FrSurfQuickflow = if O_TotStreamFlow > 0 then O_CumSurfQFlow/O_TotStreamFlow   else 0
-    O_FrSurfQuickflow <- ifelse(O_TotStreamFlow > 0, stock$O_CumSurfQFlow /
-                                  O_TotStreamFlow, 0)
+    O_FrSurfQuickflow <- ifelse(O_TotStreamFlow > 0,
+                                stock$O_CumSurfQFlow /
+                                  O_TotStreamFlow,
+                                0)
     
     #### Stock #######################
     # I_WarmEdUp?(t) = I_WarmEdUp?(t - dt) + (I_Warmedup) * dt
@@ -4794,15 +5381,21 @@ server <- function(input, output, session) {
     stream_vars$O_SoilWaterTot <- O_SoilWaterTot
     stream_vars$O_Ch_EvapoTran <- O_Ch_EvapoTran
     
+    stream_vars$D_RiverFlowtoLake <- D_RiverFlowtoLake
+    stream_vars$D_GWtoLake <- D_GWtoLake
+    
     return(
       list(
         subc_lc_df = subc_lc_df,
         subc_df = subc_df,
         stream_vars = stream_vars,
-        stock = stock
+        stock = stock,
+        stream_delay_df = stream_delay_df
       )
     )
   }
+  
+  temp_df <- NULL
   
   get_rain_map <- function() {
     
@@ -4868,6 +5461,7 @@ server <- function(input, output, session) {
   }
   
   get_genriver_pars <- function() {
+    # print("sim parameters")
     inp <- waterbalance_input_pars
     inp$I_Rain_IntensMean <- v$rain_par_cfg$rain_intensity_mean
     inp$I_Rain_IntensCoefVar <- v$rain_par_cfg$rain_intensity_coef
@@ -4880,15 +5474,24 @@ server <- function(input, output, session) {
     inp$I_InitRelGW <- v$groundwater_par_cfg$groundwater_rel_init
     inp$I_InitRelSoil <- v$soilplant_par_cfg$soil_water_initial
     
-    ### Initial Sub-catchment vars #############
-    I_TotalArea <- v$ws_boundary_outlet_cfg$area_m2
-    subc_area_df <- as.data.frame(v$subcatchment_map_sf)[c("ws_id", "area_m2", "distance")]
+    stream_pars <- stream_input_pars
+    if (!is.null(v$river_par_cfg)) {
+      stream_pars$I_RoutVeloc_m_per_s <- v$river_par_cfg$I_RoutVeloc_m_per_s
+      stream_pars$I_Tortuosity <- v$river_par_cfg$I_Tortuosity
+      stream_pars$I_RiverflowDispersalFactor <- v$river_par_cfg$I_RiverflowDispersalFactor
+      stream_pars$I_SurfLossFrac <- v$river_par_cfg$I_SurfLossFrac
+    }
     
-    subc_area_df$I_RelArea <- subc_area_df$area_m2 / I_TotalArea
-    subc_area_df$I_RoutingDistance <- subc_area_df$distance / 1000 # m to km
+    ### Initial Sub-catchment vars #############
+    I_TotalArea <- v$genriver_cfg$total_area_m2 #
+    subc_area_df <- as.data.frame(v$subcatchment_map_sf)[c("ws_id", "area", "distance")]
+    subc_area_df$area <- subc_area_df$area * 10000 # ha to m2
+    subc_area_df$I_RelArea <- subc_area_df$area / I_TotalArea
+    subc_area_df$I_RoutingDistance <- subc_area_df$distance  #/ 1000 # m to km
     subc_df <- subc_area_df[c("ws_id", "I_RelArea", "I_RoutingDistance")]
     
     ### INITIALIZATION ##################################
+    # print("* init")
     map_subc_lc_df <- get_map_subc_lc_df()
     lc_map_df <- v$lc_map_df
     
@@ -4899,21 +5502,29 @@ server <- function(input, output, session) {
     yr_subc_lc_df <- get_lc_vars_of_year(year_now, map_subc_lc_df, lc_map_df, wslcid_cols)
     yr_subc_lc_df$I_AvailWatClassNow <- yr_subc_lc_df$I_PlantAvWatSub
     
+    # print("* ground")
     ground_par_df <- v$ground_par_df
     wsid_cols <- c("ws_id")
     yr_ground_par_df <- get_lc_vars_of_year(year_now, ground_par_df, lc_map_df, wsid_cols)
-    subc_df <- merge(subc_df, yr_ground_par_df, by = "ws_id", all.x = T)
+    subc_df <- merge(subc_df,
+                     yr_ground_par_df,
+                     by = "ws_id",
+                     all.x = T)
     
     subc_lc_df <- yr_subc_lc_df
     
     subc_lc_df$D_CumNegRain <- 0
     subc_lc_df$D_CumEvapTranspClass <- 0
-    subc_lc_df <- merge(subc_lc_df, subc_area_df[c("ws_id", "I_RelArea")], by = "ws_id", all.x = T)
+    subc_lc_df <- merge(subc_lc_df,
+                        subc_area_df[c("ws_id", "I_RelArea")],
+                        by = "ws_id",
+                        all.x = T)
     lc_par_df <- v$lc_par_df[c("lc_id",
                                "I_InterceptClass",
                                "I_RelDroughtFact",
                                "I_BD_BDRefVegNow")]
     subc_lc_df <- merge(subc_lc_df, lc_par_df, by = "lc_id", all.x = T)
+    # print("* water")
     # I_AvailWaterClass = if I_SoilPropConst? = 1 then I_AvailWaterConst*I_FracVegClassNow[VegClass,Subcatchement]*I_RelArea[Subcatchement] else
     # (I_AvailWatClassNow[VegClass,Subcatchement])*I_FracVegClassNow[VegClass,Subcatchement]*I_RelArea[Subcatchement]
     if (inp$I_SoilPropConst == 1) {
@@ -4940,14 +5551,16 @@ server <- function(input, output, session) {
     subc_lc_df$D_GW_Utilization_fraction <- 0.02
     
     #### Evapot init #######################
+    # print("* evapot")
     month_now <- month(d)
     lc_evapot_df <- v$lc_evapot_df[v$lc_evapot_df$month == month_now, c("lc_id", "value")]
     names(lc_evapot_df) <- c("lc_id", "I_MultiplierEvapoTrans")
     subc_lc_df <- merge(subc_lc_df, lc_evapot_df, by = "lc_id", all.x = T)
     
     #### Stream and Lake init #######################
+    # print("* stream")
     lake_input_pars$I_TotalArea <- I_TotalArea
-    lake_input_pars$I_WarmUpTime <- input$I_WarmUpTime
+    I_WarmUpTime <- input$I_WarmUpTime
     #TODO: will be parameterize through UI
     subc_df$L_Lake <- 0
     subc_lc_df$L_Lake <- 0 #TODO: this should be subcat
@@ -4957,18 +5570,20 @@ server <- function(input, output, session) {
     subc_df$D_FeedingIntoLake <- 1
     # D_ReservoirVol[Subcatchement] = L_ResrDepth*L_Lake?[Subcatchement]*I_RelArea[Subcatchement]
     subc_df$D_ReservoirVol <- lake_input_pars$L_ResrDepth * subc_df$L_Lake * subc_df$I_RelArea
-    # D_SubcResVol[Subcatchement] = D_ReservoirVol[Subcatchement]*I_DaminThisStream?[Subcatchement]
+    # INIT D_SubcResVol[Subcatchement] = D_ReservoirVol[Subcatchement]*I_DaminThisStream?[Subcatchement]
     subc_df$D_SubcResVol <- subc_df$D_ReservoirVol * subc_df$I_DaminThisStream
     subc_df$I_SubcContr <- 1
-    
+    # print("* return")
     return(
       list(
         year_now = year_now,
         month_now = month_now,
         subc_lc_df = subc_lc_df,
         subc_df = subc_df,
-        waterbalance_input_pars = waterbalance_input_pars,
-        lake_input_pars = lake_input_pars
+        waterbalance_input_pars = inp,
+        stream_input_pars = stream_pars,
+        lake_input_pars = lake_input_pars,
+        I_WarmUpTime = I_WarmUpTime
       )
     )
   }
@@ -5002,40 +5617,63 @@ server <- function(input, output, session) {
     ground_par_df <- v$ground_par_df
     stock <- default_stock_vars
     
-    #### Output table ################
     output_df <- NULL
+    stream_delay_df <- NULL
     
     ### SIMULATION LOOP ##################################
+    
+    print(paste("* Simulation:", ndays, "iteration"))
     set.seed(inp$I_Rain_GenSeed + 11250)
-    I_Simulation_Time <- ndays
+    I_Simulation_Time <- ndays + pars$I_WarmUpTime
     for (t in 1:I_Simulation_Time) {
-      progress(t / I_Simulation_Time,
-               detail = paste("Day", t, "of", I_Simulation_Time))
-      
+      # print(t)
+      if (t <= pars$I_WarmUpTime) {
+        day <- t
+        day_end <- pars$I_WarmUpTime
+        w <- "WARMING UP -"
+      } else {
+        day <- (t - pars$I_WarmUpTime)
+        day_end <- ndays
+        w <- ""
+      }
+      progress(day / day_end, detail = paste(w, "Day", day, "of", day_end))
       #### Daily Rainfall input #####################
-      d <- rain_df[t, "date"]
+      date <- rain_df[day, "date"]
+      if (is.na(date))
+        next
       #TODO: could be use spatial explicit rain per sub catchment
-      I_DailyRain <- rain_df[t, "rainfall"] * inp$I_RainMultiplier
+      I_DailyRain <- rain_df[day, "rainfall"] * inp$I_RainMultiplier
+      if (is.na(I_DailyRain))
+        next
       ws_rain_df <- subc_df[c("ws_id")]
       ws_rain_df$I_RainPerDay <- I_DailyRain
       
       ### Daily Evapotranspiration input #####################
-      I_Daily_Evapotrans <- v$evapotran_df[v$evapotran_df$date == d, "evapotranspiration"]
-      I_DebitTime <- v$river_df[v$river_df$date == d, "river_flow"]
+      I_Daily_Evapotrans <- v$evapotran_df[v$evapotran_df$date == date, "evapotranspiration"]
+      I_DebitTime <- v$river_df[v$river_df$date == date, "river_flow"]
       
-      if (year_now != year(d)) {
-        year_now <- year(d)
-        yr_subc_lc_df <- get_lc_vars_of_year(year_now, map_subc_lc_df, lc_map_df, c("ws_id", "lc_id"))
+      ### Yearly data changes #####################
+      if (year_now != year(date)) {
+        year_now <- year(date)
+        # print(year_now)
+        yr_subc_lc_df <- get_lc_vars_of_year(year_now,
+                                             map_subc_lc_df,
+                                             lc_map_df,
+                                             c("ws_id", "lc_id"))
+        # print(yr_subc_lc_df)
+        
         yr_subc_lc_df$I_AvailWatClassNow <- yr_subc_lc_df$I_PlantAvWatSub
         subc_lc_df[names(yr_subc_lc_df)] <- yr_subc_lc_df
         
         yr_ground_par_df <- get_lc_vars_of_year(year_now, ground_par_df, lc_map_df, c("ws_id"))
+        # print(yr_ground_par_df)
         subc_df[names(yr_ground_par_df)] <- yr_ground_par_df
       }
       
       ### Daily Evapotranspiration potential input #####################
-      if (month_now != month(d)) {
-        month_now <- month(d)
+      if (month_now != month(date)) {
+        month_now <- month(date)
+        # print(month_now)
         lc_evapot_df <- v$lc_evapot_df[v$lc_evapot_df$month == month_now, c("lc_id", "value")]
         names(lc_evapot_df) <- c("lc_id", "I_MultiplierEvapoTrans")
         subc_lc_df$I_MultiplierEvapoTrans <- NULL
@@ -5049,43 +5687,43 @@ server <- function(input, output, session) {
       wb <- water_balance(ws_rain_df, I_Daily_Evapotrans, subc_df, subc_lc_df, inp)
       sn <- stream_network(
         t,
+        pars$I_WarmUpTime,
         I_Daily_Evapotrans,
         I_DebitTime,
         wb$subc_df,
         wb$subc_lc_df,
-        stream_input_pars,
+        pars$stream_input_pars,
         lake_input_pars,
-        stock
+        stock,
+        stream_delay_df
       )
       
       ### Compile output ######################
-      base_df <- data.frame(day = t,
-                            date = d,
-                            I_DailyRain = I_DailyRain)
-      df <- base_df
-      df[names(sn$stream_vars)] <- unlist(sn$stream_vars)
-      df[names(sn$stock)] <- unlist(sn$stock)
-      if (is.null(output_df)) {
-        output_df <- df
-      } else {
-        output_df <- rbind(output_df, df)
+      if (t > pars$I_WarmUpTime) {
+        base_df <- data.frame(day = day,
+                              date = date,
+                              I_DailyRain = I_DailyRain)
+        df <- base_df
+        df[names(sn$stream_vars)] <- unlist(sn$stream_vars)
+        df[names(sn$stock)] <- unlist(sn$stock)
+        if (is.null(output_df)) {
+          output_df <- df
+        } else {
+          output_df <- rbind(output_df, df)
+        }
       }
+      
       ### Params for next loop ############
-      subc_lc_df <- wb$subc_lc_df
-      subc_df <- wb$subc_df
+      subc_lc_df <- sn$subc_lc_df
+      subc_df <- sn$subc_df
       stock <- sn$stock
+      stream_delay_df <- sn$stream_delay_df
     }
+    
     vd$output_df <- output_df
+    print("* Simulation done")
+    showNotification("Simulation done!", type = "message")
   }
-  
-  # lc_intp_pars <- c("I_FracVegClassNow", "I_SoilSatminFCSubNow", "I_PlantAvWatSub", "I_PWPSub")
-  # lc_stock_vars <- c("D_CumNegRain",
-  #                    "D_CumEvapTranspClass",
-  #                    "D_SoilWater",
-  #                    "D_EvapTranspClass")
-  # subc_stock_vars <- c("D_GWArea")
-  # subc_output_list <- c("D_SurfaceFlow", "D_GWaDisch")
-  # lc_output_list <- c("D_SoilDischarge")
   
   water_balance_plot_output <- c(
     "day",
@@ -5143,42 +5781,116 @@ server <- function(input, output, session) {
     "O_FrSurfQuickflow"
   )
   
+  ### RUN Simulation Start ##############
+  
+  max_sim_days <- reactiveVal()
+  
+  # soil_water_dalog <- input_dialog(
+  #   "Soil Properties Not Available",
+  #   "The soil water properties is not ready<br><br>
+  #   Please click 'Confirm' to run the <b>soil water calculations</b>",
+  #   "run_soil_water_confirm_btn"
+  # )
+  
+  # observeEvent(input$run_soil_water_confirm_btn, {
+  #   removeModal()
+  #   calculate_soil_water()
+  #   calculate_sub_soil_water()
+  # })
+  
+  
+  
   observeEvent(input$sim_run_button, {
-    # observe({
-    if (is.null(vd$lc_df_crop_list) || is.null(v$lc_par_df))
+    #TODO: disable button if not ready, or show the step to be ready
+    if (is.null(v$lc_par_df)) {
+      showNotification("Land cover map was not set! Please complete the parameters",
+                       type = "error")
       return()
-    if (is.null(v$subc_soil_water_df))
+    }
+    if (is.null(v$subcatchment_map_sf)) {
+      showNotification("Watershed area was not set! Please complete the parameters",
+                       type = "error")
       return()
+    }
+    
     subc_lc_df <- v$subc_lc_df
-    if (is.null(subc_lc_df))
-      return()
-    if (is.null(subc_lc_df$soil_quick_flow_capacity))
-      return()
-    if (is.null(v$subcatchment_map_sf))
-      return()
+    if (is.null(subc_lc_df)) {
+      showNotification(
+        "Soil water properties was not set, it will be calculated before starting the simulation",
+        type = "warning"
+      )
+      # calculate_soil_water()
+      # calculate_sub_soil_water()
+      calculate_soil_water_map()
+    }
+
+    if(is.null(max_sim_days())) return()
     
     ndays <- input$ndays_input
+    if(ndays <= 0) return()
+    if (ndays > max_sim_days()) {
+      show_input_dialog(
+        "Number of Simulation Days Error",
+        paste(
+          "Maximum number of simulation days is<b>",
+          max_days,
+          "</b><br>based on Rainfall and River data availability.<br>",
+          "Click 'Confirm' and run again the simulation"
+        ),
+        "max_days_confirm_btn"
+      )
+      return()
+    }
+    
     withProgress(message = 'Running Simulation', value = 0, {
       run_genriver(ndays, progress = setProgress)
     })
     
   })
   
-  ### CALIBRATION #######################
+  observeEvent(input$max_days_confirm_btn, {
+    updateNumericInput(session, "ndays_input", value = max_sim_days())
+    removeModal()
+  })
   
   observe({
-    if (is.null(vd$lc_df_crop_list) || is.null(v$lc_par_df))
+    rain_df <- v$rain_df
+    river_df <- v$river_df
+    if (is.null(rain_df) ||
+        is.null(river_df) ||
+        nrow(rain_df) == 0 || nrow(river_df) == 0) {
+      updateNumericInput(session, "ndays_input", value = 0)
       return()
-    subc_sw_df <- v$subc_soil_water_df
-    if (is.null(subc_sw_df))
-      return()
-    subc_lc_df <- v$subc_lc_df
-    if (is.null(subc_lc_df))
-      return()
-    if (is.null(subc_lc_df$soil_quick_flow_capacity))
+    }
+    max_days <- min(nrow(rain_df), nrow(river_df))
+    updateNumericInput(session, "ndays_input", value = max_days)
+    max_sim_days(max_days)
+  })
+  
+  
+  ### CALIBRATION #######################
+  
+  observeEvent(input$run_calibration_button, check_variables())
+  
+  check_variables <- function() {
+    if (is.null(v$lc_par_df))
       return()
     if (is.null(v$subcatchment_map_sf))
       return()
+    
+    
+    subc_lc_df <- v$subc_lc_df
+    if (is.null(subc_lc_df)) {
+      showNotification(
+        "Soil water properties is not ready, it will be calculated before starting the simulation",
+        type = "warning"
+      )
+      # calculate_soil_water()
+      # calculate_sub_soil_water()
+      calculate_soil_water_map()
+    }
+    
+    print("calibration vars")
     
     pars <- get_genriver_pars()
     subc_df <- pars$subc_df
@@ -5212,6 +5924,8 @@ server <- function(input, output, session) {
     
     ws_rain_df <- subc_df[c("ws_id")]
     ws_rain_df$I_RainPerDay <- I_DailyRain
+    stream_delay_df <- NULL
+    stream_par <- pars$stream_input_pars
     for (i in 1:n_iteration) {
       wb <- water_balance(ws_rain_df,
                           I_Daily_Evapotrans,
@@ -5222,18 +5936,21 @@ server <- function(input, output, session) {
       I_DebitTime <- 0
       sn <- stream_network(
         i,
+        0,
         I_Daily_Evapotrans,
         I_DebitTime,
         wb$subc_df,
         wb$subc_lc_df,
-        stream_input_pars,
+        stream_par,
         lake_input_pars,
-        stock
+        stock,
+        stream_delay_df
       )
       # output
       subc_df <- sn$subc_df
       subc_lc_df <- sn$subc_lc_df
       stock <- sn$stock
+      stream_delay_df <- sn$stream_delay_df
     }
     
     sum_lc_vars <- c(
@@ -5266,7 +5983,7 @@ server <- function(input, output, session) {
       subc_df = subc_df[c_subc],
       output_vars = c(sn$stream_vars, sn$stock)
     )
-  })
+  }
   
   output$general_table_output <- renderReactable({
     dlist <- vd$calibration_vars$output_vars
@@ -5386,7 +6103,6 @@ server <- function(input, output, session) {
     if (is.null(df) || nrow(df) == 0)
       return()
     df <- df[water_balance_plot_output]
-    df <- df[df$day > input$I_WarmUpTime,]
     plotly_multiple_axis(df)
   })
   
@@ -5413,6 +6129,8 @@ server <- function(input, output, session) {
     reactable_daily_data(df)
   })
   
+  ### Watershed Indicator Output ##################
+  
   output$watershed_indicator_table_output <- renderReactable({
     df <- vd$output_df
     if (is.null(df))
@@ -5420,6 +6138,655 @@ server <- function(input, output, session) {
     df <- df[watershed_indicator_output]
     reactable_daily_data(df)
   })
+  
+  criteria <- c("very good", "good", "satisfactory", "unsatisfactory")
+  
+  biased_criteria <- function(x) {
+    if (is.null(x) || is.na(x))
+      return(NA)
+    x <- abs(x)
+    if (x < 10) {
+      return(criteria[1])
+    } else if (x < 15) {
+      return(criteria[2])
+    } else if (x < 25) {
+      return(criteria[3])
+    } else {
+      return(criteria[4])
+    }
+  }
+  
+  nse_criteria <- function(x) {
+    if (is.null(x) || is.na(x))
+      return(NA)
+    x <- abs(x)
+    if (x <= 1 && x > 0.75) {
+      return(criteria[1])
+    } else if (x <= 0.75 && x > 0.65) {
+      return(criteria[2])
+    } else if (x <= 0.65 && x > 0.5) {
+      return(criteria[3])
+    } else {
+      return(criteria[4])
+    }
+  }
+  
+  criteria_color <- function(x) {
+    if (is.null(x) || is.na(x))
+      return(NULL)
+    if (x == criteria[1]) {
+      return("#219ebc")
+    } else if (x == criteria[2]) {
+      return("#06d6a0")
+    } else if (x == criteria[3]) {
+      return("#fb8500")
+    } else {
+      return("#9a130e")
+    }
+  }
+  
+  
+  
+  observe({
+    df <- vd$output_df
+    if (is.null(df))
+      return()
+    df <- df[watershed_indicator_output]
+    nyear <- unique(year(df$date))
+    m <- which(month.name == input$month_hydro_select)
+    
+    output$river_flow_ui <- renderUI({
+      layout_column_wrap(width = 0.5, !!!lapply(nyear, function(x) {
+        card(plotlyOutput(paste0("river_flow_plot_", x)), full_screen = T)
+      }))
+    })
+    
+    lapply(nyear, function(x, df) {
+      output[[paste0("river_flow_plot_", x)]] <-
+        renderPlotly({
+          if (m == 1) {
+            ydf <- df[year(df$date) == x, ]
+            title <- paste("Year", x)
+          } else {
+            start <- date(paste(x, m, 1, sep = "-"))
+            end <- date(paste(x + 1, m, 1, sep = "-"))
+            ydf <- df[date(df$date) >= start &
+                        date(df$date) < end, ]
+            title <- paste(month.name[m], x, "-", month.name[m - 1], x +
+                             1)
+          }
+          if (nrow(ydf) == 0)
+            return(NULL)
+          # ydf$day <- ydf$day - min(ydf$day) + 1
+          ydf$date <- as.Date(ydf$date)
+          plot_ly(
+            ydf,
+            x = ~ date,
+            y = ~ I_RFlowdata_mmday,
+            color = I(theme_color$secondary),
+            type = "scatter",
+            mode = "lines",
+            name = 'Observation',
+            line = list(color = chart_color[1])
+          ) |>
+            add_trace(
+              y = ~ L_InFlowtoLake,
+              name = "Simulation",
+              line = list(color = chart_color[2])
+            ) |>
+            layout(
+              title = title,
+              yaxis = list(title = "River Flow (mm)"),
+              xaxis = list(title = "Date"),
+              hovermode = 'x',
+              showlegend = T
+            )
+        })
+    }, df)
+  })
+  
+  
+  observe({
+    df <- vd$output_df
+    if (is.null(df))
+      return()
+    df <- df[watershed_indicator_output]
+    nyear <- unique(year(df$date))
+    m <- which(month.name == input$month_hydro_select)
+    
+    output$cum_river_flow_ui <- renderUI({
+      layout_column_wrap(width = 0.5, !!!lapply(nyear, function(x) {
+        card(plotlyOutput(paste0("cum_river_flow_plot_", x)), full_screen = T)
+      }))
+    })
+    
+    lapply(nyear, function(x, df) {
+      output[[paste0("cum_river_flow_plot_", x)]] <-
+        renderPlotly({
+          if (m == 1) {
+            ydf <- df[year(df$date) == x, ]
+            title <- paste("Year", x)
+          } else {
+            start <- date(paste(x, m, 1, sep = "-"))
+            end <- date(paste(x + 1, m, 1, sep = "-"))
+            ydf <- df[date(df$date) >= start &
+                        date(df$date) < end, ]
+            title <- paste(month.name[m], x, "-", month.name[m - 1], x +
+                             1)
+          }
+          if (nrow(ydf) == 0)
+            return(NULL)
+          ydf$rain_cum <- cumsum(ydf$I_DailyRain)
+          ydf$obs_cum <- cumsum(ydf$I_RFlowdata_mmday)
+          ydf$sim_cum <- cumsum(ydf$L_InFlowtoLake)
+          plot_ly(
+            ydf,
+            x = ~ rain_cum,
+            y = ~ obs_cum,
+            color = I(theme_color$secondary),
+            type = "scatter",
+            mode = "lines",
+            name = 'Observation',
+            line = list(color = chart_color[1])
+          ) |>
+            add_trace(
+              y = ~ sim_cum,
+              name = "Simulation",
+              line = list(color = chart_color[2])
+            ) |>
+            layout(
+              title = title,
+              yaxis = list(title = "Cumulative River Flow (mm)"),
+              xaxis = list(title = "Cumulative Rainfall (mm)"),
+              hovermode = 'x',
+              showlegend = T
+            )
+        })
+    }, df)
+  })
+  
+  #### Watershed Performance #########################
+  
+  observe({
+    df <- vd$output_df
+    if (is.null(df))
+      return()
+    df <- df[c("date", "I_RFlowdata_mmday", "L_InFlowtoLake")]
+    m <- which(month.name == input$month_hydro_select)
+    df$n <- 1
+    df$m <- month(df$date)
+    df$year <- year(df$date)
+    df[df$m >= m, "yr_shift"] <- 0
+    df[df$m < m, "yr_shift"] <- -1
+    df$year2 <- df$year + df$yr_shift
+    
+    df$y <- df$I_RFlowdata_mmday
+    df$yi <- df$L_InFlowtoLake
+    df$dev <- df$yi - df$y
+    df$dev_sq <- df$dev ^ 2
+    df$dev_rat <- 100 * df$dev / df$y
+    df[df$y == 0, "dev_rat"] <- NA
+    
+    mean_df <- aggregate(df[c("y", "dev_rat", "dev_sq")], list(df$year2), mean, na.rm = T)
+    colnames(mean_df) <- c("year2", "y_mean", "mean_error", "dev_sq_mean")
+    df <- merge(df, mean_df[c("year2", "y_mean")], by = "year2")
+    df$dev_mean <- df$y - df$y_mean
+    df$dev_mean_sq <- df$dev_mean ^ 2
+    
+    yr_df <- aggregate(df[c("n", "y", "dev", "dev_sq", "dev_mean_sq", "dev_rat")], list(df$year2), sum, na.rm = T)
+    colnames(yr_df) <- c("year2",
+                         "n",
+                         "y_sum",
+                         "dev_sum",
+                         "dev_sq_sum",
+                         "dev_mean_sq_sum",
+                         "dev_rat_sum")
+    yr_df$hyear <- paste0(yr_df$year2, "-", yr_df$year2 + 1)
+    
+    yr_df <- merge(yr_df, mean_df[c("year2", "mean_error", "dev_sq_mean")], by = "year2")
+    yr_df$biased <- 100 * yr_df$dev_sum / yr_df$y_sum
+    yr_df$nse <- 1 - (yr_df$dev_sq_sum / yr_df$dev_mean_sq_sum)
+    yr_df$rmse <- sqrt(yr_df$dev_sq_mean)
+    
+    suppressWarnings(r <- sapply(split(df, df$year2), function(x)
+      cor(x$y, x$yi)))
+    r_df <- as.data.frame(r)
+    r_df$year2 <- rownames(r_df)
+    yr_df <- merge(yr_df, r_df, by = "year2")
+    yr_df$biased_criteria <- sapply(yr_df$biased, biased_criteria)
+    yr_df$nse_criteria <- sapply(yr_df$nse, nse_criteria)
+    
+    yr_df[sapply(yr_df, is.infinite)] <- NA
+    vd$performance_df <- yr_df[unlist(performance_fields)]
+  })
+  
+  performance_fields <- list(
+    data = c("hyear", "n"),
+    value = c("biased", "nse", "r", "mean_error", "rmse"),
+    criteria = c("biased_criteria", "nse_criteria")
+  )
+  
+  fcriteria <- function(value, index, name) {
+    color <- criteria_color(value)
+    list(
+      color = color,
+      fontWeight = "bold",
+      background = paste0(color, "15")
+    )
+  }
+  
+  fvcriteria <- function(v) {
+    list(background = paste0(criteria_color(v), "15"))
+  }
+  
+  output$performance_table_output <- renderReactable({
+    df <- vd$performance_df
+    if (is.null(df))
+      return()
+    reactable(
+      df,
+      striped = T,
+      borderless = TRUE,
+      rownames = F,
+      pagination = F,
+      columns = list(
+        hyear = colDef(name = "Year"),
+        n = colDef(format = colFormat(digits = 0), width = 60),
+        biased = colDef(
+          name = "Biased (%)",
+          style = function(value, index, name) {
+            fvcriteria(biased_criteria(value))
+          }
+        ),
+        nse = colDef(
+          name = "NSE",
+          style = function(value, index, name) {
+            fvcriteria(nse_criteria(value))
+          }
+        ),
+        mean_error = colDef(name = "Mean Error"),
+        rmse = colDef(name = "RMSE (mm)"),
+        biased_criteria = colDef(
+          name = "Biased (%)",
+          style = fcriteria,
+          width = 120,
+          headerStyle = list(background = "lightgray")
+        ),
+        nse_criteria = colDef(
+          name = "NSE",
+          style = fcriteria,
+          width = 120,
+          headerStyle = list(background = "lightgray")
+        )
+        
+      ),
+      columnGroups = list(
+        colGroup(name = "Data", columns = performance_fields$data),
+        colGroup(name = "Value", columns = performance_fields$value),
+        colGroup(
+          name = "Criteria",
+          columns = performance_fields$criteria,
+          headerStyle = list(background = "lightgray")
+        )
+      ),
+      defaultColDef = colDef(format = colFormat(digits = 3))
+    )
+  })
+  
+  #### Buffering Indicator ############
+  # Yearly Indicators of Watershed Functions
+  
+  observe({
+    idf <- vd$output_df
+    if (is.null(idf))
+      return()
+    idf$m <- month(idf$date)
+    idf$year <- year(idf$date)
+    idf$n <- 1
+    
+    mean_df <- aggregate(idf[c("I_DailyRain", "I_RFlowdata_mmday", "L_InFlowtoLake")], list(idf$year), mean, na.rm = T)
+    colnames(mean_df) <- c("year", "PAvg", "QAvg", "QsAvg")
+    idf <- merge(idf, mean_df, by = "year")
+    idf$PabAvg <- pmax(idf$I_DailyRain - idf$PAvg, 0)
+    idf$QabAvg <- pmax(idf$I_RFlowdata_mmday - idf$QAvg, 0)
+    idf$QsabAvg <- pmax(idf$I_RFlowdata_mmday - idf$QsAvg, 0)
+    
+    sum_df <- aggregate(idf[c(
+      "n",
+      "I_DailyRain",
+      "I_RFlowdata_mmday",
+      "L_InFlowtoLake",
+      "PabAvg",
+      "QabAvg",
+      "QsabAvg",
+      "O_IntercAcc",
+      "O_EvapoTransAcc",
+      "O_SurfQFlowAcc",
+      "O_SoilQFlowAcc",
+      "O_BaseFlowAcc"
+    )], list(idf$year), sum, na.rm = T)
+    colnames(sum_df) <- c(
+      "year",
+      "n",
+      "Ptot",
+      "Qtot",
+      "Qstot",
+      "PabAvg",
+      "QabAvg",
+      "QsabAvg",
+      "SumInterceptionE",
+      "SumET_SoilplusVeg",
+      "SumRO",
+      "SumSoilQFlow",
+      "Baseflow"
+    )
+    
+    max_df <- aggregate(idf[c("I_DailyRain", "I_RFlowdata_mmday", "L_InFlowtoLake")], list(idf$year), max, na.rm = T)
+    colnames(max_df) <- c("year", "PdailyMax", "QdailyMax", "QsdailyMax")
+    sum_df <- merge(sum_df, max_df, by = "year")
+    
+    sum_mt_df <- aggregate(idf[c("I_RFlowdata_mmday", "L_InFlowtoLake")], list(idf$m, idf$year), sum, na.rm = T)
+    colnames(sum_mt_df) <- c("m", "year", "Qmonthly", "Qsmonthly")
+    
+    mt_max_df <- aggregate(sum_mt_df[c("Qmonthly", "Qsmonthly")], list(sum_mt_df$year), max, na.rm = T)
+    colnames(mt_max_df) <- c("year", "QmonthlyMax", "QsmonthlyMax")
+    sum_df <- merge(sum_df, mt_max_df, by = "year")
+    
+    mt_min_df <- aggregate(sum_mt_df[c("Qmonthly", "Qsmonthly")], list(sum_mt_df$year), min, na.rm = T)
+    colnames(mt_min_df) <- c("year", "QmonthlyMin", "QsmonthlyMin")
+    sum_df <- merge(sum_df, mt_min_df, by = "year")
+    
+    
+    
+    sum_df$TotDischargeFrac <- sum_df$Qtot / sum_df$Ptot
+    sum_df$BufferingIndicator <- 1 - (sum_df$QabAvg / sum_df$PabAvg)
+    sum_df$RelBufferingIndicator <- 1 - (sum_df$QabAvg / sum_df$Qtot) / (sum_df$PabAvg /
+                                                                           sum_df$Ptot)
+    sum_df$BufferingPeak <- 1 - (sum_df$QdailyMax - sum_df$Qtot / sum_df$n) /
+      (sum_df$PdailyMax - sum_df$Ptot / sum_df$n)
+    sum_df$HighestMonthFrac <- 12 * sum_df$QmonthlyMax / sum_df$Qtot
+    sum_df$LowestMonthFrac <- 12 * sum_df$QmonthlyMin / sum_df$Qtot
+    
+    sum_df$TotDischargeFrac_s <- sum_df$Qstot / sum_df$Ptot
+    sum_df$BufferingIndicator_s <- 1 - (sum_df$QsabAvg / sum_df$PabAvg)
+    sum_df$RelBufferingIndicator_s <- 1 - (sum_df$QsabAvg / sum_df$Qstot) / (sum_df$PabAvg /
+                                                                               sum_df$Ptot)
+    sum_df$BufferingPeak_s <- 1 - (sum_df$QsdailyMax - sum_df$Qstot / sum_df$n) /
+      (sum_df$PdailyMax - sum_df$Ptot / sum_df$n)
+    sum_df$HighestMonthFrac_s <- 12 * sum_df$QsmonthlyMax / sum_df$Qtot
+    sum_df$LowestMonthFrac_s <- 12 * sum_df$QsmonthlyMin / sum_df$Qtot
+    
+    sum_df$OverlandFlowFrac <- sum_df$SumRO / sum_df$Ptot
+    sum_df$SoilQflowFrac <- sum_df$SumSoilQFlow / sum_df$Ptot
+    sum_df$SlowFlowFrac_Meth1 <- sum_df$TotDischargeFrac_s - sum_df$OverlandFlowFrac - sum_df$SoilQflowFrac
+    sum_df$SlowFlowFrac_Meth2 <- (sum_df$Ptot - sum_df$SumInterceptionE - sum_df$SumET_SoilplusVeg -
+                                    sum_df$SumRO) / sum_df$Ptot
+    
+    sum_df[sapply(sum_df, is.infinite)] <- NA
+    vd$buffering_df <- sum_df
+    
+    ##### Average of Indicators of Watershed Functions #################
+    
+    avg_df <- data.frame(var = buff_var_df$label)
+    
+    min_v <- sapply(sum_df, min, na.rm = T)
+    mean_v <- sapply(sum_df, mean, na.rm = T)
+    max_v <- sapply(sum_df, max, na.rm = T)
+    
+    avg_df$min <- min_v[buff_var_df$obs_var]
+    avg_df$avg <- mean_v[buff_var_df$obs_var]
+    avg_df$max <- max_v[buff_var_df$obs_var]
+    
+    avg_df$min_s <- min_v[buff_var_df$sim_var]
+    avg_df$avg_s <- mean_v[buff_var_df$sim_var]
+    avg_df$max_s <- max_v[buff_var_df$sim_var]
+    
+    vd$wb_ind_avg <- avg_df
+    
+    #### Average of Water Balance  ###########
+    
+    avg_wb_df <- data.frame(var = water_balance_avg)
+    wb_field <- c("Ptot", "", "Qtot", "", "", "")
+    wb_field_sim <- c("Ptot",
+                      "SumET_SoilplusVeg",
+                      "Qstot",
+                      "SumRO",
+                      "SumSoilQFlow",
+                      "Baseflow")
+    avg_wb_df$min <- min_v[wb_field]
+    avg_wb_df$avg <- mean_v[wb_field]
+    avg_wb_df$max <- max_v[wb_field]
+    
+    avg_wb_df$min_s <- min_v[wb_field_sim]
+    avg_wb_df$avg_s <- mean_v[wb_field_sim]
+    avg_wb_df$max_s <- max_v[wb_field_sim]
+    
+    ratio_df <- avg_wb_df[, -1]
+    c1 <- colnames(ratio_df)
+    c2 <- paste0("r_", c1)
+    colnames(ratio_df) <- c2
+    ratio_df[, ] <- NA
+    for (r in 2:6) {
+      ratio_df[r, ] <- avg_wb_df[r, -1] / avg_wb_df[1, -1]
+    }
+    c12 <- as.vector(rbind(c1, c2))
+    avg_wb_df <- cbind(avg_wb_df, ratio_df)[c("var", c12)]
+    vd$wb_avg <- avg_wb_df
+    
+    wb_data_field <- append(wb_field_sim, "Qtot", after = 2)
+    vd$wb_yearly <- sum_df[c("year", wb_data_field)]
+    
+  })
+  
+  buff_var_df <- data.frame(
+    label = c(
+      "Total Discharge Fraction",
+      "Buffering Indicator",
+      "Relative Buffering Indicator",
+      "Buffering Peak Event",
+      "Highest Month Fraction",
+      "Overland Flow Fraction",
+      "Soil Quick Flow Fraction",
+      "Slow Flow Fraction",
+      "Lowest Month Fraction"
+    ),
+    obs_var = c(
+      "TotDischargeFrac",
+      "BufferingIndicator",
+      "RelBufferingIndicator",
+      "BufferingPeak",
+      "HighestMonthFrac",
+      "",
+      "",
+      "",
+      "LowestMonthFrac"
+    ),
+    sim_var = c(
+      "TotDischargeFrac_s",
+      "BufferingIndicator_s",
+      "RelBufferingIndicator_s",
+      "BufferingPeak_s",
+      "HighestMonthFrac_s",
+      "OverlandFlowFrac",
+      "SoilQflowFrac",
+      "SlowFlowFrac_Meth1",
+      "LowestMonthFrac_s"
+    )
+  )
+  
+  water_balance_avg <- c(
+    "Precipitation (mm)",
+    "Evapotranspiration (mm)",
+    "RiverFlow (mm)",
+    "* RunOff (mm)",
+    "* SoilQFlow (mm)",
+    "* BaseFlow (mm)"
+  )
+  water_balance_labels <- append(water_balance_avg, "RiverFlow - Observed (mm)", after = 2)
+  
+  
+  output$buff_avg_table_output <- renderReactable({
+    df <- vd$wb_ind_avg
+    if (is.null(df))
+      return()
+    reactable(
+      df,
+      striped = T,
+      borderless = TRUE,
+      rownames = F,
+      pagination = F,
+      columns = list(
+        var = colDef(
+          name = "",
+          width = 250,
+          align = "left"
+        ),
+        min = colDef(name = "Min", width = 100),
+        avg = colDef(name = "Average", width = 100),
+        max = colDef(
+          name = "Max",
+          width = 100,
+          class = "border_right"
+        ),
+        min_s = colDef(name = "Min", width = 100),
+        avg_s = colDef(name = "Average", width = 100),
+        max_s = colDef(name = "Max", width = 100)
+      ),
+      columnGroups = list(
+        colGroup(name = "Observed", columns = c("min", "avg", "max")),
+        colGroup(
+          name = "Simulated",
+          columns = c("min_s", "avg_s", "max_s")
+        )
+      ),
+      
+      defaultColDef = colDef(format = colFormat(digits = 2), align = "center")
+    )
+  })
+  
+  output$wb_avg_table_output <- renderReactable({
+    df <- vd$wb_avg
+    if (is.null(df))
+      return()
+    percent_col <- colDef(
+      name = "",
+      width = 80,
+      format = colFormat(
+        percent = TRUE,
+        digits = 1,
+        prefix = "(",
+        suffix = ")"
+      ),
+      class = "border_right"
+    )
+    reactable(
+      df,
+      striped = T,
+      borderless = TRUE,
+      rownames = F,
+      pagination = F,
+      columns = list(
+        var = colDef(
+          name = "",
+          width = 200,
+          sticky = "left"
+        ),
+        min = colDef(name = "Min", width = 80),
+        r_min = percent_col,
+        avg = colDef(name = "Average", width = 80),
+        r_avg = percent_col,
+        max = colDef(name = "Max", width = 80),
+        r_max = percent_col,
+        min_s = colDef(name = "Min", width = 80),
+        r_min_s = percent_col,
+        avg_s = colDef(name = "Average", width = 80),
+        r_avg_s = percent_col,
+        max_s = colDef(name = "Max", width = 80),
+        r_max_s = percent_col
+      ),
+      columnGroups = list(
+        colGroup(
+          name = "Observed",
+          columns = c("min", "avg", "max", "r_min", "r_avg", "r_max")
+        ),
+        colGroup(
+          name = "Simulated",
+          columns = c("min_s", "avg_s", "max_s", "r_min_s", "r_avg_s", "r_max_s")
+        )
+      ),
+      defaultColDef = colDef(format = colFormat(digits = 1))
+    )
+  })
+  
+  output$wb_yr_table_output <- renderReactable({
+    df <- vd$wb_yearly
+    if (is.null(df))
+      return()
+    reactable(
+      df,
+      striped = T,
+      borderless = TRUE,
+      rownames = F,
+      pagination = F,
+      columns = list(year = colDef(
+        name = "Year",
+        format = colFormat(digits = 0),
+        width = 80
+      )),
+      defaultColDef = colDef(format = colFormat(digits = 1))
+    )
+  })
+  
+  
+  generate_ind_plot <- function(vars) {
+    df <- vd$buffering_df
+    if (is.null(df) || nrow(df) == 0)
+      return(NULL)
+    idf <- df[vars]
+    fig <- plot_ly(x = df$year)
+    for (i in 1:ncol(idf)) {
+      fig <- fig |> add_trace(
+        y = idf[[i]],
+        type = "scatter",
+        mode = "lines+markers",
+        # name = labels[i-1])
+        name = buff_var_df[buff_var_df$sim_var == vars[i], "label"]
+      )
+    }
+    fig <- fig |>   layout(
+      hovermode = 'x',
+      legend = list(orientation = 'h', y = 100),
+      #x = 0.5, y = 100),
+      yaxis = list(title = "Indicators"),
+      xaxis = list(title = "Year")
+    )
+    return(fig)
+  }
+  
+  output$indicator1_plot <- renderPlotly({
+    var <- c("OverlandFlowFrac", "TotDischargeFrac_s")
+    generate_ind_plot(var)
+  })
+  
+  output$indicator2_plot <- renderPlotly({
+    var <- c("OverlandFlowFrac", "HighestMonthFrac_s")
+    generate_ind_plot(var)
+  })
+  
+  output$indicator3_plot <- renderPlotly({
+    var <- c("SoilQflowFrac",
+             "SlowFlowFrac_Meth1",
+             "LowestMonthFrac_s")
+    generate_ind_plot(var)
+  })
+  
+  output$indicator4_plot <- renderPlotly({
+    var <- c("BufferingIndicator_s",
+             "RelBufferingIndicator_s",
+             "BufferingPeak_s")
+    generate_ind_plot(var)
+  })
+  
   
   output$hepp_plot <- renderPlotly({
     df <- vd$output_df
@@ -5436,5 +6803,176 @@ server <- function(input, output, session) {
     df <- df[hepp_output]
     reactable_daily_data(df)
   })
- 
+  
+  
+  ### FLOWPER ################
+  flowper_yearly <- reactiveVal()
+  flowper_period <- reactiveVal()
+  
+  output$flowper_yearly_table <- renderReactable({
+    df <- v$river_df
+    rdf <- v$rain_df
+    if (is.null(df) || is.null(rdf))
+      return()
+    
+    df$year <- year(df$date)
+    df$month <- month(df$date)
+    plist <- list(c(1:3), c(4:6), c(7:9), c(10:12))
+    for (i in 1:4) {
+      df[df$month %in% plist[[i]], "period"] <- i
+    }
+    fp_year <- flowper(df, "river_flow", c("year"))
+    fp_period <- flowper(df, "river_flow", c("year", "period"))
+
+    
+      rdf$year <- year(df$date)
+      rdf$month <- month(df$date)
+      for (i in 1:4) {
+        rdf[rdf$month %in% plist[[i]], "period"] <- i
+      }
+      rain_yearly <- aggregate(rdf$rainfall, by = rdf["year"], sum, na.rm = T)
+      colnames(rain_yearly) <- c("year", "rainfall")
+      rain_period <- aggregate(rdf$rainfall, by = rdf[c("year", "period")], sum, na.rm = T)
+      colnames(rain_period) <- c("year", "period", "rainfall")
+      
+      fp_year <- merge(fp_year, rain_yearly, by = "year", all.x = T)
+      fp_period <- merge(fp_period,
+                         rain_period,
+                         by = c("year", "period"),
+                         all.x = T)
+      flowper_yearly(fp_year)
+      flowper_period(fp_period)
+
+    reactable(
+      fp_year[c("year", "rainfall", "flowper")],
+      columns = list(
+        year = colDef(name = "Year", width = 60),
+        rainfall = colDef(
+          name = "Rainfall (mm)",
+          format = colFormat(digits = 0),
+          width = 120
+        ),
+        flowper = colDef(
+          name = "Fp Value",
+          format = colFormat(digits = 2),
+          width = 80
+        )
+      ),
+      columnGroups = list(colGroup(
+        name = "Annual Data", columns = c("rainfall", "flowper")
+      )),
+      defaultColDef = colDef(align = "center"),
+      pagination = F,
+      details = function(index) {
+        p_data <- fp_period[fp_period$year == fp_year$year[index], c("period", "rainfall", "flowper")]
+        div(
+          style = "padding:10px",
+          tags$i("Seasonal Data", style = "color:#219ebc"),
+          reactable(
+            p_data,
+            style = "background-color:#ECF9FC",
+            columns = list(
+              period = colDef(
+                name = "Period",
+                width = 65,
+                align = "center"
+              ),
+              rainfall = colDef(name = "Rainfall (mm)", format = colFormat(digits = 0)),
+              flowper = colDef(name = "Fp Value", format = colFormat(digits = 2))
+            ),
+            defaultColDef = colDef(align = "center")
+            # outlined = TRUE
+          )
+        )
+      }
+    )
+  })
+  
+  output$fp1_plot <- renderPlotly({
+    df <- flowper_yearly()
+    if (is.null(df))
+      return()
+    plot_ly(
+      x = df$year,
+      y = df$flowper,
+      type = "scatter",
+      mode = "lines+markers"
+    ) |>
+      layout(
+        hovermode = 'x',
+        yaxis = list(title = "Fp Value"),
+        xaxis = list(title = "Year"),
+        title = "Annual Fp-Value Over Time"
+      )
+  })
+  
+  output$fp2_plot <- renderPlotly({
+    df <- flowper_period()
+    if (is.null(df))
+      return()
+    df$period <- as.character(df$period)
+    plot_ly(
+      data = df ,
+      x =  ~ year,
+      y = ~ flowper,
+      color = ~ period,
+      type = "scatter",
+      mode = "lines+markers"
+    ) |>
+      layout(
+        hovermode = 'x',
+        legend = list(
+          orientation = 'h',
+          y = 1,
+          title = list(text = "<b>Period:</b>")
+        ),
+        yaxis = list(title = "Fp Value"),
+        xaxis = list(title = "Year"),
+        title = "Seasonal Fp-Value Over Time"
+      )
+  })
+  
+  output$fp3_plot <- renderPlotly({
+    df <- flowper_yearly()
+    if (is.null(df))
+      return()
+    plot_ly(
+      x = df$rainfall,
+      y = df$flowper,
+      type = "scatter",
+      mode = "markers"
+    ) |>
+      layout(
+        hovermode = 'x',
+        yaxis = list(title = "Fp Value"),
+        xaxis = list(title = "Rainfall (mm)"),
+        title = "Annual Fp-Value VS Rainfall"
+      )
+  })
+  
+  output$fp4_plot <- renderPlotly({
+    df <- flowper_period()
+    if (is.null(df))
+      return()
+    df$period <- as.character(df$period)
+    plot_ly(
+      data = df ,
+      x =  ~ rainfall,
+      y = ~ flowper,
+      color = ~ period,
+      type = "scatter",
+      mode = "markers"
+    ) |>
+      layout(
+        hovermode = 'x',
+        legend = list(
+          orientation = 'h',
+          y = 1,
+          title = list(text = "<b>Period:</b>")
+        ),
+        yaxis = list(title = "Fp Value"),
+        xaxis = list(title = "Rainfall (mm)"),
+        title = list(text = paste("Seasonal Fp-Value VS Rainfall"))
+      )
+  })
 }

@@ -1,4 +1,5 @@
 
+
 chart_color <- c(
   paletteer_d("ggthemes::calc"),
   paletteer_d("ggsci::schwifty_rickandmorty"),
@@ -36,14 +37,17 @@ get_color <- function(idx = NULL, is_light = F) {
   idx <- abs(idx)
   idx <- idx %% max_idx
   idx[idx == 0] <- max_idx
-  return(cl[idx])
+  return(substring(cl[idx], 1, 7))
+  # return(cl[idx])
 }
 
 y_axis_setting <- function(p, i, title = "") {
   l <- list(p = p)
   if (i == 1) {
     l[["yaxis"]] <-
-      list(color = chart_color[i], zeroline = F, title = title)
+      list(color = chart_color[i],
+           zeroline = F,
+           title = title)
   } else {
     l[[paste0("yaxis", i)]] <-
       list(
@@ -70,15 +74,16 @@ plotly_multiple_axis <- function(df) {
       name = v[i],
       mode = "lines",
       type = "scatter",
-      line = list(color = chart_color[i-1]),
+      line = list(color = chart_color[i - 1]),
       yaxis = paste0("y", i - 1)
     )
-    fig <- do.call(layout, y_axis_setting(fig, i-1, v[i]))
+    fig <- do.call(layout, y_axis_setting(fig, i - 1, v[i]))
   }
-  fig <- fig |> layout(
-    hovermode = 'x',
-    xaxis = list(title = v[1], tickfont = list(family = "Arial black"))
-  )
+  fig <- fig |> layout(hovermode = 'x',
+                       xaxis = list(
+                         title = v[1],
+                         tickfont = list(family = "Arial black")
+                       ))
   return(fig)
 }
 
@@ -100,20 +105,22 @@ plotly_multiple_axis <- function(df) {
 #' @examples
 table_edit_ui <- function(id,
                           title = "",
-                          is_paginated = F) {
+                          is_paginated = F,
+                          is_label = F, vspace = NULL) {
   ns <- NS(id)
-  vspace <- "30px"
-  if (is_paginated)
-    vspace <- "90px"
+  if(is.null(vspace)) {
+    vspace <- ifelse(is_paginated, "90px", "40px")
+  }
+  label <- ifelse(is_label, "Upload", "")
   div(style = "height:100%;overflow:auto;",
       span(
         div(
           style = "float:right;",
           actionButton(
             ns("upload_btn"),
-            "",
+            label,
             icon = icon("upload"),
-            class = "toolbar_button"
+            class = "menu_button"
           )
           |> tooltip(
             "Upload data",
@@ -122,18 +129,17 @@ table_edit_ui <- function(id,
           )
         ) |>
           popover(
-            title = div(icon("upload"), "Upload data"),
             id = ns("upload_pop"),
-            fileInput(ns("upload_file"), NULL, accept = c(".csv"))
+            fileInput(ns("upload_file"), "Upload data", accept = c(".csv"))
           ),
         title
       ),
-      
       excelR::excelOutput(ns("table_edit"), height = paste0("calc(100% - ", vspace, ")")))
 }
 
 table_edit_server <- function(id,
-                              data,
+                              # data,
+                              reactive_data,
                               col_title = NULL,
                               col_type = NULL,
                               col_disable = NULL,
@@ -142,89 +148,77 @@ table_edit_server <- function(id,
                               allowRowModif = F,
                               nrow = 0,
                               pagination = NULL,
-                              csvFileName = "table_data") {
+                              csvFileName = "table_data", ...) {
   moduleServer(id, function(input, output, session) {
-    if (is.null(data)) {
-      warning("table_edit_server >> Data should be initialized with dataframe object")
-      return()
-    }
-    col_names <- colnames(data)
-    
-    if (is.null(col_title)) {
-      # col_title <- tools::toTitleCase(col_names)
-      col_title <- gsub("_", " ", col_names)
-      col_title <- tools::toTitleCase(col_title)
-    }
-    
-    
-    col_render <- rep(NA, ncol(data))
-    if (is.null(col_width))
-      col_width <- col_render
-    
-    col_align <- rep("left", ncol(data))
-    
-    if (is.null(col_type)) {
-      col_type_data <- sapply(data, class)
-    } else {
-      col_type_data <- col_type
-    }
-    
-    col_type <- rep(NA, ncol(data))
-    idx <- which(tolower(col_type_data) == "date")
-    for (i in idx) {
-      col_type[i] <- "calendar"
-    }
-    idx <- which(col_type_data == "logical")
-    for (i in idx) {
-      col_type[i] <- "checkbox"
-    }
-    idx <- which(col_names == "color")
-    for (i in idx) {
-      col_type[i] <- "color"
-      col_title[i] <- " "
-      col_render[i] <- "square"
-      col_align[i] <- "center"
-      col_width[i] <- 30
-    }
-    idx <- which(col_type_data == "numeric")
-    for (i in idx) {
-      col_align[i] <- "right"
-    }
-    idx <- which(col_type_data == "dropdown")
-    for (i in idx) {
-      col_type[i] <- "dropdown"
-    }
-    
-    if (is.null(col_disable)) {
-      col_disable <- rep(F, ncol(data))
-    }
-    
-    data_column <- data.frame(
-      title = col_title,
-      type = col_type,
-      render = col_render,
-      align = col_align,
-      width = col_width,
-      readOnly = col_disable
-      # source = col_source
-    )
-    
-    if (!is.null(col_source)) {
-      data_column$source <- col_source
-    }
-    
-    table_data <- reactiveVal(data)
-    table_data_edit <- reactiveVal(data)
-    
     output$table_edit <- excelR::renderExcel({
-      ns <- session$ns
-      df <- table_data_edit()
-      if (is.null(df))
+      data <- reactive_data()
+      if (is.null(data)) {
         return()
-      # print(df)
+      }
+      col_names <<- colnames(data)
+      
+      if (is.null(col_title)) {
+        col_title <- gsub("_", " ", col_names)
+        col_title <- tools::toTitleCase(col_title)
+      }
+      
+      col_render <- rep(NA, ncol(data))
+      if (is.null(col_width))
+        col_width <- col_render
+      
+      col_align <- rep("left", ncol(data))
+      
+      if (is.null(col_type)) {
+        col_type_data <<- sapply(data, class)
+      } else {
+        col_type_data <<- col_type
+      }
+      
+      col_type <- rep(NA, ncol(data))
+      idx <- which(tolower(col_type_data) == "date")
+      for (i in idx) {
+        col_type[i] <- "calendar"
+      }
+      idx <- which(col_type_data == "logical")
+      for (i in idx) {
+        col_type[i] <- "checkbox"
+      }
+      idx <- which(col_names == "color")
+      for (i in idx) {
+        col_type[i] <- "color"
+        # col_title[i] <- " "
+        col_render[i] <- "square"
+        col_align[i] <- "center"
+        col_width[i] <- 30
+      }
+      idx <- which(col_type_data == "numeric")
+      for (i in idx) {
+        col_align[i] <- "right"
+      }
+      idx <- which(col_type_data == "dropdown")
+      for (i in idx) {
+        col_type[i] <- "dropdown"
+      }
+      
+      if (is.null(col_disable)) {
+        col_disable <- rep(F, ncol(data))
+      }
+      
+      data_column <- data.frame(
+        title = col_title,
+        type = col_type,
+        render = col_render,
+        align = col_align,
+        width = col_width,
+        readOnly = col_disable
+      )
+      
+      if (!is.null(col_source)) {
+        data_column$source <- col_source
+      }
       
       excelR::excelTable(
-        data = df,
+        data = data,
         columns = data_column,
         tableOverflow = T,
         tableWidth = "100%",
@@ -237,13 +231,19 @@ table_edit_server <- function(id,
         rowDrag = allowRowModif,
         minDimensions = c(NA, nrow),
         pagination = pagination,
-        autoIncrement = T,
+        autoIncrement = F,
         dateFormat = "DD-Mon-YYYY",
         csvFileName = csvFileName,
         defaultColWidth = 100,
-        includeHeadersOnDownload = T
+        includeHeadersOnDownload = T,
+        ...
       )
     })
+    
+    col_names <- NULL
+    col_type_data <- NULL
+    table_data <- reactiveVal()
+    # table_data_edit <- reactiveVal(data)
     
     observeEvent(input$table_edit, {
       inp <- input$table_edit
@@ -265,6 +265,10 @@ table_edit_server <- function(id,
       fpath <- input$upload_file$datapath
       df <- read.csv(fpath)
       toggle_popover("upload_pop", show = F)
+      if(is.null(col_type_data)) {
+        table_data(df)
+        return()
+      }
       if (ncol(df) > length(col_type_data))
         df <- df[c(1:length(col_type_data))]
       for (i in 1:length(col_type_data)) {
@@ -287,7 +291,7 @@ table_edit_server <- function(id,
         }
       }
       colnames(df) <- col_names
-      table_data_edit(df)
+      # table_data_edit(df)
       table_data(df)
     })
     
@@ -318,7 +322,12 @@ reactable_edit_ui <- function(id, height = NULL) {
   
 }
 
-reactable_edit_server <- function(id, reactive_df, editable = NULL, col_type = NULL, columns = NULL, ...) {
+reactable_edit_server <- function(id,
+                                  reactive_df,
+                                  editable = NULL,
+                                  col_type = NULL,
+                                  columns = NULL,
+                                  ...) {
   moduleServer(id, function(input, output, session) {
     output$table_id <- renderReactable({
       df <- reactive_df()
@@ -350,11 +359,13 @@ reactable_edit_server <- function(id, reactive_df, editable = NULL, col_type = N
         col_type_data <<- col_type
       }
       print(col_type_data)
-      reactable(df,
-                columns = columns,
-                ...,
-                defaultColDef = colDef(style = list(cursor = "default")),
-                onClick = click_edit)
+      reactable(
+        df,
+        columns = columns,
+        ...,
+        defaultColDef = colDef(style = list(cursor = "default")),
+        onClick = click_edit
+      )
     })
     
     col_type_data <- NULL
@@ -367,9 +378,9 @@ reactable_edit_server <- function(id, reactive_df, editable = NULL, col_type = N
       df <- reactive_df()
       val <- df[ed$row, ed$column]
       updateTextInput(session, "input_id", value = val)
-      # print(columns)
       name <- columns[[ed$column]]$name
-      if(is.null(name)) name <- ed$column
+      if (is.null(name))
+        name <- ed$column
       update_popover("pop_id", title = paste("Edit", name))
       output$pop_desc_id <- renderText(paste("Row:", ed$row))
       toggle_popover("pop_id", show = T)
@@ -380,7 +391,7 @@ reactable_edit_server <- function(id, reactive_df, editable = NULL, col_type = N
       ed <- edited_cell()
       df <- reactive_df()
       idx <- which(colnames(df) == ed$column)
-      if(col_type_data[idx] == "numeric") {
+      if (col_type_data[idx] == "numeric") {
         df[ed$row, ed$column] <- as.numeric(input$input_id)
       } else {
         df[ed$row, ed$column] <- input$input_id
@@ -394,15 +405,18 @@ reactable_edit_server <- function(id, reactive_df, editable = NULL, col_type = N
 }
 
 
-numeric_input_ui <- function(id, df) {
+numeric_input_ui <- function(id, df, ...) {
   ns <- NS(id)
   apply(df, 1, function(x) {
-    numericInput(ns(x[["var"]]),
-                markdown(x[["label"]]),
-                 as.numeric(x[["value"]]),
-                 as.numeric(x[["min"]]),
-                 as.numeric(x[["max"]]),
-                 as.numeric(x[["step"]]))
+    numericInput(
+      ns(x[["var"]]),
+      markdown(x[["label"]]),
+      as.numeric(x[["value"]]),
+      as.numeric(x[["min"]]),
+      as.numeric(x[["max"]]),
+      as.numeric(x[["step"]]), 
+      ...
+    )
   })
 }
 
@@ -421,9 +435,93 @@ numeric_input_server <- function(id, df) {
 }
 
 update_numeric_input_ui <- function(id, var_list) {
-  if(is.null(var_list)) return()
+  if (is.null(var_list))
+    return()
   ns <- NS(id)
-  for(var in names(var_list)) {
+  for (var in names(var_list)) {
     updateNumericInput(inputId = ns(var), value = var_list[[var]])
   }
+}
+
+table_download_link <- function(id,
+                                filename = "data.csv",
+                                label = "Download as CSV") {
+  actionLink(
+    "download_csv",
+    label,
+    icon("download"),
+    onclick = sprintf("Reactable.downloadDataCSV('%s', '%s')", id, filename)
+  )
+}
+
+info <- function(i, class = "x", ...) {
+  tooltip(icon("info-circle", style = "margin-left:10px;"), i, 
+          options = list(customClass = paste("custom-tooltip", class)),...)
+}
+
+
+input_dialog <- function(title = "",
+                         desc = "",
+                         confirm_id,
+                         confirm_label = "Confirm",
+                         input_var = NULL,
+                         input_label = NULL,
+                         input_def = NULL,
+                         input_pholder = NULL,
+                         input_type = NULL,
+                         input_info = NULL,
+                         custom_input = NULL) {
+  inp <- NULL
+  if (!is.null(input_var)) {
+    blank <- rep("", length(input_var))
+    if (is.null(input_label))
+      input_label <- blank
+    if (is.null(input_def))
+      input_def <- blank
+    if (is.null(input_pholder))
+      input_pholder <- blank
+    if (is.null(input_type))
+      input_type <- blank
+    if (is.null(input_info))
+      input_info <- blank
+    inp <- mapply(
+      function(v, l, d, p, t, i) {
+        if (i != "") {
+          # label = span(HTML(l), tooltip(icon("info-circle", style = "margin-left:10px;"), i))
+          label = span(HTML(l), info(i))
+        } else {
+          label = HTML(l)
+        }
+        if (t == "numeric") {
+          paste(numericInput(v, label, d, width = "100%"))
+        } else if (t == "boolean") {
+          paste(checkboxInput(v, label, d, width = "100%"))
+        } else {
+          paste(textInput(v, label, d, width = "100%", p))
+        }
+      },
+      input_var,
+      input_label,
+      input_def,
+      input_pholder,
+      input_type,
+      input_info
+    )
+  }
+  names(inp) <- NULL
+  inp <- HTML(inp)
+  modalDialog(
+    title = title,
+    HTML(paste("<p>", desc, "</p>")),
+    custom_input,
+    inp,
+    footer = tagList(
+      modalButton("Cancel"),
+      actionButton(confirm_id, confirm_label)
+    )
+  )
+}
+
+show_input_dialog <- function(...) {
+  showModal(input_dialog(...))
 }

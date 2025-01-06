@@ -133,8 +133,23 @@ prefix <- function(v, sep = "_", n = 1) {
   return(p[1:min(length(p), n)])
 }
 
-
-
+download_as_zip <- function(filename, vars, vlist) {
+  downloadHandler(
+    filename = function() {
+      paste(filename)
+    },
+    content = function(fname) {
+      setwd(tempdir())
+      fs <- c()
+      for(v in vars) {
+        type <- suffix(v)
+        fs <- c(fs, write_data(vlist[[v]], v, type))
+      }
+      return(zip::zip(zipfile = fname, files = fs))
+    },
+    contentType = "application/zip"
+  )
+}
 
 
 #TODO: to compare with JSON method, which one is faster
@@ -181,3 +196,7 @@ get_rainfall_data <- function() {
   n <- nearest_stations(LAT = -6.5790138, LON = 106.7352587, distance = 100)
   tbar <- get_GSOD(years = 2023, station = "967510-99999")
 }
+
+
+
+
