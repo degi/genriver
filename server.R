@@ -2614,6 +2614,8 @@ server <- function(input, output, session) {
     v$soil_cfg$elevation_coe <- input$elevation_coe_input
     v$soil_cfg$elevation_exp <- input$elevation_exp_input
     v$soil_cfg$noise_removal <- input$soil_noise_input
+    # reset soil water
+    v$subc_lc_df <- NULL
   })
   
   
@@ -2654,6 +2656,8 @@ server <- function(input, output, session) {
     updateSelectInput(session,
                       "soil_type_select",
                       selected = v$soil_cfg$soil_type_select)
+    # reset soil water
+    v$subc_lc_df <- NULL
   }
   
   
@@ -3001,6 +3005,8 @@ server <- function(input, output, session) {
     v$soil_cfg$top_soil_prop <- top_soil
     vd$soil_water_content_user_df <- calculate_soil_water_table(v$soil_type_df, top_soil)
     isolate(update_soil_water_content())
+    # reset soil water
+    v$subc_lc_df <- NULL
   })
   
   soil_type_top_cols <- c("soil_id", "color", "SOIL", hydro_prop)
@@ -3182,6 +3188,8 @@ server <- function(input, output, session) {
     v$soil_cfg$soil_type_select <- input$soil_type_select
     update_soil_water_content()
     repaint_segments()
+    # reset soil water
+    v$subc_lc_df <- NULL
   })
   
   update_soil_water_content <- function() {
