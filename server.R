@@ -6,6 +6,10 @@
 
 # setelah warming up. trus balik lagi ke tanggal awal
 
+# Rahmat
+# tambah tombol stop simulasi
+# garis 1 vs 1 di river vs rain
+
 server <- function(input, output, session) {
   options(shiny.maxRequestSize = 1000 * 1024 ^ 2)
   data_dir <- paste0(tempdir(), "/data_temp")
@@ -2187,22 +2191,51 @@ server <- function(input, output, session) {
   
   output$ws3d_plot <- renderPlotly({
     dem_ws <- v$dem_crop_stars
-    if (is.null(dem_ws))
+    subc_sf <- v$subcatchment_map_sf
+    stream_sf <- v$dem_stream_sf
+    if (is.null(dem_ws) || is.null(subc_sf) || is.null(stream_sf))
       return()
-    delta_m <- log(cellSize.stars(dem_ws))
+    wsb <- dem_ws
+    wsb[[1]] <- NA
+    
+    subc_stars <- st_rasterize(subc_sf["ws_id"], wsb)
+    subc_info <- subc_stars[[1]]
+    subc_stars[subc_stars == 999] <- 0
+    stream_stars <- st_rasterize(stream_sf, wsb)
+    subc_stars[!is.na(stream_stars)] <- nrow(subc_sf) + 1
+    
+    df <- as.data.frame(subc_sf)
+    df$info <- paste0("<b>[",
+                      df$ws_id,
+                      "] ",
+                      df$label,
+                      "</b><br>Area: ",
+                      round(df$area),
+                      " ha")
+    for (id in df$ws_id) {
+      subc_info[subc_info == id] <- df[df$ws_id == id, "info"]
+    }
+    cdf <- st_coordinates(dem_ws)
+    y <- sort(unique(cdf$x))
+    x <- sort(unique(cdf$y))
+    color <- chart_color[1:nrow(subc_sf)]
+    
     plot_ly(
-      z = dem_ws[[1]],
-      colorscale = 'Portland',
-      colorbar = list(title = "<b>Elevation</b>", x = 0.9, y = 0.9),
-      hoverinfo = "z",
-      name = "ASL",
-      hovertemplate =  "Elevation: %{z} m"
-    ) |> add_surface() |>
+      colors = c("#CAEDF6", color),
+      showscale = F,
+      lighting = list(ambient = 0.05, diffuse = 1),
+      hoverlabel = list(bgcolor = "#023047E9"),
+      hovertemplate =
+        "Elevation: %{z} m<br>Lat: %{x}<br>Lon: %{y}<extra>Subcathment<br>%{text}</extra>"
+    ) |>
       layout(
         scene = list(
-          aspectratio = list(x = delta_m, y = delta_m, z = 1),
+          xaxis = list(title = "Latitude", nticks = 20, showline = T, backgroundcolor = "#EEE", showbackground = T),
+          yaxis = list(title = "Longitude", nticks = 20, showline = T, backgroundcolor = "#EEE", showbackground = T),
+          zaxis = list(title = "Elevation (m)", nticks = 5, showline = T),
+          aspectratio = list(x = 1, y = 1, z = 0.1),
           camera = list(eye = list(
-            x = 4, y = 4, z = 4
+            x = 0.8, y = 0.8, z = 0.8
           ))
         ),
         margin = list(
@@ -2212,47 +2245,20 @@ server <- function(input, output, session) {
           t = 0,
           pad = 0
         )
+      ) |> add_surface(
+        z = dem_ws[[1]],
+        x = x,
+        y = y,
+        surfacecolor = subc_stars[[1]],
+        text = t(subc_info)
       )
+    
+    
   })
   
-  # observeEvent(input$generate_3d_button, {
-  #   is_show_3d(T)
-  # })
-  # 
-  # output$plot3d <- renderRglwidget({
-  #   dem <- v$dem_crop_stars
-  #   if (is.null(dem))
-  #     return()
-  #   try(close3d())
-  #   showPageSpinner(caption = "Please wait while rendering 3D view")
-  #   dem <- st_as_stars(dem)
-  #   m_mat <- dem[[1]]
-  #   m_mat[is.na(m_mat)] <- min(m_mat, na.rm = T)
-  #   m_mat %>%
-  #     sphere_shade(texture = "desert") %>%
-  #     add_shadow(ray_shade(m_mat, zscale = 3), 0.5) %>%
-  #     add_shadow(ambient_shade(m_mat), 0) %>%
-  #     plot_3d(
-  #       m_mat,
-  #       zscale = 10,
-  #       fov = 60,
-  #       theta = 135,
-  #       zoom = 0.75,
-  #       phi = 45,
-  #       triangulate = T,
-  #       max_tri = 15000
-  #     )
-  #   hidePageSpinner()
-  #   rglwidget()
-  # })
-  
+
   ### SOIL PROPERTIES ####################################
-  
-  # observe({
-  #   if (is.null(v$dem_crop_stars))
-  #     return()
-  #   generate_slope_classes()
-  # })
+
   
   
   
@@ -2885,7 +2891,11 @@ server <- function(input, output, session) {
   })
   
   observe({
-    v$soil_segments_sf$soil_id <- v$soil_segments_df$soil_id
+    sf <- isolate(v$soil_segments_sf)
+    df <- v$soil_segments_df
+    if(is.null(sf) || is.null(df)) return()
+    if(nrow(sf) == nrow(df))
+      v$soil_segments_sf$soil_id <- df$soil_id
   })
 
   output$soil_mapped_table_global <- renderReactable({

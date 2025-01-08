@@ -640,7 +640,7 @@ ui <-
             padding = 0,
             navset_card_underline(
               nav_panel(
-                title = "Watershed",
+                title = "Watershed Map",
                 icon = icon("mountain-sun"),
                 card_body(
                   padding = 0,
@@ -667,6 +667,11 @@ ui <-
                     )
                   )
                 )
+              ),
+              nav_panel(
+                title = "3D View",
+                icon = icon("cube"),
+                card_body(padding = 5, plotlyOutput("ws3d_plot"))
               ),
               nav_panel(
                 title = "Lake and DAM",
@@ -712,20 +717,9 @@ ui <-
                 icon = icon("house-flood-water"),
                 h5("Ground water dynamic and time of river flow"),
                 card(table_edit_ui("ground_water_table"))
-              ),
-              
-              nav_panel(
-                title = "3D View",
-                icon = icon("cube"),
-                card_body(padding = 5, plotlyOutput("ws3d_plot"))
-                
-                # conditionalPanel(condition = "!output.is_show_3d", div(
-                #   actionButton("generate_3d_button", "Click here to generate 3D view")
-                # )),
-                # conditionalPanel(condition = "output.is_show_3d", card_body(
-                #   padding = 0, rglwidgetOutput("plot3d", width = "calc(100% - 20px)")
-                # ))
               )
+              
+
             )
           )
         ),
