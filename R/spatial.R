@@ -913,16 +913,56 @@ tes <- function() {
   
   ###########################################
   ### TEST PLOTLY #########################
-  
-  setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/pars/genriver_tes")
-  dem_ws <- read_stars("dem_ws.tif")
-  delta_m <- sqrt(cellSize.stars(dem_ws))
-  plot_ly(z = dem_ws[[1]], colorscale= 'Portland') |> add_surface() |>
-    layout(scene = list(
-      aspectratio = list(x = 1, y = 1, z = 10 / delta_m)
-    ))
+  setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/pars/genriver_pars_3")
+  setwd("C:/Degi/GDrive_code/data/genriver/sumberjaya/pars/genriver_pars_3")
+  dem_map <- read_stars("dem_bb.tif")
+  sf <- st_read("ws_boundary.shp")
+  subc_sf <- st_read("subcatchment.shp")
   
   
+  ws_boundary_stars <- st_rasterize(st_sf(st_geometry(sf)), dem_map, align = T)
+  dem_ws <- crop_raster(dem_map, ws_boundary_stars)
+  # subc_sf <- subc_sf[order(subc_sf$ws_id),]
+  subc_stars <- st_rasterize(subc_sf["ws_id"], dem_map, align = T)
+  subc_info <- subc_stars
+  subc_stars <- subc_stars + 1
+  subc_stars[subc_stars == 1000] <- 0
+  color <- as.data.frame(subc_sf)$color
+
+  df <- as.data.frame(subc_sf)
+  df$info <- paste0("[", df$ws_id,"] ", df$label, "<br>Area:", round(df$area), " ha")
+  subc_info <- apply(subc_stars[[1]], c(1,2), function(x, d) {
+    if(is.na(x)) {
+      NA
+    } else {
+      d[d$ws_id == x, "info"]
+    }
+  }, df)
+  
+  df <- st_coordinates(m)
+  x <- sort(unique(df$x))
+  y <- sort(unique(df$y))
+  
+  plot_ly(
+    colors = c("#034464", "#9a130e", color),
+    showscale = F,
+    hovertemplate =  "<b>Subcathment ID: %{text}</b><br>Elevation: %{z} m<extra></extra>"
+  ) |>
+    layout(scene = list(aspectratio = list(
+      x = 1, y = 1, z = 0.2
+    ))) |> add_surface(z = dem_ws[[1]],
+                       surfacecolor = subc_stars[[1]],
+                       text = t(subc_info[[1]]))
+  
+
+  
+  m <- matrix(c(1,2,3,4,5,6,7,8,9),3,3)
+  
+  dd <- data.frame(a = c(2:4), b = "x")
+  
+  m2 <- apply(m, c(1,2), function(x, d){
+    d[d$a == x, "b"]
+  }, dd)
 }
 
 

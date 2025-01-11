@@ -313,7 +313,7 @@ reactable_edit_ui <- function(id, height = NULL) {
   ns <- NS(id)
   reactableOutput(ns("table_id"), height = height) |> popover(
     id = ns("pop_id"),
-    title = "Edit",
+    title = span(icon("edit"), "Edit"),
     textOutput(ns("pop_desc_id")),
     textInput(ns("input_id"), NULL),
     actionButton(ns("confirm_id"), "Confirm"),

@@ -62,13 +62,11 @@ install_load(
   "httr",
   
   "lubridate",
-  # "shinyjqui",
-  # "rgl",
-  
-  "DBI"
-  # "rayshader"
-  
-  # "shinyWidgets"
+  "DBI",
+
+  "future",
+  "promises",
+  "ipc"
 )
 
 library("remotes")
@@ -92,7 +90,6 @@ library("plotly")
 #table UI
 library("reactable")
 library("excelR")
-# library("shinyWidgets")
 #spatial
 library("stars")
 library("terra")
@@ -111,14 +108,15 @@ library("httr")
 #utiliy
 library("reshape2")
 library("lubridate")
-# library("shinyjqui")
-# library("rgl")
 library("DBI")
 library("flowdem")
-# library("rayshader")
 library("shinycssloaders")
 library("RSQLite")
+library(future)
+library(promises)
+library(ipc)
 
+plan(multisession)
 
 theme_color <- list(
   primary = "#034464",
@@ -159,74 +157,6 @@ map_label <- function(desc = "",
         footer_div) |>
     lapply(htmltools::HTML)
 }
-
-
-#TODO: create modal dialog only, show later
-# input_dialog <- function(title = "",
-#                          desc = "",
-#                          confirm_id,
-#                          confirm_label = "Confirm",
-#                          input_var = NULL,
-#                          input_label = NULL,
-#                          input_def = NULL,
-#                          input_pholder = NULL,
-#                          input_type = NULL,
-#                          input_info = NULL,
-#                          custom_input = NULL) {
-#   inp <- NULL
-#   if (!is.null(input_var)) {
-#     blank <- rep("", length(input_var))
-#     if (is.null(input_label))
-#       input_label <- blank
-#     if (is.null(input_def))
-#       input_def <- blank
-#     if (is.null(input_pholder))
-#       input_pholder <- blank
-#     if (is.null(input_type))
-#       input_type <- blank
-#     if (is.null(input_info))
-#       input_info <- blank
-#     inp <- mapply(
-#       function(v, l, d, p, t, i) {
-#         if (i != "") {
-#           # label = span(HTML(l), tooltip(icon("info-circle", style = "margin-left:10px;"), i))
-#           label = span(HTML(l), info(i))
-#         } else {
-#           label = HTML(l)
-#         }
-#         if (t == "numeric") {
-#           paste(numericInput(v, label, d, width = "100%"))
-#         } else if (t == "boolean") {
-#           paste(checkboxInput(v, label, d, width = "100%"))
-#         } else {
-#           paste(textInput(v, label, d, width = "100%", p))
-#         }
-#       },
-#       input_var,
-#       input_label,
-#       input_def,
-#       input_pholder,
-#       input_type,
-#       input_info
-#     )
-#   }
-#   names(inp) <- NULL
-#   inp <- HTML(inp)
-#   modalDialog(
-#     title = title,
-#     HTML(paste("<p>", desc, "</p>")),
-#     custom_input,
-#     inp,
-#     footer = tagList(
-#       modalButton("Cancel"),
-#       actionButton(confirm_id, confirm_label)
-#     )
-#   )
-# }
-# 
-# show_input_dialog <- function(...) {
-#   showModal(input_dialog(...))
-# }
 
 show_spinner <- function(label) {
   conditionalPanel(

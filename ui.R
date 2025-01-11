@@ -1,19 +1,16 @@
 
-
-
-
 wave_div <- HTML(
   '<div><svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-            viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-          <defs>
-          <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
-          </defs>
-          <g class="parallax">
-          <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7" />
-          <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
-          <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
-          <use xlink:href="#gentle-wave" x="48" y="7" fill="#fff" />
-          </g></svg></div>'
+    viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+  <defs>
+  <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+  </defs>
+  <g class="parallax">
+  <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7" />
+  <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
+  <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
+  <use xlink:href="#gentle-wave" x="48" y="7" fill="#fff" />
+  </g></svg></div>'
 )
 
 
@@ -149,7 +146,16 @@ outlet_table <- card(
       )
     )
   ),
-  card_body(padding = 0, reactableOutput("watershed_list", height = "500px")),
+  card_body(
+    padding = 0,
+    reactableOutput("watershed_list", height = "500px") |> popover(
+      id = "watershed_pop",
+      title = "Edit",
+      textInput("watershed_pop_input", NULL),
+      actionButton("watershed_pop_confirm", "Confirm"),
+      options = list(trigger = "manual")
+    )
+  ),
   card_footer(
     style = "background-color: rgba(255, 255, 255, 0.5);",
     "Unclassified watershed area:" ,
@@ -160,8 +166,6 @@ outlet_table <- card(
     )
   )
 )
-
-
 
 lake_table <- card(
   class = c("transparent_bg"),
@@ -217,85 +221,73 @@ soil_segment_setting_ui <- layout_sidebar(
   class = "p-0",
   sidebar = sidebar(
     padding = 0,
-    width = "400px",
+    gap = 0,
+    width = "350px",
     class = "bordercard squarecard",
-    
-    navset_card_tab(
+    title = h5("Segmentation Setting", style = "margin:15px 20px"),
+    card_body(padding = 0, navset_card_tab(
       nav_panel(
         title = span(
-          "Segmentation",
-          info(
-            "Automatic procedural map segmentation based on slope and elevation factors"
-          )
+          "Segmentation"
         ),
-        
+        icon = icon("draw-polygon"),
+        "Parameter setting on soil depth and procedural map segmentation.
+        The segmentation calculated based on slope map and elevation map factors",
         accordion(
-          class = "bordercard compact_blue",
           open = F,
           accordion_panel(
             "Soil depth",
-            card(
-              card_header("Soil depth ranges"),
-              numericInput("min_soil_depth_input", "Minimum (cm)", 20),
-              numericInput("max_soil_depth_input", "Maximum (cm)", 200),
-              numericInput("top_soil_prop_input", "Depth of top soil (%)", 10)
-            ),
-            card(
-              card_header("Slope factor"),
-              numericInput("slope_coe_input", "Scaling coefficient", 1),
-              numericInput("slope_exp_input", "Scaling exponent", 1)
-            ),
-            card(
-              card_header("Elevation factor"),
-              numericInput("elevation_coe_input", "Scaling coefficient", 1),
-              numericInput("elevation_exp_input", "Scaling exponent", 1)
-            )
+            h5("Soil depth ranges", style = "font-size:1.2em"),
+            numericInput("min_soil_depth_input", "Minimum (cm)", 20),
+            numericInput("max_soil_depth_input", "Maximum (cm)", 200),
+            numericInput("top_soil_prop_input", "Depth of top soil (%)", 10),
+            tags$hr(),
+            h5("Slope map factor"),
+            numericInput("slope_coe_input", "Scaling coefficient", 1),
+            numericInput("slope_exp_input", "Scaling exponent", 1),
+            tags$hr(),
+            h5("Elevation map factor"),
+            numericInput("elevation_coe_input", "Scaling coefficient", 1),
+            numericInput("elevation_exp_input", "Scaling exponent", 1),
           ),
           accordion_panel(
             "Map segmentations",
             numericInput("n_class_input", "Number of segmentation classes", 10, min = 0),
-            card(
-              card_header("Slope factor"),
-              numericInput("slope_coe_segment_input", "Scaling coefficient", 1),
-              numericInput("slope_exp_segment_input", "Scaling exponent", 1)
+            tags$hr(),
+            h5("Slope map factor"),
+            numericInput("slope_coe_segment_input", "Scaling coefficient", 1),
+            numericInput("slope_exp_segment_input", "Scaling exponent", 1),
+            tags$hr(),
+            h5("Elevation map factor"),
+            numericInput("elevation_coe_segment_input", "Scaling coefficient", 1),
+            numericInput("elevation_exp_segment_input", "Scaling exponent", 1),
+            tags$hr(),
+            h5("Soil depth factor"),
+            numericInput("depth_coe_segment_input", "Scaling coefficient", 1),
+            numericInput("depth_exp_segment_input", "Scaling exponent", 1),
+            tags$hr(),
+            h5("Edge smoothing filter"),
+            p(
+              "A modal filter which smoothing the edge and removing small patches of segments"
             ),
-            card(
-              card_header("Elevation factor"),
-              numericInput(
-                "elevation_coe_segment_input",
-                "Scaling coefficient",
-                1,
-                width = "200px"
-              ),
-              numericInput("elevation_exp_segment_input", "Scaling exponent", 1)
-            ),
-            card(
-              card_header("Soil depth factor"),
-              numericInput("depth_coe_segment_input", "Scaling coefficient", 1),
-              numericInput("depth_exp_segment_input", "Scaling exponent", 1)
-            ),
-            card(
-              card_header("Edge smoothing filter"),
-              "A modal filter which smoothing the edge and removing small patches of segments",
-              numericInput("noise_filter_input", "Filter mask size (pixels)", 15, min = 1),
-              numericInput("noise_rep_input", "Repetition", 3, min = 0)
-            )
+            numericInput("noise_filter_input", "Filter mask size (pixels)", 15, min = 1),
+            numericInput("noise_rep_input", "Repetition", 3, min = 0)
           ),
           accordion_panel(
-            "Slope factor smoothing filter",
+            "Slope map smoothing filter",
             numericInput("slope_filter_input", "Filter mask size (pixels)", 15, min = 1),
             plotOutput("slope_std_plot", height = 200)
           ),
           accordion_panel(
-            "Elevation factor smoothing filter",
+            "Elevation map smoothing filter",
             numericInput("elevation_filter_input", "Filter mask size (pixels)", 15, min = 1),
             plotOutput("elevation_std_plot", height = 200)
           )
-          
         )
       ),
       nav_panel(
         title = "Soil Map Table",
+        icon = icon("table"),
         card_body(
           padding = 10,
           "List of segments and the asscociated soil type ID",
@@ -303,7 +295,7 @@ soil_segment_setting_ui <- layout_sidebar(
           conditionalPanel(condition = "input.soil_type_select == 'soil_type_user'", table_edit_ui("soil_mapped_table_user"))
         )
       )
-    )
+    ))
   ),
   card_body(
     padding = 0,
@@ -311,7 +303,6 @@ soil_segment_setting_ui <- layout_sidebar(
     inset_plot("slope_map_plot", top = "20px"),
     inset_plot("elevation_map_plot", top = "290px"),
     inset_plot("depth_map_plot", top = "560px")
-    
   )
 )
 
@@ -350,7 +341,7 @@ ui <-
             }
 
             .gray_bg {
-              background-color: #ECF9FC;
+              background-color: #F8F9FA;
             }
 
             .menu_button {
@@ -435,10 +426,6 @@ ui <-
             }
 
             .leaflet-control-container { position:absolute; top:35px }
-
-            .accordion-body {
-              background-color: #CAEDF6;
-            }
 
             .highlight_label {
               color: black;
@@ -584,7 +571,7 @@ ui <-
                     card_body(uiOutput("lc_map_out"))
                   ),
                   conditionalPanel(condition = "output.is_lc_df", card(
-                    table_edit_ui("lc_df_table", tags$b("Land cover legend"), is_label = T)
+                    table_edit_ui("lc_df_table", h5("Land cover legend"), is_label = T)
                   ))
                 )
               ),
@@ -719,7 +706,7 @@ ui <-
                 card(table_edit_ui("ground_water_table"))
               )
               
-
+              
             )
           )
         ),
@@ -755,6 +742,7 @@ ui <-
                     id = "soil_type_panel",
                     nav_panel(
                       title = "Soil Type List",
+                      icon = icon("list"),
                       card_body(
                         class = "bordercard",
                         padding = 10,
@@ -766,16 +754,26 @@ ui <-
                         conditionalPanel(
                           condition = "input.soil_type_select == 'soil_type_global'",
                           navset_card_tab(
-                            nav_panel(title = "Soil Types", reactableOutput("soil_type_global_table")),
-                            nav_panel(title = "Map of Global Soil Database", card_body(
-                              padding = 0, leafletOutput("soil_map_leaflet")
-                            )),
+                            nav_panel(
+                              title = "Soil Types",
+                              icon = icon("mountain"),
+                              reactableOutput("soil_type_global_table")
+                            ),
+                            nav_panel(
+                              title = "Global Soil Database",
+                              icon = icon("database"),
+                              card_body(padding = 0, leafletOutput("soil_map_leaflet"))
+                            ),
                             height = "100%"
                           )
                         )
                       )
                     ),
-                    nav_panel(title = "Soil Map", soil_segment_setting_ui)
+                    nav_panel(
+                      title = "Soil Map",
+                      icon = icon("earth-asia"),
+                      soil_segment_setting_ui
+                    )
                   )
                 )
               ),
@@ -972,9 +970,9 @@ ui <-
             numericInput("ndays_input", NULL, value = 2000, width = "100px"),
             actionButton(
               "sim_run_button",
-              "Run",
+              "Run Simulation",
               icon = icon("play"),
-              style = "width:100px;height:32px;padding:0px;"
+              style = "width:auto;height:32px;padding:0px 20px;"
             )
           ),
         nav_panel(
