@@ -237,7 +237,7 @@ soil_segment_setting_ui <- layout_sidebar(
           open = F,
           accordion_panel(
             "Soil depth",
-            h5("Soil depth ranges", style = "font-size:1.2em"),
+            h5("Soil depth ranges"),
             numericInput("min_soil_depth_input", "Minimum (cm)", 20),
             numericInput("max_soil_depth_input", "Maximum (cm)", 200),
             numericInput("top_soil_prop_input", "Depth of top soil (%)", 10),
@@ -305,6 +305,37 @@ soil_segment_setting_ui <- layout_sidebar(
     inset_plot("depth_map_plot", top = "560px")
   )
 )
+
+erosion_setting_ui <- card_body(
+  class = "subpanel",
+  padding = 0,
+  navset_card_underline(
+    nav_panel(title = "Riparian Zone", card_body(
+      padding = 0,
+      leafletOutput("riparian_leaflet"),
+      absolutePanel(
+        top = "70px",
+        right = "20px",
+        width = "250px",
+        card(
+          class = "transparent_bg",
+          card_body(gap = 5,
+          numericInput("riparian_dist_input", "Riparian distance (m)", 500, 0),
+          span("Riparian area:", tags$b(textOutput("riparian_area", inline = T)), "ha"),
+          tags$br(),
+          tags$b("Zone shape modifier"),
+          numericInput("pre_Simple_input", "Pre-simplify (tolerance)", 100, 0),
+          numericInput("post_Simple_input", "Post-simplify (tolerance)", 0, 0))
+        )
+      )
+    )),
+    nav_panel(title = "Erosion Level", table_edit_ui("lc_erosion_table")),
+    nav_panel(title = "Sedimentation Level", table_edit_ui("Sedimentation_table")),
+    nav_panel(title = "Conservation Scenario", table_edit_ui("conservation_table"))
+  )
+)
+
+
 
 ui <-
   page_navbar(
@@ -425,7 +456,7 @@ ui <-
               border-right: 1px solid rgba(0, 0, 0, 0.05);
             }
 
-            .leaflet-control-container { position:absolute; top:35px }
+            .leaflet-control-container { position:absolute; top:35px; width = 300P }
 
             .highlight_label {
               color: black;
@@ -541,6 +572,7 @@ ui <-
               nav_panel(
                 title = "Land Cover Map",
                 icon = icon("layer-group"),
+                p(desc$landcover),
                 layout_column_wrap(
                   class = "bordercard",
                   
@@ -848,7 +880,7 @@ ui <-
               nav_panel(
                 title = "Soil Erosion and Sedimentation",
                 icon = icon("hill-rockslide"),
-                p("Erosion and sedimentation parameters")
+                erosion_setting_ui
               )
             )
           )

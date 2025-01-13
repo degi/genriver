@@ -234,6 +234,11 @@ dem_api_info <- "The API key can be obtained when you register at opentopography
 
 
 desc <- list(
+  landcover = "Land cover map is the primary input required for the watershed analysis.
+  The boundary box of land cover map is assumed as the targeted DEM boundary. 
+  The map size should cover up the targeted area of watershed boundary",
+  landcover_legend = "Land cover legend should be defined as an identifier for other correlated parameters",
+  
   soil_hydraulic = "At a potential of 0 kPa, soil is in a state of saturation.
              At saturation, all soil pores are filled with water, and water typically drains
              from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand),
@@ -452,3 +457,6 @@ lake_par_df <- data.frame(
   step = c(rep(0.1, 13)),
   stringsAsFactors = FALSE
 )
+
+
+

@@ -449,6 +449,7 @@ server <- function(input, output, session) {
   
   update_lc_legend <- function(lc_df, lc_map) {
     id <- unique(as.vector(lc_map[[1]]))
+
     id <- sort(id[!is.na(id) & id >= 0])
     if (is.null(lc_df) || nrow(lc_df) == 0) {
       lc_df <- data.frame("lc_id" = id)
@@ -460,7 +461,7 @@ server <- function(input, output, session) {
       if (length(dif) > 0) {
         a_df <- data.frame(
           lc_id = dif,
-          color = chart_color[sample.int(length(chart_color), length(dif))],
+          color = get_color(sample(length(dif))),
           land_cover = paste0("Landcover_", dif),
           description = ""
         )
@@ -469,6 +470,28 @@ server <- function(input, output, session) {
       }
     }
     return(lc_df)
+  }
+  
+  update_removed_lc_legend <- function() {
+    lc_df <- isolate(v$lc_df)
+    mlist <- isolate(v$lc_map_stars_list)
+    ids <- lapply(mlist, function(x){
+      unique(as.vector(st_as_stars(x)[[1]]))
+    })
+    ids <- unique(unlist(ids))
+    v$lc_df <- lc_df[lc_df$lc_id %in% ids,]
+    #TODO: update boundary!
+    bb <- NULL
+    for(m in mlist) {
+      # m <- st_as_stars(m)
+      ps <- m |> st_bbox() |> st_as_sfc() |> st_transform(crs = "+proj=longlat +datum=WGS84") |> st_as_sf()
+      if(is.null(bb)) {
+        bb <- ps
+      } else {
+        bb <- st_union(bb, ps) |> st_bbox() |> st_as_sfc()
+      }
+    }
+    v$map_boundary_sf <- bb
   }
   
   #### Land Cover Map File  #########################
@@ -519,6 +542,18 @@ server <- function(input, output, session) {
             mst[mst < 0] <- NA
             m <- mst
           }
+          if(length(mid) > 100) {
+            showNotification(
+              paste(
+                "The land cover map file",
+                ferr,
+                "has more than 100 ids.",
+                "Make sure it's a land cover type map."
+              ),
+              type = "warning"
+            )
+
+          }
           ps <- m |> st_bbox() |> st_as_sfc() |> st_transform(crs = "+proj=longlat +datum=WGS84") |> st_as_sf()
           bb <- isolate(v$map_boundary_sf)
           if (is.null(bb)) {
@@ -530,9 +565,10 @@ server <- function(input, output, session) {
               if (!all(int)) {
                 showNotification(
                   paste(
-                    "The map file",
+                    "The land cover map file",
                     ferr,
-                    "is outside the previous map boundary"
+                    "is outside the previous map boundary.",
+                    "All land cover map should on the same boundary location"
                   ),
                   type = "warning"
                 )
@@ -562,6 +598,7 @@ server <- function(input, output, session) {
           } else {
             mdf <- rbind(mdf, c(id, as.numeric(suffix(id)), ferr))
           }
+          
           lc_df <- update_lc_legend(lc_df , mst)
         }
       }
@@ -643,6 +680,10 @@ server <- function(input, output, session) {
           main = NULL
         ))
       }, bg = "transparent")
+    }, ms)
+    
+    o_year <- lapply(name_ms, function(x) {
+      output[[paste0("lc_year_label_", x)]] <- renderText(v$lc_map_df[v$lc_map_df$map_id == x, "year"])
       
       observeEvent(input[[paste0("lc_map_year_", x)]], {
         yr <- input[[paste0("lc_map_year_", x)]]
@@ -650,17 +691,23 @@ server <- function(input, output, session) {
         df[df$map_id == x, "year"] <- yr
         v$lc_map_df <- df
       })
-      
-      output[[paste0("lc_year_label_", x)]] <- renderText(v$lc_map_df[v$lc_map_df$map_id == x, "year"])
-      
+    })
+    
+    o_delete <- lapply(name_ms, function(x) {
       observeEvent(input[[paste0("delete_map_btn_", x)]], {
         df <- isolate(v$lc_map_df)
         v$lc_map_df <- df[df$map_id != x, ]
         v$lc_map_stars_list[[x]] <- NULL
-        print(paste("delete", x))
+        # update legend
+        update_removed_lc_legend()
+        # destroy related observer
+        lapply(o_delete, function(x) {x$destroy()})
+        lapply(o_year, function(x) {x$destroy()})
+        print(paste("delete land cover:", x))
       })
-    }, ms)
+    })
     
+
   })
   
   landuse_list <- c("Forest", "Tree-based system", "Agriculture", "Settlement")
@@ -3759,6 +3806,82 @@ server <- function(input, output, session) {
   soilplant_par <- numeric_input_server("soilplant_par_input", soilplant_par_df)
   observe({
     v$soilplant_par_cfg <- soilplant_par()
+  })
+  
+  ### EROSION #############################
+  
+  output$riparian_leaflet <- renderLeaflet({
+    sc <- v$subcatchment_map_sf
+    slope <- vd$slope_stars
+    if (is.null(sc) || is.null(slope))
+      return()
+    slope <- st_as_stars(slope)
+    riparian_leaflet_update(T)
+    val <- sort(unique(as.vector(slope[[1]])))
+    # val <- val[!is.na(val)]
+    # pal <- colorNumeric(slope_color(10), val, na.color = "transparent")
+    pal = colorNumeric(
+      slope_color(256)
+      , domain = slope[[1]]
+      , na.color = "transparent"
+    )
+    lf <- base_leaflet() |>
+      clearShapes() |>
+      clearMarkers() |>
+      clearControls() |>
+      fit_map_view(sc) |>
+      addGeoRaster(slope,
+                   group = "slope",
+                   opacity = 1,
+                   colorOptions = colorOptions(palette = soil_color(256))) |>
+      show_stream(v$dem_stream_sf,
+                  opacity = 0.5,
+                  is_show_label = F) |>
+      addLegend(pal = pal, values = val, position = "topleft", title = "Slope") |>
+      addLayersControl(overlayGroups = c("slope", "stream", "riparian"), position = "topleft")
+  })
+  
+  riparian_leaflet_update <- reactiveVal(F)
+  
+  observe({2
+    if(!riparian_leaflet_update()) return()
+  
+    dflow <- v$dem_flow_stars
+    if(is.null(dflow)) return()
+    rm <- v$routing_map_stars
+    if (is.null(rm)) {
+      rm <- generate_routing_distance(v$dem_flow_stars, v$genriver_cfg$flow_threshold)
+      v$routing_map_stars <- rm
+    }
+      
+    rdist <- max(0, input$riparian_dist_input)
+    tol1 <- max(0, input$pre_Simple_input)
+    tol2 <- max(0, input$post_Simple_input)
+    if(is.na(rdist) || is.na(tol1) || is.na(tol2)) return() 
+    
+    m <- rm["order"]
+    m1 <- m[m == 1]
+    sf1 <- st_as_sf(m1,
+                    as_points = F,
+                    merge = T,
+                    connect8 = T) |> st_transform(crs = 7801) |> 
+      st_simplify(F, dTolerance = tol1) |> st_buffer(rdist) |> st_simplify(F, dTolerance = tol2)
+    sf1 <- sf1 |> st_transform(crs = 4326)
+    output$riparian_area <- renderText(f_number(as.numeric(st_area(sf1))/10000, digits = 3))
+    
+    group <- "riparian"
+    lf <- leafletProxy("riparian_leaflet", session) |> clearGroup(group)
+    
+    lf |> addFeatures(
+      sf1,
+      color = "black",
+      fillColor = theme_color$warning,
+      fillOpacity = 0.6,
+      opacity = 0.8,
+      weight = 2,
+      group = group
+    )
+    
   })
   
   ### Evapotranspiration DATA ######################
