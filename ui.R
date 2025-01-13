@@ -1,4 +1,5 @@
 
+
 wave_div <- HTML(
   '<div><svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
     viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
@@ -227,9 +228,7 @@ soil_segment_setting_ui <- layout_sidebar(
     title = h5("Segmentation Setting", style = "margin:15px 20px"),
     card_body(padding = 0, navset_card_tab(
       nav_panel(
-        title = span(
-          "Segmentation"
-        ),
+        title = span("Segmentation"),
         icon = icon("draw-polygon"),
         "Parameter setting on soil depth and procedural map segmentation.
         The segmentation calculated based on slope map and elevation map factors",
@@ -309,7 +308,7 @@ soil_segment_setting_ui <- layout_sidebar(
 erosion_setting_ui <- card_body(
   class = "subpanel",
   padding = 0,
-  navset_card_underline(
+  navset_card_pill(
     nav_panel(title = "Riparian Zone", card_body(
       padding = 0,
       leafletOutput("riparian_leaflet"),
@@ -319,13 +318,17 @@ erosion_setting_ui <- card_body(
         width = "250px",
         card(
           class = "transparent_bg",
-          card_body(gap = 5,
-          numericInput("riparian_dist_input", "Riparian distance (m)", 500, 0),
-          span("Riparian area:", tags$b(textOutput("riparian_area", inline = T)), "ha"),
-          tags$br(),
-          tags$b("Zone shape modifier"),
-          numericInput("pre_Simple_input", "Pre-simplify (tolerance)", 100, 0),
-          numericInput("post_Simple_input", "Post-simplify (tolerance)", 0, 0))
+          card_body(
+            gap = 5,
+            numericInput("riparian_dist_input", "Riparian distance (m)", 500, 0),
+            span("Riparian zone area:", tags$b(textOutput(
+              "riparian_area", inline = T
+            )), "ha"),
+            tags$br(),
+            tags$b("Zone shape modifier"),
+            numericInput("pre_Simple_input", "Pre-simplify (tolerance)", 100, 0),
+            numericInput("post_Simple_input", "Post-simplify (tolerance)", 0, 0)
+          )
         )
       )
     )),
@@ -455,9 +458,9 @@ ui <-
             .border_right {
               border-right: 1px solid rgba(0, 0, 0, 0.05);
             }
-
+/*
             .leaflet-control-container { position:absolute; top:35px; width = 300P }
-
+*/
             .highlight_label {
               color: black;
               background-color: white;

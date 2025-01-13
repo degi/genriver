@@ -782,6 +782,7 @@ tes <- function() {
   
   # setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/genriver_sbj")
   setwd("D:/google_drive/ecomodels/data/genriver/sumberjaya/pars/genriver_tes")
+  setwd("C:/Degi/GDrive_code/data/genriver/sumberjaya/pars/genriver_tes")
   dem_map <- read_stars("dem_bb.tif")
   dem_ws <- read_stars("dem_ws.tif")
   ws_boundary_sf <- st_read("ws_boundary.shp")
@@ -795,6 +796,17 @@ tes <- function() {
   sc <- generate_subcathments(direction_map, rd, 2, min_sub_area = 200)
 
   m <- rd["order"]
+  m1 <- m[m==1]
+
+  sf1 <- st_as_sf(m1,
+                 as_points = F,
+                 merge = T,
+                 connect8 = T) |> st_transform(crs = 7801)
+  
+  plot(sf1 |> st_simplify(dTolerance = 100) |> st_buffer(500))
+  plot(sf1 |> st_simplify(dTolerance = 100) |> st_buffer(500) |> st_simplify(dTolerance = -10))
+  plot(sf1)
+  
   om <- rd["outlet"]
   om[om != 2] <- NA
   mapview(list(sc["distance"],m,om), col.regions = rainbow)
@@ -963,6 +975,13 @@ tes <- function() {
   m2 <- apply(m, c(1,2), function(x, d){
     d[d$a == x, "b"]
   }, dd)
+  
+  ################################
+  #### expand polygon for riparian
+  
+  rd_map <- generate_routing_distance(v$dem_flow_stars, min_sub_area)
+  strm_sf <- generate_rounded_polygon(rd_map["routing"] / 1000, 1)
+  
 }
 
 
