@@ -1,11 +1,5 @@
 theme: jekyll-theme-minimal
 title: GenRiver3
+logo: /www/images/genriver_logo.svg
 description: A generic river model on river flow
-baseurl: "docs"
 
-defaults:
-  - scope:
-      path: "docs" # an empty string here means all files in the project
-      type: "pages"
-    values:
-      layout: "default"
