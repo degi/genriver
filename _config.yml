@@ -1,5 +1,8 @@
 theme: jekyll-theme-minimal
-title: GenRiver3
 logo: /www/images/genriver_logo.svg
+title: GenRiver3
 description: A generic river model on river flow
 
+header_navigation:
+  - title: Documentation
+    url: /docs/
