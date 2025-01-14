@@ -788,19 +788,23 @@ ui <-
                         ))),
                         conditionalPanel(
                           condition = "input.soil_type_select == 'soil_type_global'",
+                          card_body(padding = 0,
+                            markdown(desc$soil_db),
                           navset_card_tab(
                             nav_panel(
                               title = "Soil Types",
                               icon = icon("mountain"),
+                              markdown(desc$soil_list),
                               reactableOutput("soil_type_global_table")
                             ),
                             nav_panel(
                               title = "Global Soil Database",
                               icon = icon("database"),
+                              
                               card_body(padding = 0, leafletOutput("soil_map_leaflet"))
                             ),
                             height = "100%"
-                          )
+                          ))
                         )
                       )
                     ),

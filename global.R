@@ -63,7 +63,7 @@ install_load(
   
   "lubridate",
   "DBI",
-
+  
   "future",
   "promises",
   "ipc"
@@ -142,7 +142,8 @@ map_label <- function(desc = "",
                       footer = "") {
   title_div <- ""
   if (title != "")
-    title_div <- paste("<div style='font-size:1.5em;'>",title,
+    title_div <- paste("<div style='font-size:1.5em;'>",
+                       title,
                        "</div><hr style='margin:2px auto;'>")
   footer_div <- "</div>"
   if (footer != "")
@@ -221,7 +222,7 @@ dem_fail <- "The DEM download was failed. You may do the following:
 * Register to  <a href='https://portal.opentopography.org/' target='_blank'>opentopography.org</a> and get your own API key.
 Make sure the key was correctly copied into 'API key' input"
 
-dem_info <- "The DEM data is acquired from <a href='https://opentopography.org/' 
+dem_info <- "The DEM data is acquired from <a href='https://opentopography.org/'
 target='_blank'><b>opentopography.org</b></a>.
           OpenTopography provides open and free access to DEM dataset.
           Please visit the website for further info and follow
@@ -234,19 +235,30 @@ dem_api_info <- "The API key can be obtained when you register at opentopography
 
 
 desc <- list(
-  landcover = "Land cover map is the primary input required for the watershed analysis.
-  The boundary box of land cover map is assumed as the targeted DEM boundary. 
-  The map size should cover up the targeted area of watershed boundary",
-  landcover_legend = "Land cover legend should be defined as an identifier for other correlated parameters",
+  landcover = "Land cover is one of the main factors in watershed dynamics.
+  A time series of land cover maps follows the dynamic changes in soil properties.
+  Please provide land cover maps on the intended location.
+  The land cover map's boundary box will be used as the area for the DEM query,
+  The DEM is later delineated to generate the watershed boundary.",
   
   soil_hydraulic = "At a potential of 0 kPa, soil is in a state of saturation.
-             At saturation, all soil pores are filled with water, and water typically drains
-             from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand),
-             soil is at field capacity. Typically, at field capacity, air is in the macropores,
-             and water in the micropores. Field capacity is viewed as the optimal condition
-             for plant growth and microbial activity. At a potential of −1500 kPa,
-             the soil is at its permanent wilting point, at which plant roots cannot
-             extract the water through osmotic diffusion.(https://en.wikipedia.org/wiki/Water_potential)"
+  At saturation, all soil pores are filled with water, and water typically drains
+  from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand),
+  soil is at field capacity. Typically, at field capacity, air is in the macropores,
+  and water in the micropores. Field capacity is viewed as the optimal condition
+  for plant growth and microbial activity. At a potential of −1500 kPa,
+  the soil is at its permanent wilting point, at which plant roots cannot
+  extract the water through osmotic diffusion.(https://en.wikipedia.org/wiki/Water_potential)",
+  
+  soil_db = "The soil data is acquired from **Harmonized World Soil Database version 2.0** (HWSD v2.0). 
+  **HWSD** is a comprehensive global soil inventory that offers detailed insights into soil properties, 
+  including their morphology, chemistry, and physical characteristics, 
+  with a focus on a 1 km resolution. Please visit 
+  <a href='https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20/en/' target='_blank'>**FAO SOILS PORTAL**</a>
+  for more information on the database and the suggested citation",
+  
+  soil_list = "The soil list here is extracted from the global soil database, including the **summarized properties** required for the model. 
+  Check the Global Soil Database tab to view the soil properties in detail."
 )
 
 
@@ -457,6 +469,3 @@ lake_par_df <- data.frame(
   step = c(rep(0.1, 13)),
   stringsAsFactors = FALSE
 )
-
-
-
