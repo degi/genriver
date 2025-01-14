@@ -235,13 +235,13 @@ dem_api_info <- "The API key can be obtained when you register at opentopography
 
 
 desc <- list(
-  landcover = "Land cover is one of the main factors in watershed dynamics.
-  A time series of land cover maps follows the dynamic changes in soil properties.
-  Please provide land cover maps on the intended location.
+  landcover = "**Land cover** is one of the main factors in watershed dynamics.
+  A **time series** of land cover maps follows the dynamic changes in soil properties.
+  Please provide land cover maps on the observed periods.
   The land cover map's boundary box will be used as the area for the DEM query,
   The DEM is later delineated to generate the watershed boundary.",
   
-  soil_hydraulic = "At a potential of 0 kPa, soil is in a state of saturation.
+  soil_hydraulic = "Soil hydraulic at a potential of 0 kPa is in a state of saturation.
   At saturation, all soil pores are filled with water, and water typically drains
   from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand),
   soil is at field capacity. Typically, at field capacity, air is in the macropores,
@@ -255,7 +255,7 @@ desc <- list(
   including their morphology, chemistry, and physical characteristics, 
   with a focus on a 1 km resolution. Please visit 
   <a href='https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20/en/' target='_blank'>**FAO SOILS PORTAL**</a>
-  for more information on the database and the suggested citation",
+  for more information on the database and its suggested citation",
   
   soil_list = "The soil list here is extracted from the global soil database, including the **summarized properties** required for the model. 
   Check the Global Soil Database tab to view the soil properties in detail."

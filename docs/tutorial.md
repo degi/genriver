@@ -1,12 +1,4 @@
-# GenRiver3
-
-## User Manual
-
-#### Disclaimer and Copyright
-
-Although efforts have been made to incorporate relevant process knowledge on a range of interactions, the model is not more (and not less) than a research tool. Model predictions may help in developing specific hypotheses for research, in exploring potential management options and extrapolation domains, but they should not be used as authoritative statements per se.
-
-Copy right, but do not copy wrong. The GenRiver model was developed on the basis of publicly funded research at the World Agroforestry Centre (ICRAF) and may be used for non-commercial research purposes in the interest of the smallholder agroforesters of the world.
+## GenRiver3 - User Manual
 
 ### Preface
 

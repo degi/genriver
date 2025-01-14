@@ -554,7 +554,7 @@ ui <-
           "is a generic river model on river flow",
           style = "margin-bottom:60px"
         ),
-        HTML("&copy; World Agroforestry (ICRAF) - 2024")
+        HTML("&copy; World Agroforestry (ICRAF) - 2025")
       ))
     ),
     nav_panel(
@@ -575,7 +575,7 @@ ui <-
               nav_panel(
                 title = "Land Cover Map",
                 icon = icon("layer-group"),
-                p(desc$landcover),
+                markdown(desc$landcover),
                 layout_column_wrap(
                   class = "bordercard",
                   

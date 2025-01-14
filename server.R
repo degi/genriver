@@ -10,7 +10,7 @@ server <- function(input, output, session) {
   map_color <-
     colorRampPalette(c("darkgreen", "#ffb703", "#9a130e", "#023e8a"))
   grad_color <- colorRampPalette(c("#023047", "#219ebc", "#06d6a0", "#ffb703", "#9a130e"))
-  slope_color <- colorRampPalette(c("#023047","#06d6a0", "#ffb703","#f78c6b"))
+  slope_color <- colorRampPalette(c("#023047", "#06d6a0", "#ffb703", "#f78c6b"))
   stream_color <-
     colorRampPalette(c(
       "#e07a5f",
@@ -2208,12 +2208,12 @@ server <- function(input, output, session) {
   ### 3D VIEW ####################################
   
   output$ws3d_plot <- renderPlotly({
+    dem_ws <- v$dem_crop_stars
+    subc_sf <- v$subcatchment_map_sf
+    stream_sf <- v$dem_stream_sf
+    if (is.null(dem_ws) || is.null(subc_sf) || is.null(stream_sf))
+      return()
     withProgress(message = "Preparing 3D map..", value = 0, {
-      dem_ws <- v$dem_crop_stars
-      subc_sf <- v$subcatchment_map_sf
-      stream_sf <- v$dem_stream_sf
-      if (is.null(dem_ws) || is.null(subc_sf) || is.null(stream_sf))
-        return()
       wsb <- dem_ws
       wsb[[1]] <- NA
       
@@ -2246,6 +2246,7 @@ server <- function(input, output, session) {
       x <- sort(unique(cdf$y))
       color <- c(get_color(1:nrow(df), T), "#023047E9")
     })
+    
     plot_ly(
       colors = color,
       showscale = F,
@@ -3852,7 +3853,7 @@ server <- function(input, output, session) {
     riparian_leaflet_update(T)
     val <- sort(unique(as.vector(slope[[1]])))
     pal <- colorNumeric(slope_color(10), val, na.color = "transparent")
-
+    
     lf <- base_leaflet() |>
       clearShapes() |>
       clearMarkers() |>
@@ -3877,7 +3878,8 @@ server <- function(input, output, session) {
         pal = pal,
         values = val,
         position = "topleft",
-        title = "Slope", opacity = 1
+        title = "Slope",
+        opacity = 1
       )
   })
   
@@ -3934,7 +3936,7 @@ server <- function(input, output, session) {
         weight = 3,
         group = group
         
-      )|>
+      ) |>
       fit_map_view(sf1)
     
   })
