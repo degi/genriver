@@ -6,7 +6,7 @@ description: A generic river model on river flow
 ################################
 # Theme Settings
 ################################
-theme       : minimal-jekyll-theme
+theme       : jekyll-theme-minimal
 permalink   : /:title/
 
 collections:
