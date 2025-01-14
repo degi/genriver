@@ -1,13 +1,19 @@
-@software{genriver,
-
-  author = "Asmara, D.H., Tanika, L., Mulia, R., Van Noordwijk, M.",
-
-  title = "GenRiver3",
-
-  date = "2025-01-15",
-
-  publisher = "World Agroforestry (ICRAF)",
-
-  repository = "https://github.com/degi/genriver"
-
-}
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Asmara"
+  given-names: "Degi Harja"
+  orcid: "https://orcid.org/0000-0002-6079-1305"
+- family-names: "Tanika"
+  given-names: "Lisa"
+  orcid: "https://orcid.org/0000-0002-5319-7607"
+- family-names: "Mulia"
+  given-names: "Rachmat"
+  orcid: "https://orcid.org/0000-0003-1186-9847"
+- family-names: "Van Noordwijk"
+  given-names: "Meine"
+  orcid: "https://orcid.org/0000-0002-7791-4703"
+title: "GenRiver"
+version: 3.0.0
+date-released: 2025-01-15
+url: "https://github.com/degi/genriver"
