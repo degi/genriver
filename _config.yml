@@ -2,5 +2,4 @@ theme: jekyll-theme-minimal
 title: GenRiver3
 description: A generic river model on river flow
 logo: /www/images/genriver_logo.svg
-show_downloads: true
 google_analytics:
