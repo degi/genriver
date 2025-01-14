@@ -1,0 +1,13 @@
+@software{genriver,
+
+  author = "Asmara, D.H., Tanika, L., Mulia, R., Van Noordwijk, M.",
+
+  title = "GenRiver3",
+
+  date = "2025-01-15",
+
+  publisher = "World Agroforestry (ICRAF)",
+
+  repository = "https://github.com/degi/genriver"
+
+}
