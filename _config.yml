@@ -1,6 +1,7 @@
 theme: jekyll-theme-minimal
 title: GenRiver3
 description: A generic river model on river flow
+baseurl: "docs"
 
 defaults:
   - scope:
