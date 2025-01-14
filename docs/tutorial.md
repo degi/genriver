@@ -1,3 +1,7 @@
+layout: page
+title: "PAGE-TITLE"
+permalink: /docs/tutorial
+
 ## GenRiver3 - User Manual
 
 ### Preface
