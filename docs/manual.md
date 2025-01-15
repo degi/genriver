@@ -42,7 +42,7 @@ The software can also be launched as standalone app using R and RStudio. Followi
 
 ## User Interface Overview
 
-<img src="/docs/images/home.png" width="400"/>
+<img src="/images/home.png" width="400"/>
 
 
 - **Component 1**: Description of component 1.
