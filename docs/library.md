@@ -1,3 +1,8 @@
+---
+layout: page
+title: Libraries
+permalink: /libraries/
+---
 ### R Libraries
 
 GUI:
