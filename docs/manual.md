@@ -38,11 +38,11 @@ The software can also be launched as standalone app using R and RStudio. Followi
     ```R
     runApp("path/to/your/app")
     ```
-> If you have the **app source code** on local folder, you will need an internet connection for running the app at first time. The internet connection is required for updating and initializing the R libraries. After the updates completed, you will be able to run the app **without internet connection**. 
+> If you have the **app source code** on local folder, you will need internet connection to run it for the first time. The internet connection is required for updating and initializing the R libraries. After the updates completed, you will be able to run the app **without internet connection**. 
 
 ## User Interface Overview
 
-<img src="/images/home.png" width="400"/>
+<img src="images/home.png" width="400"/>
 
 
 - **Component 1**: Description of component 1.
