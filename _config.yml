@@ -6,7 +6,7 @@ theme: minima
 title: GenRiver3
 description: A generic river model on river flow
 logo: /www/images/genriver_logo.svg
-google_analytics:
+google_analytics: UA-NNNNNNNN-N
 
 header_pages:
   - /docs/about.md
