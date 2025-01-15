@@ -1,4 +1,5 @@
 
+#jekyll-theme-minimal
 
 wave_div <- HTML(
   '<div><svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -1240,7 +1241,7 @@ ui <-
         nav_panel(
           title = "Tutorial",
           icon = icon("book"),
-          card_body(includeMarkdown("docs/tutorial.md"))
+          card_body(includeMarkdown("docs/manual.md"))
         ),
         nav_panel(
           title = "References",
