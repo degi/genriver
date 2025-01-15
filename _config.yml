@@ -7,3 +7,7 @@ title: GenRiver3
 description: A generic river model on river flow
 logo: /www/images/genriver_logo.svg
 google_analytics:
+
+header_pages:
+  - about.md
+  - tutorial.md
