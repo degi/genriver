@@ -3,7 +3,7 @@
 
 server <- function(input, output, session) {
   options(shiny.maxRequestSize = 1000 * 1024 ^ 2)
-  options(future.globals.maxSize = 3000 * 1024 ^ 2)
+  options(future.globals.maxSize = 5000 * 1024 ^ 2)
   
   data_dir <- paste0(tempdir(), "/data_temp")
   
