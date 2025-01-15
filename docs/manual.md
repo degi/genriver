@@ -41,7 +41,7 @@ It can also launched as standalone application using R and RStudio.
     If you have the source code on local folder, you can run the app **without internet connection**. Except the first time for initialization of the R libraries.
 
 ## User Interface Overview
-![Screenshot of the app](path/to/screenshot.png)
+![Screenshot of the app](images/home.png)
 - **Component 1**: Description of component 1.
 - **Component 2**: Description of component 2.
 
