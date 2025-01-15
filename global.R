@@ -66,7 +66,10 @@ install_load(
   
   "future",
   "promises",
-  "ipc"
+  "ipc",
+  
+  "RSQLite",
+  "lwgeom"
 )
 
 library("remotes")
@@ -112,6 +115,7 @@ library("DBI")
 library("flowdem")
 library("shinycssloaders")
 library("RSQLite")
+library(lwgeom)
 library(future)
 library(promises)
 library(ipc)
