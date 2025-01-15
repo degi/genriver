@@ -19,7 +19,7 @@ description: >
 remote_theme: jekyll/minima
 
 plugins:
-  - jekyll-feed
+#  - jekyll-feed
   - jekyll-seo-tag
 
 # Theme-specific settings
@@ -51,7 +51,7 @@ minima:
   #date_format: "%b-%d-%Y"
 
   # Generate social links in footer.
-  #social_links:
+  social_links:
   #  - { platform: devto,          user_url: "https://dev.to/jekyll" }
   #  - { platform: dribbble,       user_url: "https://dribbble.com/jekyll" }
   #  - { platform: facebook,       user_url: "https://www.facebook.com/jekyll" }
