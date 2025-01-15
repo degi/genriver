@@ -1,4 +1,8 @@
-## GenRiver3 - User Manual
+---
+layout: page
+title: User Guide
+permalink: /guide/
+---
 
 ### Preface
 
