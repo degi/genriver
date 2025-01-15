@@ -9,5 +9,5 @@ logo: /www/images/genriver_logo.svg
 google_analytics:
 
 header_pages:
-  - about.md
-  - tutorial.md
+  - /docs/about.md
+  - /docs/tutorial.md
