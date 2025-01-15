@@ -30,15 +30,15 @@ It can also launched as standalone application using R and RStudio.
     ```R
     library(shiny)
     ```
-3. Run the app:
+3. Run the app directly from GitHub source code:
+    ```R
+    shiny::runGitHub("genriver", "degi")
+    ```
+    Another option is to download first the source code from https://github.com/degi/genriver. Extract the files to local folder and execute this script 
     ```R
     runApp("path/to/your/app")
     ```
-Run the app:
-    
-    ```R
-    runApp("path/to/your/app")
-    ```
+    If you have the source code on local folder, you can run the app **without internet connection**. Except the first time for initialization of the R libraries.
 
 ## User Interface Overview
 ![Screenshot of the app](path/to/screenshot.png)
