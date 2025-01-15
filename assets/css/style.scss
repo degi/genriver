@@ -7,9 +7,9 @@
   "minima/initialize";
 
 .site-title::before {
-  content: URL("./genriver_logo.png");
+  content: URL("https://raw.githubusercontent.com/degi/genriver/refs/heads/main/www/images/genriver_logo.svg");
   display: inline-block;
   position: relative;
   width: 32px;
-  top: 5px;
+  top: 10px;
 }
