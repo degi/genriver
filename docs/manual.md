@@ -12,7 +12,7 @@ GenRiver a generic river flow model that responds to spatially explicit rainfall
 
 ## How to run the software
 
-The software is a web application and can be launched online at https://genriver.agroforestri.id/
+The software is a web application and can be launched **online** at https://genriver.agroforestri.id/
 
 It can also launched as standalone application using R and RStudio. 
 
@@ -24,7 +24,7 @@ It can also launched as standalone application using R and RStudio.
     install.packages("shiny")
     ```
 
-### Launching the Shiny App
+### Launching the App
 1. Open RStudio.
 2. Load the Shiny library:
     ```R
@@ -34,11 +34,11 @@ It can also launched as standalone application using R and RStudio.
     ```R
     shiny::runGitHub("genriver", "degi")
     ```
-    Another option is to download first the source code from https://github.com/degi/genriver. Extract the files to local folder and execute this script 
+    Another option is to download first the source code from https://github.com/degi/genriver. Extract the files to local folder and execute the script below 
     ```R
     runApp("path/to/your/app")
     ```
-    If you have the source code on local folder, you can run the app **without internet connection**. Except the first time for initialization of the R libraries.
+    If you have the **source code** on local folder, you can run the app **without internet connection**. Only for the first time of running, it might still need the internet connection for the initialization of R libraries.
 
 ## User Interface Overview
 ![Screenshot of the app](images/home.png)
