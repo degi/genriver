@@ -1,7 +1,7 @@
 ---
 layout: page
-title: User Guide
-permalink: /guide/
+title: User Manual
+permalink: /manual/
 ---
 
 ### Preface
