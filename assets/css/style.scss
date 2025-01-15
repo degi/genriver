@@ -7,7 +7,7 @@
   "minima/initialize";
 
 .site-title::before {
-  content: url("/assets/genriver_logo.png");
+  content: URL("./assets/genriver_logo.png");
   display: inline-block;
   position: relative;
   width: 32px;
