@@ -6,7 +6,7 @@ author:
 # The `>` after `description:` means to ignore line-breaks until next key.
 # If you want to omit the line-break after the end of text, use `>-` instead.
 description: >
-  GenrRiver is a generic river model on river flow.
+  GenRiver is a generic river model on river flow.
 
 # Build settings
 
