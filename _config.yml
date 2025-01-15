@@ -9,5 +9,5 @@ logo: /www/images/genriver_logo.svg
 google_analytics: UA-NNNNNNNN-N
 
 header_pages:
-  - /docs/about.md
-  - /docs/tutorial.md
+  - docs/about.md
+  - docs/tutorial.md
