@@ -4,7 +4,7 @@ Run the program by executing this script in R or RStudio:
 
     shiny::runGitHub("genriver", "degi")
 
-The online version is available at: https://genriver.agroforestri.id/
+The online version is available at: https://genriver.agroforestri.id/. If the server is down because of memory and bandwidth limitations, it is suggested that the app be run using RStudio by running the script above.
 
 See the user manual here: https://degi.github.io/genriver/manual/ 
 
