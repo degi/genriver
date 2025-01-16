@@ -143,12 +143,13 @@ server <- function(input, output, session) {
     lc_map_crop_stars_list = NULL,
     
     lc_evapot_df = NULL,
-    evapot_month_data_df = data.frame(
-      n = month_cols$month,
-      month = month_cols$var,
-      evapotranspiration =  rep(NA, 12),
-      stringsAsFactors = FALSE
-    ),
+    evapot_month_data_df <- NULL,
+    # evapot_month_data_df = data.frame(
+    #   n = month_cols$month,
+    #   month = month_cols$var,
+    #   evapotranspiration =  rep(NA, 12),
+    #   stringsAsFactors = FALSE
+    # ),
     
     ground_par_df = data.frame(
       map_id = character(),
@@ -218,24 +219,10 @@ server <- function(input, output, session) {
     
     subc_lc_df = NULL,
     
-    evapotran_df = data.frame(
-      date = as.Date(character()),
-      evapotranspiration = numeric(),
-      stringsAsFactors = FALSE
-    ),
-    
-    rain_df = data.frame(
-      date = as.Date(character()),
-      rainfall = numeric(),
-      stringsAsFactors = FALSE
-    ),
-    
-    river_df = data.frame(
-      date = as.Date(character()),
-      river_flow = numeric(),
-      stringsAsFactors = FALSE
-    ),
-    
+    evapotran_df = NULL,
+    rain_df = NULL,
+    river_df = NULL,
+
     rain_par_cfg = default_par(rain_par_df),
     river_par_cfg = default_par(river_par_df),
     
@@ -268,7 +255,9 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     ),
     riparian_sf = NULL,
-    erosion_cfg = NULL
+    erosion_cfg = NULL,
+    sedimentation_df = NULL
+
   )
   
   vd <- reactiveValues(
@@ -395,7 +384,8 @@ server <- function(input, output, session) {
       
       "erosion_cfg",
       "riparian_sf",
-      "lc_erosion_df"
+      "lc_erosion_df",
+      "sedimentation_df"
     ),
     file = c(
       "genriver",
@@ -440,7 +430,8 @@ server <- function(input, output, session) {
       
       "erosion",
       "riparian",
-      "lc_erosion"
+      "lc_erosion",
+      "sedimentation"
     )
   )
   
@@ -862,6 +853,14 @@ server <- function(input, output, session) {
   
   observe({
     v$evapot_month_data_df <- evapot_month_df_edited()
+    if(is.null(isolate(v$evapot_month_data_df))) {
+      v$evapot_month_data_df <- data.frame(
+        n = month_cols$month,
+        month = month_cols$var,
+        evapotranspiration =  rep(NA, 12),
+        stringsAsFactors = FALSE
+      )
+    }
   })
   
   output$evapot_monthly_data_plot <- renderPlotly({
@@ -3973,6 +3972,26 @@ server <- function(input, output, session) {
     v$erosion_cfg$post_simplify <- max(0, input$post_Simple_input)
   })
   
+  sedimentation_df_edited <- table_edit_server(
+    "sedimentation_table",
+    reactive(v$sedimentation_df),
+    col_type = c("date", "numeric"),
+    nrow = 365,
+    allowRowModif = T,
+    pagination = 365
+  )
+  
+  observe({
+    v$sedimentation_df <- sedimentation_df_edited()
+    if(is.null(isolate(v$sedimentation_df))) {
+      v$sedimentation_df = data.frame(
+        date = as.Date(character()),
+        sedimentation = numeric(),
+        stringsAsFactors = FALSE
+      )
+    }
+  })
+  
   ### Evapotranspiration DATA ######################
   
   evapotran_df_edited <- table_edit_server(
@@ -3986,6 +4005,13 @@ server <- function(input, output, session) {
   
   observe({
     v$evapotran_df <- evapotran_df_edited()
+    if(is.null(isolate(v$evapotran_df))) {
+      v$evapotran_df = data.frame(
+        date = as.Date(character()),
+        evapotranspiration = numeric(),
+        stringsAsFactors = FALSE
+      )
+    }
   })
   
   observe({
@@ -4085,6 +4111,13 @@ server <- function(input, output, session) {
   
   observe({
     v$rain_df <- rain_df_edited()
+    if(is.null(isolate(v$rain_df))) {
+      v$rain_df = data.frame(
+        date = as.Date(character()),
+        rainfall = numeric(),
+        stringsAsFactors = FALSE
+      )
+    }
   })
   
   observe({
@@ -4180,6 +4213,13 @@ server <- function(input, output, session) {
   
   observe({
     v$river_df <- river_df_edited()
+    if(is.null(isolate(v$river_df))) {
+      v$river_df = data.frame(
+        date = as.Date(character()),
+        river_flow = numeric(),
+        stringsAsFactors = FALSE
+      )
+    }
   })
   
   observe({

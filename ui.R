@@ -334,7 +334,7 @@ erosion_setting_ui <- card_body(
       )
     )),
     nav_panel(title = "Erosion Level", table_edit_ui("lc_erosion_table")),
-    nav_panel(title = "Sedimentation Level", table_edit_ui("Sedimentation_table")),
+    nav_panel(title = "Sedimentation Level", table_edit_ui("sedimentation_table")),
     nav_panel(title = "Conservation Scenario", table_edit_ui("conservation_table"))
   )
 )
@@ -894,7 +894,7 @@ ui <-
           )
         ),
         
-        
+        ### RAINFALL AND RIVER #############################################
         
         nav_panel(
           title = "Rainfall and Rivers",
