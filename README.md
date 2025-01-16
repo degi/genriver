@@ -4,13 +4,13 @@ Run the program by executing this script in R or RStudio:
 
     shiny::runGitHub("genriver", "degi")
 
-The online version is available at: https://genriver.agroforestri.id/. If the server is down because of memory and bandwidth limitations, it is suggested that the app be run using RStudio by running the script above.
+The **online version** is available at: [https://genriver.agroforestri.id/](https://genriver.agroforestri.id/). If the server is down because of memory and bandwidth limitations, it is suggested that the app be run using RStudio by running the script above.
 
-See the user manual here: https://degi.github.io/genriver/manual/ 
+The **user manual** is available here: [https://degi.github.io/genriver/manual/](https://degi.github.io/genriver/manual/) 
 
 ## Feature highlights
 
-* Download the DEM map automatically from the app through https://opentopography.org/<br/>  
+* The app can provide DEM map which downloaded through [opentopography.org](https://opentopography.org/)<br/>. 
   
     <img src="docs/images/dem_map.png" width="400"/><br/>
 
