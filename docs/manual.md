@@ -18,7 +18,7 @@ Land cover change can significantly affect watershed functions through a) change
 
 <figure>
   <img src="../docs/images/model1.png" width="400"/>
-  <figcaption>Figure 1.1 Multiple influences of tree cover and (forest) soil condition in terms of the water balance.</figcaption>
+  <figcaption><b>Figure 1.1</b> Multiple influences of tree cover and (forest) soil condition in terms of the water balance.</figcaption>
 </figure>
 
 Simple characteristics of the vegetation (monthly pattern of leaf biomass, influencing canopy interception and transpiration, and ability to extract water from deeper soil layers) and soil (especially compaction of the macro pores in the soil that store water between ‘saturation’ and ‘field capacity’) can probably explain a major part of the impacts on river flow.
