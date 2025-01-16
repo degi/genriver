@@ -16,8 +16,10 @@ GenRiver is a generic river flow model that responds to spatially explicit rainf
 
 Land cover change can significantly affect watershed functions through a) changes in the fraction of rainfall that reaches the ground, b) the subsequent path-ways of water flow over and through the soil as related to surface and subsurface structure of the soil, surface roughness, and landscape drainage, and c) the rate of water use by plants (Fig. 1.1). 
 
-<img src="../docs/images/model1.png" width="400"/>
-*Figure 1.1 Multiple influences of tree cover and (forest) soil condition in terms of the water balance*
+<figure>
+  <img src="../docs/images/model1.png" width="400"/>
+  <figcaption>Figure 1.1 Multiple influences of tree cover and (forest) soil condition in terms of the water balance.</figcaption>
+</figure>
 
 Simple characteristics of the vegetation (monthly pattern of leaf biomass, influencing canopy interception and transpiration, and ability to extract water from deeper soil layers) and soil (especially compaction of the macro pores in the soil that store water between ‘saturation’ and ‘field capacity’) can probably explain a major part of the impacts on river flow.
 
