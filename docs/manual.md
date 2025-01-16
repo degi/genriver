@@ -50,21 +50,13 @@ A river is treated as a summation of streams, each originating in a sub-catch¬m
   <figcaption><b>Figure 1.4</b> GenRiver model, key types of input, and main output.</figcaption>
 </figure>
 
-
-
-
-
-
-
-
-
-## How to run the software
+### How to run the software
 
 GenRiver3 software is web application and the **online** version is available at: https://genriver.agroforestri.id/
 
 The software can also be launched as a standalone app using R and RStudio. Following is the step-by-step to run the software from the source code as a standalone app.
 
-### Installation Instructions
+#### Installation Instructions
 1. Install R from [CRAN](https://cran.r-project.org/).
 2. Install RStudio from [RStudio](https://www.rstudio.com/products/rstudio/download/).
 3. Install the Shiny package in R:
@@ -72,7 +64,7 @@ The software can also be launched as a standalone app using R and RStudio. Follo
     install.packages("shiny")
     ```
 
-### Launching the App
+#### Launching the App
 1. Open RStudio.
 2. Load the Shiny library:
     ```R
