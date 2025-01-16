@@ -17,14 +17,14 @@ GenRiver is a generic river flow model that responds to spatially explicit rainf
 Land cover change can significantly affect watershed functions through a) changes in the fraction of rainfall that reaches the ground, b) the subsequent path-ways of water flow over and through the soil as related to surface and subsurface structure of the soil, surface roughness, and landscape drainage, and c) the rate of water use by plants (Fig. 1.1). 
 
 <img src="../docs/images/model1.png" width="400"/>
-Figure 1.1 Multiple influences of tree cover and (forest) soil condition in terms of the water balance
+*Figure 1.1 Multiple influences of tree cover and (forest) soil condition in terms of the water balance*
 
 Simple characteristics of the vegetation (monthly pattern of leaf biomass, influencing canopy interception and transpiration, and ability to extract water from deeper soil layers) and soil (especially compaction of the macro pores in the soil that store water between ‘saturation’ and ‘field capacity’) can probably explain a major part of the impacts on river flow.
 
 Empirical assessment of the dynamics of water flows as a function of land cover change and soil properties takes time and resources, and needs to take temporal and spatial variation of rainfall into account. A model based on ‘first principles’ that integrates land cover change and change in soil properties as driving factors of changes in river flow can be used as a tool to explore scenarios of land use change if it passes a ‘validation’ test against observed data.
 
 <img src="../docs/images/model2.png" width="400"/>
-Figure 1.2 Landscape-scale processes that relate the spatial and temporal aspects of rainfall to river flow 
+*Figure 1.2 Landscape-scale processes that relate the spatial and temporal aspects of rainfall to river flow* 
 
 GenRiver is a generic river model on river flow.  As is common in hydrology, it starts the accounting with rainfall or precipitation (P) and traces the subsequent flows and storage in the landscape, which can lead to either evapotranspiration (E), river flow (Q), or change in storage (ΔS) (Figure 1.3):
 
@@ -37,10 +37,10 @@ The core of the GenRiver model is a ‘patch’ level representation of a daily 
 A river is treated as a summation of streams, each originating in a sub-catch¬ment with its own daily rainfall, yearly land cover fractions, and constant total area and distance to the river outflow (or measurement) point.  Interactions between streams in their contribution to the river are considered to be negligible (i.e. there is no ‘backflow’ problem).  Spatial patterns in daily rainfall events are translated into average daily rainfall in each sub-catchment.  The sub-catchment model represents interception, infiltration into the soil, rapid percolation into the subsoil, the surface flow of water, and rapid lateral subsurface flow into streams with parameters that can vary between land cover classes.
 
 <img src="../docs/images/model3.png" width="400"/>
-Figure 1.3. Overview of the GenRiver model; the multiple subcatchments that make up the catchment as a whole can differ in basic soil properties, land cover fractions that affect interception, soil structure (infiltration rate), and seasonal pattern of water use by the vegetation. The sub-catchment will also typically differ in ‘routing time’ or in the time it takes the streams and river to reach the observation point of main interest
+*Figure 1.3. Overview of the GenRiver model; the multiple subcatchments that make up the catchment as a whole can differ in basic soil properties, land cover fractions that affect interception, soil structure (infiltration rate), and seasonal pattern of water use by the vegetation. The sub-catchment will also typically differ in ‘routing time’ or in the time it takes the streams and river to reach the observation point of main interest*
 
 <img src="../docs/images/model4.png" width="400"/>
-Figure 1.4 GenRiver model, key types of input, and main output
+*Figure 1.4 GenRiver model, key types of input, and main output*
 
 
 
