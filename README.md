@@ -7,7 +7,7 @@ Run the program by executing this script in R or RStudio:
 The **online version** is available at: [https://genriver.agroforestri.id/](https://genriver.agroforestri.id/).
 > If the server is down because of memory and bandwidth limitations, you may run the app using RStudio by running the script above.
 
-**User manual** and other informations are available here: [https://degi.github.io/genriver/](https://degi.github.io/genriver/) 
+**User manual** and more informations are available at: [https://degi.github.io/genriver/](https://degi.github.io/genriver/) 
 
 ## Feature highlights
 
@@ -22,3 +22,21 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 * View the watershed area in 3D<br/>
 
     <img src="docs/images/ws_3d.png" width="400"/><br/>
+
+* The soil data is acquired from [FAO - Harmonized World Soil Database version 2.0](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20)<br/>
+
+    <img src="docs/images/soil_global_db.png" width="400"/><br/>
+
+* The app provide a soil mapping method with automatic procedural segmentation<br/>
+  
+    <img src="docs/images/soil_map_global.png" width="400"/><br/>
+
+* Soil water is pre-calculated from soil properties data
+ 
+    <img src="docs/images/soil_water.png" width="400"/><br/>
+
+* Simulation output in various graphical chart
+  
+    <img src="docs/images/sim_ws_ind.png" width="400"/><br/>
+    <img src="docs/images/sim_cum.png" width="400"/><br/>
+    <img src="docs/images/sim_buf.png" width="400"/><br/>

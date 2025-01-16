@@ -38,35 +38,16 @@ The software can also be launched as standalone app using R and RStudio. Followi
     ```R
     runApp("path/to/your/app")
     ```
-> If you have the **app source code** on local folder, you will need internet connection to run it for the first time. The internet connection is required for updating and initializing the R libraries. After the updates completed, you will be able to run the app **without internet connection**. 
+> If you have the **source code** on local folder, you will need internet connection to run it for the first time. The internet connection is required for updating and initializing the R libraries. Once the updates completed, you will be able to run the app **without internet connection**.
+> *To be noted*: the internet connection might still be required for downloading the DEM. Once you have in your saved parameters, you don't need the internet connection anymore. 
 
 ## User Interface Overview
 
 <img src="../docs/images/home.png" width="400"/>
 
 
-- **Component 1**: Description of component 1.
-- **Component 2**: Description of component 2.
-
-## Usage Instructions
-1. **Step 1**: Description of step 1.
-2. **Step 2**: Description of step 2.
-
-## Examples
-### Example 1
-- **Input**: Description of input.
-- **Output**: Description of output.
-
-### Example 2
-- **Input**: Description of input.
-- **Output**: Description of output.
-
-## Troubleshooting
-- **Issue 1**: Description of issue and solution.
-- **Issue 2**: Description of issue and solution.
-
 ## Contact Information
-For further support, please contact [Your Contact Information].
+For further support, please contact: degi_ecomodels@gmail.com.
 
 
-*To be updated..*
+*To be updated...*
