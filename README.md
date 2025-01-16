@@ -10,11 +10,11 @@ The **user manual** is available here: [https://degi.github.io/genriver/manual/]
 
 ## Feature highlights
 
-* The app can provide DEM map which downloaded through [opentopography.org](https://opentopography.org/)<br/>. 
+* The app can provide DEM map which is downloaded automatically through [opentopography.org](https://opentopography.org/)<br/> 
   
     <img src="docs/images/dem_map.png" width="400"/><br/>
 
-* The stream path and subcathments is generated automatically <br/> 
+* The stream path and sub-catchments are generated automatically and can still be modified<br/> 
   
     <img src="docs/images/ws2.png" width="400"/><br/>
 
