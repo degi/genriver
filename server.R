@@ -143,7 +143,7 @@ server <- function(input, output, session) {
     lc_map_crop_stars_list = NULL,
     
     lc_evapot_df = NULL,
-    evapot_month_data_df <- NULL,
+    evapot_month_data_df = NULL,
     # evapot_month_data_df = data.frame(
     #   n = month_cols$month,
     #   month = month_cols$var,
