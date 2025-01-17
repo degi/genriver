@@ -13,10 +13,12 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 * The DEM map is provided by the app through [opentopography.org](https://opentopography.org/)<br/> 
   
+    <img src="docs/images/dem_get.png" width="400"/>
     <img src="docs/images/dem_map.png" width="400"/><br/>
 
 * The watershed area, stream path, and sub-catchments are generated automatically<br/> 
   
+    <img src="docs/images/ws.png" width="400"/>
     <img src="docs/images/ws2.png" width="400"/><br/>
 
 * View the watershed area in 3D<br/>
@@ -39,4 +41,5 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
   
     <img src="docs/images/sim_ws_ind.png" width="400"/>
     <img src="docs/images/sim_cum.png" width="400"/>
-    <img src="docs/images/sim_buf.png" width="400"/><br/>
+    <img src="docs/images/sim_buf.png" width="400"/>
+    <img src="docs/images/sim_avg.png" width="400"/><br/>
