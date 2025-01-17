@@ -5650,28 +5650,29 @@ server <- function(input, output, session) {
       return(NULL)
     sim_running(T)
     print("run simulation")
-    updateActionButton(
-      inputId = "sim_run_button",
-      label = "Running simulation..",
-      icon = icon("sync", class = "fa-spin")
-    )
+
     if (is.null(v$lc_par_df)) {
       showNotification("Land cover map was not set! Please complete the parameters",
                        type = "error")
+      sim_running(F)
       return()
     }
     if (is.null(v$subcatchment_map_sf)) {
       showNotification("Watershed area was not set! Please complete the parameters",
                        type = "error")
+      sim_running(F)
       return()
     }
     
     if (is.null(max_sim_days()))
+      sim_running(F)
       return()
     
     ndays <- input$ndays_input
-    if (ndays <= 0)
+    if (ndays <= 0) {
+      sim_running(F)
       return()
+    }
     if (ndays > max_sim_days()) {
       show_input_dialog(
         "Number of Simulation Days Error",
@@ -5683,6 +5684,7 @@ server <- function(input, output, session) {
         ),
         "max_days_confirm_btn"
       )
+      sim_running(F)
       return()
     }
     
@@ -5695,6 +5697,11 @@ server <- function(input, output, session) {
       calculate_soil_water_map()
     }
     
+    updateActionButton(
+      inputId = "sim_run_button",
+      label = "Running simulation..",
+      icon = icon("sync", class = "fa-spin")
+    )
     start_simulation(ndays)
   })
   
