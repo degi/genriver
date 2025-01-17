@@ -7,7 +7,7 @@ Run the program by executing this script in R or RStudio:
 The **online version** is available at: [https://genriver.agroforestri.id/](https://genriver.agroforestri.id/).
 > If the server is down due to memory and bandwidth limitations, run the app using RStudio by running the script above.
 
-**User manual** are available at: [https://degi.github.io/genriver/](https://degi.github.io/genriver/) 
+**User manual** is available at: [https://degi.github.io/genriver/](https://degi.github.io/genriver/) 
 
 ## Feature highlights
 
