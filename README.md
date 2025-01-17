@@ -43,7 +43,7 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 * Simulation output in various graphical charts
   
-    <img src="docs/images/sim_ws_ind.png" height="300"/>
-    <img src="docs/images/sim_cum.png" height="300"/>
-    <img src="docs/images/sim_buf.png" height="300"/>
-    <img src="docs/images/sim_avg.png" height="300"/><br/>
+    <img src="docs/images/sim_ws_ind.png" height="250"/>
+    <img src="docs/images/sim_cum.png" height="250"/>
+    <img src="docs/images/sim_buf.png" height="250"/>
+    <img src="docs/images/sim_avg.png" height="250"/><br/>
