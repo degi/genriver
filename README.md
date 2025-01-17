@@ -18,12 +18,12 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 * The watershed area, stream path, and sub-catchments are generated automatically<br/> 
   
-    <img src="docs/images/dem_ws.png" width="400"/>
-    <img src="docs/images/ws2.png" width="400"/><br/>
+    <img src="docs/images/dem_ws.png" height="300"/>
+    <img src="docs/images/ws2.png" height="300"/><br/>
 
 * View the watershed area in 3D<br/>
 
-    <img src="docs/images/ws_3d.png" width="400"/><br/>
+    <img src="docs/images/ws_3d.png" height="300"/><br/>
 
 * The soil data is acquired from [FAO - Harmonized World Soil Database version 2.0](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20)<br/>
 
