@@ -28,7 +28,7 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 * The soil data is acquired from [FAO - Harmonized World Soil Database version 2.0](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20)<br/>
 
     <img src="docs/images/soil_global_db.png" height="300"/>
-    <img src="docs/images/soil_list_global_db.png" height="300"/><br/>
+    <img src="docs/images/soil_list_global.png" height="300"/><br/>
 
 * The app provides a soil mapping method with automatic procedural segmentation<br/>
   
