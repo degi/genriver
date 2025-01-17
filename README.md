@@ -23,7 +23,8 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 * View the watershed area in 3D<br/>
 
-    <img src="docs/images/ws_3d.png" height="300"/><br/>
+    <img src="docs/images/ws_3d.png" height="300"/>
+    <img src="docs/images/ws_3d2.png" height="300"/><br/>
 
 * The soil data is acquired from [FAO - Harmonized World Soil Database version 2.0](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20)<br/>
 
