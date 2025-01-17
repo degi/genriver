@@ -27,19 +27,19 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 * The soil data is acquired from [FAO - Harmonized World Soil Database version 2.0](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20)<br/>
 
-    <img src="docs/images/soil_global_db.png" width="400"/><br/>
+    <img src="docs/images/soil_global_db.png" height="300"/><br/>
 
 * The app provides a soil mapping method with automatic procedural segmentation<br/>
   
-    <img src="docs/images/soil_map_global.png" width="400"/><br/>
+    <img src="docs/images/soil_map_global.png" height="300"/><br/>
 
 * Soil water is pre-calculated from soil properties data
  
-    <img src="docs/images/soil_water.png" width="400"/><br/>
+    <img src="docs/images/soil_water.png" height="300"/><br/>
 
 * Simulation output in various graphical charts
   
-    <img src="docs/images/sim_ws_ind.png" width="400"/>
-    <img src="docs/images/sim_cum.png" width="400"/>
-    <img src="docs/images/sim_buf.png" width="400"/>
-    <img src="docs/images/sim_avg.png" width="400"/><br/>
+    <img src="docs/images/sim_ws_ind.png" height="300"/>
+    <img src="docs/images/sim_cum.png" height="300"/>
+    <img src="docs/images/sim_buf.png" height="300"/>
+    <img src="docs/images/sim_avg.png" height="300"/><br/>
