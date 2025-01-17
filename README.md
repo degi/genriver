@@ -18,7 +18,7 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 * The watershed area, stream path, and sub-catchments are generated automatically<br/> 
   
-    <img src="docs/images/ws.png" width="400"/>
+    <img src="docs/images/dem_ws.png" width="400"/>
     <img src="docs/images/ws2.png" width="400"/><br/>
 
 * View the watershed area in 3D<br/>
