@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Model
-permalink: /model/
+title: Background
+permalink: /background/
 ---
 ## Description of Model Sectors
 
@@ -10,7 +10,7 @@ permalink: /model/
 At short time span of most observers of river flow it is difficult to distinguish interannual variability of weather from real change in climate and from changes in land cover and soil conditions.
 <figure>
   <img src="../docs/images/back1.png" width="400"/>
-  <figcaption><b>Figure 1.1</b> The biophysical relations between rainfall, land use in upper catchments and river flow to downstream.</figcaption>
+  <figcaption><b>Figure 1</b> The biophysical relations between rainfall, land use in upper catchments and river flow to downstream.</figcaption>
 </figure>
 
 The hydrology of the river basin integrates processes at a range of temporal and spatial scales and the interactions between ‘input’ and ‘water processing’ at patch and river channel scale are not easily unraveled. Purely empirical (data driven) models may need only  a few parameter to reconstruct a daily hydrograph from rainfall data, but because their parameter cannot ‘unpacked’ at the land use level, such models are not  suited for scenario models where the effect of land cover change (including forest cover) are the main interest (Croke, et. al., 2004).
@@ -42,43 +42,40 @@ The behaviour of streams and rivers in these respects can be seen as the consequ
    * regulating structures in the river  
    * impediments to rapid drainage in the form of dams and reservoirs
 
-	Where much of the public debate attributes most of the changes in ‘watershed functions’ to a change in forest cover (deforestation or reforestation), we need tools to account for the interactions of all four aspects mentioned here, to help us in assessing the causality of changes and the opportunities for interventions.
+Where much of the public debate attributes most of the changes in ‘watershed functions’ to a change in forest cover (deforestation or reforestation), we need tools to account for the interactions of all four aspects mentioned here, to help us in assessing the causality of changes and the opportunities for interventions.
 
-	Various approaches exist for modelling watershed functions, ranging from directly data-driven (empirical) approaches to models based on concepts of a water balance, soil physics and hydrology. Models differ by temporal and spatial scale: detailed description of rainfall and infiltration may require a minute (or even seconds) time step, especially on slopes where water will become surface runoff if it cannot infiltrate within seconds of reaching the soil surface. At the other end of the spectrum we may find empirical equations relating annual water yield of a catchment to annual rainfall (or precipitation in climate zones where snowfall and ice rains are significant). For some Indonesian catchments, for example, an empirical equation (Rizaldi Boer, pers. comm.) was derived as:
+Various approaches exist for modelling watershed functions, ranging from directly data-driven (empirical) approaches to models based on concepts of a water balance, soil physics and hydrology. Models differ by temporal and spatial scale: detailed description of rainfall and infiltration may require a minute (or even seconds) time step, especially on slopes where water will become surface runoff if it cannot infiltrate within seconds of reaching the soil surface. At the other end of the spectrum we may find empirical equations relating annual water yield of a catchment to annual rainfall (or precipitation in climate zones where snowfall and ice rains are significant). For some Indonesian catchments, for example, an empirical equation (Rizaldi Boer, pers. comm.) was derived as:
 
 Q \= 0.94 P – 1000 mm year –1
 
 with Q as river flow and P as precipitation both in mm year –1. A tentative interpretation of these coefficients is that 6% of rainfall is lost through interception and direct evaporation from wet leaf surfaces and/or a rainfall-dependent increase in plant transpiration, and that the basic value for annual evapotranspiration is 1000 mm year –1. Both these parameters, the interception loss, and the evapotranspiration will vary with the temporal distribution of rainfall and the land cover type, but the intercept is unlikely to change by more than 50% of the values given (so the intercept in unlikely to be more than 1500 or less than 500 mm year-1), while the slope is probably confined to the range 0.8 – 1\. The simple model may thus be fairly robust, but it is not sensitive to changes in land use or land cover (these could shift the parameters from the indicated values), and cannot be directly ‘downscaled’ to shorter periods of time (as it does not consider changes in storage terms). More sophisticated models will need to be explicit in the basic value for evapotranspiration of different types of land cover, and the degree to which these land covers induce direct evaporative losses.
 
-|                                                                                                                                                  ![][image2]                                                                                                                                                  |
-| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| **Figure 4.2.** The biophysical relations between rainfall, land use in upper catchments and river flow to downstream areas are subject to discussions between downstream and upland people whose perceptions on the cause-effect relations are reflected in policies that may aggravate poverty and conflict |
+<figure>
+  <img src="../docs/images/back2.png" width="400"/>
+  <figcaption><b>Figure 2</b> The biophysical relations between rainfall, land use in upper catchments and river flow to downstream areas are subject to discussions between downstream and upland people whose perceptions on the cause-effect relations are reflected in policies that may aggravate poverty and conflict.</figcaption>
+</figure>
 
-	Four classes of land cover can be distinguished from the perspective of evapotranspiration : 
+Four classes of land cover can be distinguished from the perspective of evapotranspiration : 
 
 * open water bodies
-
-where water loss is determined by the relative humidity of the air and the presence of a stagnant boundary layer of air that reduces the transport of water vapour
+	where water loss is determined by the relative humidity of the air and the presence of a stagnant boundary layer of air that reduces the transport of water vapour
 
 * open soil
-
-which may have a rate of evaporation similar to open water bodies when the surface is wet, but where evaporation may rapidly become limited by the rate of transport to the soil surface; soil cover with a litter layer provides a stagnant air zone, further reducing transport opportunities and mixing with the atmosphere
+	which may have a rate of evaporation similar to open water bodies when the surface is wet, but where evaporation may rapidly become limited by the rate of transport to the soil surface; soil cover with a litter layer provides a stagnant air zone, further reducing transport opportunities and mixing with the atmosphere
 
 * seasonally green vegetation
-
-most plants are able to provide their leaves (evaporating surfaces) with the amount of water that is needed for evaporation similar to an open water surface, during most of the rainy season; during periodic dry spells, plant transpiration is likely to drop below the value of open water, but stay above that of open soil
+	most plants are able to provide their leaves (evaporating surfaces) with the amount of water that is needed for evaporation similar to an open water surface, during most of the rainy season; during periodic dry spells, plant transpiration is likely to drop below the value of open water, but stay above that of open soil
 
 * evergreen vegetation 
+	such as evergreen trees (e.g. pines, eucalypts, trees such as grevillea), irrigated rice paddies or vegetable crops will have a rate of transpiration equal to that of open water, or higher if lateral flows of dry air drive the evapotranspiration per unit area to higher levels
 
-such as evergreen trees (e.g. pines, eucalypts, trees such as grevillea), irrigated rice paddies or vegetable crops will have a rate of transpiration equal to that of open water, or higher if lateral flows of dry air drive the evapotranspiration per unit area to higher levels
+If we take for granted that effects of local land use on total annual rainfall are small, the main effect on total water yield of a catchment area is a change in the rate of evapotranspiration, or the return flow of water molecules to the atmosphere. In a simple equation: Q \= P – E \-  S or the total water yield (surface rivers Qr \+ subsurface lateral flows Qs \+ groundwater flows Qg) equals precipitation (rainfall plus snow and ice, which in most parts of the tropic can be ignored) minus evapotranspiration minus the changes in storage terms of water in the catrchment. If the time frame for evaluation is sufficiently long relative to the variability of rainfall (e.g. one year for predictable humid climates but multiple years for more erratic drier areas), the S term can be ignored. 
 
-	If we take for granted that effects of local land use on total annual rainfall are small, the main effect on total water yield of a catchment area is a change in the rate of evapotranspiration, or the return flow of water molecules to the atmosphere. In a simple equation: Q \= P – E \-  S or the total water yield (surface rivers Qr \+ subsurface lateral flows Qs \+ groundwater flows Qg) equals precipitation (rainfall plus snow and ice, which in most parts of the tropic can be ignored) minus evapotranspiration minus the changes in storage terms of water in the catrchment. If the time frame for evaluation is sufficiently long relative to the variability of rainfall (e.g. one year for predictable humid climates but multiple years for more erratic drier areas), the S term can be ignored. 
+Efforts of land users that will reduce evapotranspiration and thus increase total water yield may thus be found in not planting evergeen trees (especially fast growing ones), or not irrigating rice paddies or vegetable crops in the dry season.
 
-	Efforts of land users that will reduce evapotranspiration and thus increase total water yield may thus be found in not planting evergeen trees (especially fast growing ones), or not irrigating rice paddies or vegetable crops in the dry season.
+By expressing the rainfall and river flow in mm year-1 we essentially use volume of water per unit area as the basis for calculations; if we consider larger areas, where both rainfall and evapotranspiration vary with space, we will need to make an effort to adjust the average value to maintain validity of the equation. For annual water yield, however, an area-based approach to scaling is valid, and values per unit area can be used to estimate values for any scale through multiplication with area. For properties such as ‘evenness of flow’ or probability of flooding, the relation with the scale of consideration is more complex, and a greater sensitivity to both the mean value of land cover fractions as well as the spatial organization of the landscape is probably needed.
 
-	By expressing the rainfall and river flow in mm year-1 we essentially use volume of water per unit area as the basis for calculations; if we consider larger areas, where both rainfall and evapotranspiration vary with space, we will need to make an effort to adjust the average value to maintain validity of the equation. For annual water yield, however, an area-based approach to scaling is valid, and values per unit area can be used to estimate values for any scale through multiplication with area. For properties such as ‘evenness of flow’ or probability of flooding, the relation with the scale of consideration is more complex, and a greater sensitivity to both the mean value of land cover fractions as well as the spatial organization of the landscape is probably needed.
-
-	If a greater model sensitivity to land use change is important for the question we try to answer or if we are interested in phenomena operating at shorter time scales than a year, we need to take into account the intermediate processes that determine the access to and use of water stored in the soil and the upper groundwater, as well as the rates of transport and temporary storage of water in the river network. The basic framework for a patch or plot level water balance (Figure 4.3) is well accepted, so the various models differ in the details of the time course of describing canopy interception and throughfall, and the way lateral flows over the surface and through the soil are described. As most plot level studies exclude surface inflows, there is a tendency to focus on surface runoff rather than run-on or net transport.
+If a greater model sensitivity to land use change is important for the question we try to answer or if we are interested in phenomena operating at shorter time scales than a year, we need to take into account the intermediate processes that determine the access to and use of water stored in the soil and the upper groundwater, as well as the rates of transport and temporary storage of water in the river network. The basic framework for a patch or plot level water balance (Figure 4.3) is well accepted, so the various models differ in the details of the time course of describing canopy interception and throughfall, and the way lateral flows over the surface and through the soil are described. As most plot level studies exclude surface inflows, there is a tendency to focus on surface runoff rather than run-on or net transport.
 
 |                                 ![][image3]                                  |
 | :--------------------------------------------------------------------------: |
