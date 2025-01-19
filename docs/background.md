@@ -1,13 +1,13 @@
 ---
 layout: page
-title: Model Background
-permalink: /background/
+title: Model
+permalink: /model/
 ---
 ## Description of Model Sectors
 
 ### Why a River Flow Model
 
-At the short time span of most observers of river flow, it is difficult to distinguish interannual variability of weather from real change in climate and from changes in land cover and soil conditions.
+At short time span of most observers of river flow it is difficult to distinguish interannual variability of weather from real change in climate and from changes in land cover and soil conditions.
 
 |                                                      ![][image1]                                                      |
 | :-------------------------------------------------------------------------------------------------------------------: |
@@ -15,15 +15,15 @@ At the short time span of most observers of river flow, it is difficult to disti
 
 The hydrology of the river basin integrates processes at a range of temporal and spatial scales and the interactions between ‘input’ and ‘water processing’ at patch and river channel scale are not easily unraveled. Purely empirical (data driven) models may need only  a few parameter to reconstruct a daily hydrograph from rainfall data, but because their parameter cannot ‘unpacked’ at the land use level, such models are not  suited for scenario models where the effect of land cover change (including forest cover) are the main interest (Croke, et. al., 2004).
 
-	Spatially explicit models that make use of a basic of understanding of the underlying mechanisms tend to require a large number of spatially explicit parameters more than normally available. If such models are used for ‘model optimization’ there may be to many degrees of freedom for improving the model fit (‘survival of the fitter’), and it is hard to decide which among a range of parameterization options to use for subsequent scenario studies (Thanapakpawin, P., et. al. 2005).
+Spatially explicit models that make use of a basic of understanding of the underlying mechanisms tend to require a large number of spatially explicit parameters more than normally available. If such models are used for ‘model optimization’ there may be to many degrees of freedom for improving the model fit (‘survival of the fitter’), and it is hard to decide which among a range of parameterization options to use for subsequent scenario studies (Thanapakpawin, P., et. al. 2005).
 
-	The term ‘watershed functions’ is often used in a rather loose way, suggesting that its various aspects (dimensions) change in a similar way when we make comparisons across climatic zones, land forms and human-induced land cover change. In reality, however, changes in total quantity of water may not be of the same relative magnitude (or even sign) as changes in quality or regularity of flow, and a differentiation among the ‘functions’ is needed. The ‘functionality’ of various aspects of river flow depends on the perspective, however, and thus may differ between various stakeholders. So, we may want to restrict ourselves to the hydrological ‘consequences’ of a watershed, and leave the value judgements of ‘functions’ to a later step in the analysis. The three main outcomes of current interest are:
+The term ‘watershed functions’ is often used in a rather loose way, suggesting that its various aspects (dimensions) change in a similar way when we make comparisons across climatic zones, land forms and human-induced land cover change. In reality, however, changes in total quantity of water may not be of the same relative magnitude (or even sign) as changes in quality or regularity of flow, and a differentiation among the ‘functions’ is needed. The ‘functionality’ of various aspects of river flow depends on the perspective, however, and thus may differ between various stakeholders. So, we may want to restrict ourselves to the hydrological ‘consequences’ of a watershed, and leave the value judgements of ‘functions’ to a later step in the analysis. The three main outcomes of current interest are:
 
 * Quantity or total water yield  
   * Evenness of flow, which implies high flows in the ‘dry’ season and an absence of strong peak flows in the wet season  
   * Quality of water, with respect to its use as drinking water, other domestic uses, industrial use, irrigation or as habitat for fish and other water organisms
 
-	The behaviour of streams and rivers in these respects can be seen as the consequence of:
+The behaviour of streams and rivers in these respects can be seen as the consequence of:
 
 1. Site properties that ‘come with the territory’  
    * local rainfall regime (and its temporal autocorrelation or tendency for wet days to follow wet days)  
@@ -35,12 +35,12 @@ The hydrology of the river basin integrates processes at a range of temporal and
    * size of the catchment (upstream of the observer/stakeholder) relative to the spatial autocorrelation of rainfall  
 3. Land use that directly depend on human activities  
    * infiltration and supply to groundwater as potentially influenced by soil structure that itself depends on vegetation and land use  
-     * vegetative aspects of the properties of the riverbed (and temporary storage) that dominate pulse transmission  
-     * irrigated agriculture and horticulture based on extractions from rivers  
+   * vegetative aspects of the properties of the riverbed (and temporary storage) that dominate pulse transmission  
+   * irrigated agriculture and horticulture based on extractions from rivers  
 4. Engineering structures  
    * canalisation of streams and rivers, increasing the rate of drainage  
-     * regulating structures in the river  
-     * impediments to rapid drainage in the form of dams and reservoirs
+   * regulating structures in the river  
+   * impediments to rapid drainage in the form of dams and reservoirs
 
 	Where much of the public debate attributes most of the changes in ‘watershed functions’ to a change in forest cover (deforestation or reforestation), we need tools to account for the interactions of all four aspects mentioned here, to help us in assessing the causality of changes and the opportunities for interventions.
 
