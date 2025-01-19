@@ -58,15 +58,19 @@ with Q as river flow and P as precipitation both in mm year –1. A tentative in
 Four classes of land cover can be distinguished from the perspective of evapotranspiration : 
 
 * open water bodies
+  
 	where water loss is determined by the relative humidity of the air and the presence of a stagnant boundary layer of air that reduces the transport of water vapour
 
 * open soil
+  
 	which may have a rate of evaporation similar to open water bodies when the surface is wet, but where evaporation may rapidly become limited by the rate of transport to the soil surface; soil cover with a litter layer provides a stagnant air zone, further reducing transport opportunities and mixing with the atmosphere
 
 * seasonally green vegetation
+  
 	most plants are able to provide their leaves (evaporating surfaces) with the amount of water that is needed for evaporation similar to an open water surface, during most of the rainy season; during periodic dry spells, plant transpiration is likely to drop below the value of open water, but stay above that of open soil
 
-* evergreen vegetation 
+* evergreen vegetation
+  
 	such as evergreen trees (e.g. pines, eucalypts, trees such as grevillea), irrigated rice paddies or vegetable crops will have a rate of transpiration equal to that of open water, or higher if lateral flows of dry air drive the evapotranspiration per unit area to higher levels
 
 If we take for granted that effects of local land use on total annual rainfall are small, the main effect on total water yield of a catchment area is a change in the rate of evapotranspiration, or the return flow of water molecules to the atmosphere. In a simple equation: Q \= P – E \-  S or the total water yield (surface rivers Qr \+ subsurface lateral flows Qs \+ groundwater flows Qg) equals precipitation (rainfall plus snow and ice, which in most parts of the tropic can be ignored) minus evapotranspiration minus the changes in storage terms of water in the catrchment. If the time frame for evaluation is sufficiently long relative to the variability of rainfall (e.g. one year for predictable humid climates but multiple years for more erratic drier areas), the S term can be ignored. 
