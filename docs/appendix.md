@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Appendix
-permalink: /references/
+permalink: /appendix/
 ---
 ## Glossary ##
 
