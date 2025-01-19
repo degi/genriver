@@ -8,10 +8,10 @@ permalink: /model/
 ### Why a River Flow Model
 
 At short time span of most observers of river flow it is difficult to distinguish interannual variability of weather from real change in climate and from changes in land cover and soil conditions.
-
-|                                                      ![][image1]                                                      |
-| :-------------------------------------------------------------------------------------------------------------------: |
-| **Figure 4.1.** The biophysical relations between rainfall, land use in upper catchments and river flow to downstream |
+<figure>
+  <img src="../docs/images/back1.png" width="400"/>
+  <figcaption><b>Figure 1.1</b> The biophysical relations between rainfall, land use in upper catchments and river flow to downstream.</figcaption>
+</figure>
 
 The hydrology of the river basin integrates processes at a range of temporal and spatial scales and the interactions between ‘input’ and ‘water processing’ at patch and river channel scale are not easily unraveled. Purely empirical (data driven) models may need only  a few parameter to reconstruct a daily hydrograph from rainfall data, but because their parameter cannot ‘unpacked’ at the land use level, such models are not  suited for scenario models where the effect of land cover change (including forest cover) are the main interest (Croke, et. al., 2004).
 
