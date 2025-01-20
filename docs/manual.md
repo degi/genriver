@@ -51,7 +51,43 @@ The software can also be launched as a standalone app using R and RStudio. The f
 
 ### Watershed
 
+#### Watershed Map
+
+#### 3D View
+
+#### Lake and DAM
+
+#### Ground Water and River Flow
+
+### Soil
+
+#### Physical and Chemical Properties
+
+#### Hydraulic Properties
+
+####  Soil and Plant Water
+
+#### Soil Erosion and Sedimentation
+
+### Rainfall and Rivers
+
+#### Rainfall
+
+#### River
+
+#### Consistency Check
+
+### Options
+
 ## Simulation
+
+### Water Balance
+
+### Watershed Indicator
+
+### Buffering Indicator
+
+### HEPP
 
 
 *To be updated...*
