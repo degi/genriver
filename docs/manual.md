@@ -35,15 +35,23 @@ The software can also be launched as a standalone app using R and RStudio. The f
     >
     > *To be noted*: You might still need an internet connection to download the DEM. However, once you have it in your saved parameters, you can go without it. 
 
-## User Interface Overview
-
-### Home
+## Home Screen
 
 <img src="../docs/images/home.png" width="400"/>
 
-### Input
+## Input
 
-### Simulation
+### Land Cover
+
+#### Land Cover Map
+
+#### Hydrological Properties
+
+#### Evapotranspiration
+
+### Watershed
+
+## Simulation
 
 
 *To be updated...*
