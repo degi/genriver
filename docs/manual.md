@@ -45,37 +45,83 @@ The software can also be launched as a standalone app using R and RStudio. The f
 
 #### Land Cover Map
 
+<img src="../docs/images/landcover.png" width="400"/>
+
 #### Hydrological Properties
+
+<img src="../docs/images/lc_prop.png" width="400"/>
 
 #### Evapotranspiration
 
+<img src="../docs/images/evapot.png" width="400"/>
+
+<img src="../docs/images/evapot_month.png" width="400"/>
+
 ### Watershed
+
+<img src="../docs/images/dem_map.png" width="400"/>
 
 #### Watershed Map
 
+<img src="../docs/images/ws2.png" width="400"/>
+
 #### 3D View
+
+<img src="../docs/images/ws_3d.png" width="400"/>
 
 #### Lake and DAM
 
+<img src="../docs/images/lake.png" width="400"/>
+
 #### Ground Water and River Flow
+
+<img src="../docs/images/ground_water.png" width="400"/>
 
 ### Soil
 
 #### Physical and Chemical Properties
 
+<img src="../docs/images/soil_global_db.png" width="400"/>
+
+<img src="../docs/images/soil_list_global.png" width="400"/>
+
+<img src="../docs/images/soil_map_global.png" width="400"/>
+
+<img src="../docs/images/soil_seg_sett.png" width="400"/>
+
+<img src="../docs/images/soil_seg_sett2.png" height="300"/>
+
+<img src="../docs/images/soil_seg_sett3.png" height="300"/>
+
 #### Hydraulic Properties
+
+<img src="../docs/images/soil_water.png" width="400"/>
+
+<img src="../docs/images/soil_water_lc.png" width="400"/>
 
 ####  Soil and Plant Water
 
+<img src="../docs/images/soil_water_par.png" width="400"/>
+
 #### Soil Erosion and Sedimentation
+
+<img src="../docs/images/eosion_map.png" width="400"/>
+
+<img src="../docs/images/erosion_par.png" width="400"/>
 
 ### Rainfall and Rivers
 
 #### Rainfall
 
+<img src="../docs/images/rainfall.png" width="400"/>
+
 #### River
 
+<img src="../docs/images/river.png" width="400"/>
+
 #### Consistency Check
+
+<img src="../docs/images/rain_river_check.png" width="400"/>
 
 ### Options
 
@@ -83,11 +129,18 @@ The software can also be launched as a standalone app using R and RStudio. The f
 
 ### Water Balance
 
+<img src="../docs/images/sim_cum.png" width="400"/>
+
 ### Watershed Indicator
+
+<img src="../docs/images/sim_avg.png" width="400"/>
 
 ### Buffering Indicator
 
-### HEPP
+<img src="../docs/images/sim_buf.png" width="400"/>
 
+## FlowPer
+
+<img src="../docs/images/flowper.png" width="400"/>
 
 *To be updated...*
