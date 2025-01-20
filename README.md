@@ -13,7 +13,6 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 * The DEM map is provided by the app through [opentopography.org](https://opentopography.org/)<br/> 
   
-    <img src="docs/images/dem_get.png" height="300"/>
     <img src="docs/images/dem_map.png" height="300"/><br/>
 
 * The watershed area, stream path, and sub-catchments are generated automatically<br/> 
@@ -23,23 +22,19 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 * View the watershed area in 3D<br/>
 
-    <img src="docs/images/ws_3d.png" height="300"/>
-    <img src="docs/images/ws_3d2.png" height="300"/><br/>
+    <img src="docs/images/ws_3d.png" height="300"/><br/>
 
 * The soil data is acquired from [FAO - Harmonized World Soil Database version 2.0](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20)<br/>
 
-    <img src="docs/images/soil_global_db.png" height="300"/>
-    <img src="docs/images/soil_list_global.png" height="300"/><br/>
+    <img src="docs/images/soil_global_db.png" height="300"/><br/>
 
 * The app provides a soil mapping method with automatic procedural segmentation<br/>
   
-    <img src="docs/images/soil_map_global.png" height="300"/>
-    <img src="docs/images/soil_seg_sett.png" height="300"/><br/>
+    <img src="docs/images/soil_map_global.png" height="300"/><br/>
 
 * Soil water is pre-calculated from soil properties data
  
-    <img src="docs/images/soil_water.png" height="300"/>
-    <img src="docs/images/soil_water_lc.png" height="300"/><br/>
+    <img src="docs/images/soil_water.png" height="300"/><br/>
 
 * Simulation output in various graphical charts
   
