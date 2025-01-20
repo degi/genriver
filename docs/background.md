@@ -53,6 +53,7 @@ A river is treated as a summation of streams, each originating in a sub-catch¬m
 ### Why a River Flow Model
 
 At short time span of most observers of river flow it is difficult to distinguish interannual variability of weather from real change in climate and from changes in land cover and soil conditions.
+
 <figure>
   <img src="../docs/images/back1.png" width="400"/>
   <figcaption><b>Figure 1</b> The biophysical relations between rainfall, land use in upper catchments and river flow to downstream.</figcaption>
@@ -65,8 +66,8 @@ Spatially explicit models that make use of a basic of understanding of the under
 The term ‘watershed functions’ is often used in a rather loose way, suggesting that its various aspects (dimensions) change in a similar way when we make comparisons across climatic zones, land forms and human-induced land cover change. In reality, however, changes in total quantity of water may not be of the same relative magnitude (or even sign) as changes in quality or regularity of flow, and a differentiation among the ‘functions’ is needed. The ‘functionality’ of various aspects of river flow depends on the perspective, however, and thus may differ between various stakeholders. So, we may want to restrict ourselves to the hydrological ‘consequences’ of a watershed, and leave the value judgements of ‘functions’ to a later step in the analysis. The three main outcomes of current interest are:
 
 * Quantity or total water yield  
-  * Evenness of flow, which implies high flows in the ‘dry’ season and an absence of strong peak flows in the wet season  
-  * Quality of water, with respect to its use as drinking water, other domestic uses, industrial use, irrigation or as habitat for fish and other water organisms
+* Evenness of flow, which implies high flows in the ‘dry’ season and an absence of strong peak flows in the wet season  
+* Quality of water, with respect to its use as drinking water, other domestic uses, industrial use, irrigation or as habitat for fish and other water organisms
 
 The behaviour of streams and rivers in these respects can be seen as the consequence of:
 
@@ -102,19 +103,19 @@ with Q as river flow and P as precipitation both in mm year –1. A tentative in
 
 Four classes of land cover can be distinguished from the perspective of evapotranspiration : 
 
-* open water bodies
+* **open water bodies**
   
 	where water loss is determined by the relative humidity of the air and the presence of a stagnant boundary layer of air that reduces the transport of water vapour
 
-* open soil
+* **open soil**
   
 	which may have a rate of evaporation similar to open water bodies when the surface is wet, but where evaporation may rapidly become limited by the rate of transport to the soil surface; soil cover with a litter layer provides a stagnant air zone, further reducing transport opportunities and mixing with the atmosphere
 
-* seasonally green vegetation
+* **seasonally green vegetation**
   
 	most plants are able to provide their leaves (evaporating surfaces) with the amount of water that is needed for evaporation similar to an open water surface, during most of the rainy season; during periodic dry spells, plant transpiration is likely to drop below the value of open water, but stay above that of open soil
 
-* evergreen vegetation
+* **evergreen vegetation**
   
 	such as evergreen trees (e.g. pines, eucalypts, trees such as grevillea), irrigated rice paddies or vegetable crops will have a rate of transpiration equal to that of open water, or higher if lateral flows of dry air drive the evapotranspiration per unit area to higher levels
 
