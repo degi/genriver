@@ -88,9 +88,7 @@ The software can also be launched as a standalone app using R and RStudio. The f
 <img src="../docs/images/soil_map_global.png" width="400"/>
 
 <img src="../docs/images/soil_seg_sett.png" width="400"/>
-
 <img src="../docs/images/soil_seg_sett2.png" height="400"/>
-
 <img src="../docs/images/soil_seg_sett3.png" height="400"/>
 
 #### Hydraulic Properties
