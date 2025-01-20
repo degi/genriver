@@ -31,7 +31,6 @@ header_pages:
   - docs/manual.md
   - docs/background.md
   - docs/references.md
-  - docs/library.md
   - docs/appendix.md
 
 # Set to `true` to show excerpts on the homepage.
