@@ -12,17 +12,17 @@ GenRiver is a generic river flow model that responds to spatially explicit rainf
 ## GenRiver Model Overview
 
 Land cover change can significantly affect watershed functions through a) changes in the fraction of rainfall that reaches the ground, b) the subsequent path-ways of water flow over and through the soil as related to surface and subsurface structure of the soil, surface roughness, and landscape drainage, and c) the rate of water use by plants (Fig. 1.1). 
-<p style="text-align: center">
+
 <figure>
   <img src="../docs/images/model1.png" width="400"/>
   <figcaption><b>Figure 1.1</b> Multiple influences of tree cover and (forest) soil condition in terms of the water balance.</figcaption>
 </figure>
-</p>
+
 Simple characteristics of the vegetation (monthly pattern of leaf biomass, influencing canopy interception and transpiration, and ability to extract water from deeper soil layers) and soil (especially compaction of the macro pores in the soil that store water between ‘saturation’ and ‘field capacity’) can probably explain a major part of the impacts on river flow.
 
 Empirical assessment of the dynamics of water flows as a function of land cover change and soil properties takes time and resources, and needs to take temporal and spatial variation of rainfall into account. A model based on ‘first principles’ that integrates land cover change and change in soil properties as driving factors of changes in river flow can be used as a tool to explore scenarios of land use change if it passes a ‘validation’ test against observed data.
 
-<figure style="text-align:center">
+<figure>
   <img src="../docs/images/model2.png" width="400" />
   <figcaption><b>Figure 1.2</b> Landscape-scale processes that relate the spatial and temporal aspects of rainfall to river flow.</figcaption>
 </figure>
@@ -146,7 +146,7 @@ If a greater model sensitivity to land use change is important for the question 
 | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | **Figure 4.4.** Overview of the GenRiver model; the multiple subcatchments that make up the catchment as a whole can differ in basic soil properties, land cover fractions that affect interception, soil structure (infiltration rate) and seasonal pattern of water use by the vegetation. The subcatchment will also typically differ in ‘routing time’ or in the time it takes the streams and river to reach the observation point of main interest |
 
-	The core of the model is a ‘patch level representation of a daily water balance, driven by local rainfall and modified by the land cover and soil properties of the patch. The patch can contribute to three types of stream flow: surface-quick flow on the day of the rainfall event, soil-quick flow on the next day and base flow, via the gradual release of groundwater (Figure 4.4).
+The core of the model is a ‘patch level representation of a daily water balance, driven by local rainfall and modified by the land cover and soil properties of the patch. The patch can contribute to three types of stream flow: surface-quick flow on the day of the rainfall event, soil-quick flow on the next day and base flow, via the gradual release of groundwater (Figure 4.4).
 
 **Table 4.2.** The overall water balance of the model, summed over space and time
 
@@ -156,9 +156,9 @@ If a greater model sensitivity to land use change is important for the question 
 | \- Δs \= Changes in soil and groundwater storage             | Q \= River debit (summed over base flow, soil quick flow and surface quick flow) |
 | \- Δr \=Changes in the volume of water in streams and rivers | ε \= Error (***unaccounted for***) term (difference between all in & out terms)  |
 
-	For the long-term behaviour the changes in soil and groundwater storage, as well as changes in the volume of streams and rivers will be negligible, while the error term should be negligible at all times if the model is correctly implemented.
+For the long-term behaviour the changes in soil and groundwater storage, as well as changes in the volume of streams and rivers will be negligible, while the error term should be negligible at all times if the model is correctly implemented.
 
-	Many models for river flow, especially for drier areas, focus on the overland flow directly after rainfall (Quickflow) but do not account for the ‘slow flows’, that derive from water that infiltrates into the soil but can take a range of pathways, with various residence times, to reach the streams and rivers, depending on land form, geology and extractions along the way. To keep things simple, GenRiver distinguishes only two steps in this: a soil quick flow (or ‘inter flow’) that is considered to reach the streams a day after the rainfall event, and a ‘slow flow’ that forms a fraction of the available store of groundwater (leading to an exponential decline of the groundwater store with time and a linear relation ship between the logarithm of the discharge and time in the absence of rainfall).
+Many models for river flow, especially for drier areas, focus on the overland flow directly after rainfall (Quickflow) but do not account for the ‘slow flows’, that derive from water that infiltrates into the soil but can take a range of pathways, with various residence times, to reach the streams and rivers, depending on land form, geology and extractions along the way. To keep things simple, GenRiver distinguishes only two steps in this: a soil quick flow (or ‘inter flow’) that is considered to reach the streams a day after the rainfall event, and a ‘slow flow’ that forms a fraction of the available store of groundwater (leading to an exponential decline of the groundwater store with time and a linear relation ship between the logarithm of the discharge and time in the absence of rainfall).
 
 	The GenRiver model was made for data-scarce situations and is therefore based on ‘first principles’, as these may be considered the safest bet for a wide range of applications (acknowledging that directly empirical models may have greater precision within the tested range). The model includes an attempt to relate across spatial scales (Figure 4.5).
 
