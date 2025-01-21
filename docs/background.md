@@ -503,23 +503,25 @@ Part of the ‘flow persistence’ may in fact derive from ‘rainfall persisten
 
 #### Input parameterization
 
-FlowPer Model in excel file is organized into seven sheets, labeled: “READ ME”, “DebitData”, “FlowPerModel”, “Calculation”, “Graphics”, “QAddon”, “FP”, and “Shape and TimeMax” (Figure 5.2).
+FlowPer Model in excel file is organized into seven sheets, labeled: “READ ME”, “DebitData”, “FlowPerModel”, “Calculation”, “Graphics”, “QAddon”, “FP”, and “Shape and TimeMax” (Figure 3.2).
 
 The only input required is a (partial) time series of daily river flow data, to be entered in the “DebitData” sheet, as in GenRiver.xls. Once river flow data have passed minimum quality checks, we can use them to parameterize the FlowPer model, esp. the Fp parameter. The “FlowPerModel” sheet (Figure 5.3) then provide options to run the model for each year that data are available and derive four auxiliary parameters to run FlowPer model (Table 5.2). The four auxiliary parameters are flow persistence (“FP” sheet), the mean random variate that reflects inputs from recent rainfall (“QAddon” sheet), and two parameters that describe a seasonal pattern, peak and shape of the distribution (“Shape and TimeMax” sheet). The only parameters that based on trial and fit is coefficient variation of measurement noise.
 
-![][image13]  
-Figure 5.2. The main interface of FlowPer Model
+<figure>
+  <img src="../docs/images/back13.png" width="400"/>
+  <figcaption><b>Figure 3.2</b>The main interface of FlowPer Model.</figcaption>
+</figure>
 
-2. **Running the model**
+#### Running the model
 
 Once you open FlowPer model and enter the river flow data on the “DebitData” sheet, then simply click “FlowPerModel” button and you will see something like Figure 5.3. Then and run the model, table 5.2 present the location of each input parameter in excel file:
 
 1. Change the starting year to begin the simulation as entered in “DebitData” sheet.  
-   2. Type year of simulation in the year colum to to look at the type of fit obtained then simply click “RUN” button.  
-   3. Once the running finish, then copy predicted value of flow persistence (FP) and random variate of rainfall (QAdd) into table of input FP & Qadd.  
-   4. Click “RUN” again until you got fit result by comparing the summary of predicted value and observation value in colum D25 and D26. 
+2. Type year of simulation in the year colum to to look at the type of fit obtained then simply click “RUN” button.  
+3. Once the running finish, then copy predicted value of flow persistence (FP) and random variate of rainfall (QAdd) into table of input FP & Qadd.  
+4. Click “RUN” again until you got fit result by comparing the summary of predicted value and observation value in colum D25 and D26. 
 
-Table 5.2. Input parameters of FlowPerModel
+Table 3.2. Input parameters of FlowPerModel
 
 | Input Parameters             | Location in excel, “Flow Per Model” sheet                    | Note                                                                                             |
 | ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -531,16 +533,18 @@ Table 5.2. Input parameters of FlowPerModel
 | Time Maximum Flow            | E10                                                          |                                                                                                  |
 | CV measurement noise         | E11                                                          |                                                                                                  |
 
-![][image14]  
-Figure 5.3. The interface of FlowPer Model
+<figure>
+  <img src="../docs/images/back14.png" width="400"/>
+  <figcaption><b>Figure 3.3</b>The interface of FlowPer Model.</figcaption>
+</figure>
 
-3. **FlowPer model output**
+#### FlowPer model output
 
 There are two types of FlowPer model output, flow persistence value and predicted daily river flow. The predicted daily river flow is presented in graph and table. There are two types of graph in presenting the predicted daily river flow (Figure 5.1).
 
 The flow persistence value can be considered as input and output. As input, the FP is used to generate the predicted daily river flow, while as an output, the FP is a indicator value of watershed condition that range from 0 \- 1\. If fp \= 0, then there is no relation between river flow on subsequent days and the river is extremely ‘flashy’, alternating between high and low flows without temporal predictability within the frequency distribution of Qadd.
 
-## ***References***
+## References
 
 Brouwer C; Prins K; Kay M and Heibloem M. 1990\. Irrigation Water Management Training Manual No. 5: Irrigation Methods. FAO. http:// www.fao.org/docrep/S8684E/s8684e0a.htm. 4 Nopember 2003\.  
 Bandaragoda C, David G and Ross Woods T. 2004\. Application of TOPNET in the distributed model intercomparison project. Journal of hydrology 298: 178-201.  
