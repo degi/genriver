@@ -420,11 +420,11 @@ After entered into river, those streams will flow from subcatchment center to ob
 	D\_RoutingTime \= I\_RoutingDistance\[i,ObsPoint\]/(I\_RivFlowTimeNow\[i\] x I\_RoutVeloc\_m\_per\_s x 3.6 x 24 x I\_Tortuosity) 
 
 There are two types of routing time:  
-1 If the value of routing time is between 0-1 then the water enter to the final outlet on the same day. The amount of direct river flow (D\_RivLakeSameDay) is depending on parameters fraction release value (I\_ReleaseFrac).
+1. If the value of routing time is between 0-1 then the water enter to the final outlet on the same day. The amount of direct river flow (D\_RivLakeSameDay) is depending on parameters fraction release value (I\_ReleaseFrac).
 
 	D\_RivLakeSameDay \= if D\_RoutingTime\[i,ObsPoint\]\>=0 and D\_RoutingTime\[i,ObsPoint\]\<1  then D\_TotalStreamInflow\[i,ObsPoint\] x (I\_ReleaseFrac\[i,ObsPoint\]) else 0
 
-2 If the value of routing time is more than 1 then the flow process have delay before enter to the final outlet
+2. If the value of routing time is more than 1 then the flow process have delay before enter to the final outlet
 
 ### Land Cover 
 
@@ -432,22 +432,23 @@ Land cover sector is a sector to generate proportion of land cover for each year
 
 There are eleven types of land cover and four time series data (start simulation, first transition, second transition and end transition) as a default that provided by GenRiver model. Fraction of land cover change for each year is a result of interpolation. Figure 4.12. and below equation shows calculation for interpolation of fraction of land cover for each year in each subctachment.
 
-|                                                                                                                                                                                                ![][image12]                                                                                                                                                                                                |
-| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| **Figure 4.12.** Interpolation of land cover fraction inside GenRiver. Number 1, 2, …, 11 on  I\_Frac1\_1 1, I\_Frac2\_1 1, …, I\_Frac11\_4, the first number \= land cover type, the second number \= the transition year. I\_FracVegClass1, I\_FracVegClass2, I\_FracVegClass3 and I\_FracVegClass4 is land cover fraction for start simulation, first transition, second transition and end transition. |
+<figure>
+  <img src="../docs/images/back12.png" width="400"/>
+  <figcaption><b>Figure 2.12</b>Interpolation of land cover fraction inside GenRiver. Number 1, 2, …, 11 on  I\_Frac1\_1 1, I\_Frac2\_1 1, …, I\_Frac11\_4, the first number \= land cover type, the second number \= the transition year. I\_FracVegClass1, I\_FracVegClass2, I\_FracVegClass3 and I\_FracVegClass4 is land cover fraction for start simulation, first transition, second transition and end transition.</figcaption>
+</figure>
 
-I\_FracVegClassNow \= if I\_RelArea\[i\]\>0  then   
-(if I\_Flag1 \= 1 then (I\_FracVegClass1\[j,i\]+((I\_FracVegClass2\[j,i\]-I\_FracVegClass1\[j,i\]) x (int((I\_Simulation\_Time)/365)-I\_InputDataYears\[Start\])/(I\_InputDataYears\[Trans1\]-I\_InputDataYears\[Start\]))/ARRAYSUM(I\_FracVegClass1\[\*,i\])) ELSE  
-if I\_Flag2 \= 1 then (I\_FracVegClass2\[j,i\]+((I\_FracVegClass3\[j,i\]-I\_FracVegClass2\[j,i\]) x (int((I\_Simulation\_Time)/365)-I\_InputDataYears\[Trans1\])/(I\_InputDataYears\[Trans2\]-I\_InputDataYears\[Trans1\]))/ARRAYSUM(I\_FracVegClass2\[\*,i\])) else  
-(I\_FracVegClass3\[j,i\]+((I\_FracVegClass4\[j,i\]-I\_FracVegClass3\[j,i\]) x (int((I\_Simulation\_Time)/365)-I\_InputDataYears\[Trans2\])/(I\_InputDataYears\[End\]-I\_InputDataYears\[Trans2\]))/ARRAYSUM(I\_FracVegClass3\[\*,i\]))) else 0
+	I\_FracVegClassNow \= if I\_RelArea\[i\]\>0  then   
+	(if I\_Flag1 \= 1 then (I\_FracVegClass1\[j,i\]+((I\_FracVegClass2\[j,i\]-I\_FracVegClass1\[j,i\]) x (int((I\_Simulation\_Time)/365)-I\_InputDataYears\	[Start\])/(I\_InputDataYears\[Trans1\]-I\_InputDataYears\[Start\]))/ARRAYSUM(I\_FracVegClass1\[\*,i\])) ELSE  
+	if I\_Flag2 \= 1 then (I\_FracVegClass2\[j,i\]+((I\_FracVegClass3\[j,i\]-I\_FracVegClass2\[j,i\]) x (int((I\_Simulation\_Time)/365)-I\_InputDataYears\[Trans1\])/(I\_InputDataYears\[Trans2\]-I\_InputDataYears\[Trans1\]))/ARRAYSUM(I\_FracVegClass2\[\*,i\])) else  
+	(I\_FracVegClass3\[j,i\]+((I\_FracVegClass4\[j,i\]-I\_FracVegClass3\[j,i\]) x (int((I\_Simulation\_Time)/365)-I\_InputDataYears\[Trans2\])/(I\_InputDataYears\[End\]-I\_InputDataYears\[Trans2\]))/ARRAYSUM(I\_FracVegClass3\[\*,i\]))) else 0
 
-	Other parameters that also use interpolation method are water availability for plant (I\_AvailWatClassNow), permanent willing point (I\_PWPSub), bulk density (I\_BD\_BDRefVegNow), a difference value between saturation water storage capacity and field capacity of the soil (I\_SoilSatminFCSubNow), ratio of time arrival of river flow (I\_RivFlowTimeNow), ground water release fraction (I\_GWRelFracNow) and dynamic groundwater storage capacity (I\_MaxDynGWSubNow).
+Other parameters that also use interpolation method are water availability for plant (I\_AvailWatClassNow), permanent willing point (I\_PWPSub), bulk density (I\_BD\_BDRefVegNow), a difference value between saturation water storage capacity and field capacity of the soil (I\_SoilSatminFCSubNow), ratio of time arrival of river flow (I\_RivFlowTimeNow), ground water release fraction (I\_GWRelFracNow) and dynamic groundwater storage capacity (I\_MaxDynGWSubNow).
 
-**4.3.4 Subcatchment Parameter**
+### Subcatchment Parameter
 
-	This sector provides number of constant parameters to fill in unavailable data. The parameters are ground water release fraction (I\_GWRelFrac), Actual Maximum Ground Water Dynamic (I\_MaxDynGWat), Soil saturation Class (I\_SoilSatClass), Maximum Infiltration Area (I\_MaxInfArea), Maximum Infiltration sub surface area (I\_MaxInfSubSAreaClass), Potential evapotranspiration (I\_PotEvapTransp). 
+This sector provides number of constant parameters to fill in unavailable data. The parameters are ground water release fraction (I\_GWRelFrac), Actual Maximum Ground Water Dynamic (I\_MaxDynGWat), Soil saturation Class (I\_SoilSatClass), Maximum Infiltration Area (I\_MaxInfArea), Maximum Infiltration sub surface area (I\_MaxInfSubSAreaClass), Potential evapotranspiration (I\_PotEvapTransp). 
 
-5. **Flow Persistence and the FlowPer model**  
+## Flow Persistence and the FlowPer model  
       
    1. **Background: temporal autocorrelation of river flow**
 
