@@ -300,7 +300,7 @@ Rainfall at subcatchment level is implemented as daily amounts (I\_RainPerDay) f
   <figcaption><b>Figure 2.7</b>Implementation process of daily rainfall at subcatchment level from long time records.</figcaption>
 </figure>
 
-	I\_RainPerDay \= if I\_UseSpatVarRain? \= 1 then I\_SpatRainTime\[i\] else I\_DailyRain\[i\]
+	I_RainPerDay = if I_UseSpatVarRain? = 1 then I_SpatRainTime[i] else I_DailyRain[i]
 
 Rainfall at subcatchment level for each landcover type (I\_ DailyRainAmount) directly calculated proportionally to the area (I\_RelArea) and type of each landcover (I\_FracVegClassNow). 
 
