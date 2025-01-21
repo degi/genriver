@@ -1,6 +1,3 @@
----
-showMiniToc: true
----
 **GenRiver** is a generic river model on river flow.
 
 Run the program by executing this script in R or RStudio:
