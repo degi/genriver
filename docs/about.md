@@ -13,11 +13,11 @@ GenRiver3 is an open-source and free web application software. The source code i
 -   **Model Authors**: Meine van Noordwijk, Rudy Harto Widodo, Ai Farida, Desi Suyamto, Betha Lusiana, Ni’matul Khasanah, Lisa Tanika, Rachmat Mulia, Degi Harja Asmara
 -   **Hydrology Expert**: Lisa Tanika
 
-Suggested citation to the original model:
+*Suggested citation to the original model*:
 
 - van Noordwijk, M., Widodo, R.H., Farida, A., Suyamto, D., Lusiana, B., Tanika, L. and Khasanah, N., 2011. GenRiver and FlowPer: Generic River and Flow Persistence Models: User Manual Version 2.0. World Agroforestry Centre.
 
-Suggested citation to this software:
+*Suggested citation to this software*:
 
 - Asmara, D. H., Tanika, L., Mulia, R., & Van Noordwijk, M. (2025). GenRiver (Version 3.0.0) [Computer software]. https://github.com/degi/genriver
 
