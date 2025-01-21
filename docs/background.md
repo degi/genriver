@@ -448,9 +448,9 @@ Other parameters that also use interpolation method are water availability for p
 
 This sector provides number of constant parameters to fill in unavailable data. The parameters are ground water release fraction (I\_GWRelFrac), Actual Maximum Ground Water Dynamic (I\_MaxDynGWat), Soil saturation Class (I\_SoilSatClass), Maximum Infiltration Area (I\_MaxInfArea), Maximum Infiltration sub surface area (I\_MaxInfSubSAreaClass), Potential evapotranspiration (I\_PotEvapTransp). 
 
-## Flow Persistence and the FlowPer model  
+## 3. Flow Persistence and the FlowPer model  
       
-   1. **Background: temporal autocorrelation of river flow**
+### Background: temporal autocorrelation of river flow
 
 Models of river flow, even relatively simple ones such as GenRiver, are over-parameterized relative to the information that we can use to check the statistical validity of the model. There are multiple ways of achieving a similar level of ‘model fit’ between measured and predicted river flow patterns, and the fit obtained may thus be ‘right for the wrong reasons’. Using the ‘validated model’ outside of the calibration range may then be as risky as using a simple regression line. In testing the ‘lack of fit’ of a model we can benefit from having a ‘null-model’, a model that takes basic properties of the data into account, without specific hypotheses about the way rainfall translates into river flow.
 
@@ -458,7 +458,7 @@ In the analysis of watershed functions, we deal with a complex of factors that i
 
 The FlowPer model is focused on that. It can serve two functions: 1\) summarize the key parameters that downstream stakeholders can observe on the flow pattern, e.g. as basis for conditional ES rewards, 2\) serve as a parsimonious (parameter-sparse) ‘null model’ that allows quantification of the increments in model prediction that is achieved with spatially explicit models (with a priori parameterization rather than parameter tuning to the data).
 
-2. **FlowPer Model Overview**
+### FlowPer Model Overview
 
 The FlowPer.xls model provides a parsimonious null-model, that is based on temporal autocorrelation or an empirical ‘flow persistence’ in the river flow data. The basic form is a recursive relationship between river flow Q at subsequent days:
 
@@ -469,7 +469,7 @@ where Qt and Qt+1 represent the river flow on subsequent days, fp is the flow pe
 Qadd and fp are related, as Σ Qadd i \= (1 – fp) ΣQ. Thus, if fp \= 1, Qadd \= 0 and river flow is constant, regardless of rainfall (the ideally buffered system…). If fp \= 0 there is no relation between river flow on subsequent days and the river is extremely ‘flashy’, alternating between high and low flows without temporal predictability within the frequency distribution of Qadd.
 
 The term Qadd,i can be described as a statistical distribution with a probability of a non-zero value, a mean and a measure of variance, plus two parameters that describe a seasonal pattern (peak and shape of the distribution, e.g. Weibull). This makes for 5 parameters for Qadd,i (and six for the whole model) that are derived from the data. It leaves many degrees of freedom for more specific models that, for example, make use of measured rainfall.  
-**Table 5.1.** Multiple influences on process and pattern of river flow and the downstream perceptions of ‘ecosystem services’ (modified from van Noordwijk et al. 2006\)
+**Table 3.1.** Multiple influences on process and pattern of river flow and the downstream perceptions of ‘ecosystem services’ (modified from van Noordwijk et al. 2006\)
 
 | Influence                                    | Process and pattern                                                          | Resultant river and stream flow                                                                                                                                                                                                                                                                                                                                       | Downstream ‘ecosystem service’                                                                                                                                                                                                                                                                                                                                                                                             |
 | :------------------------------------------- | :--------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -487,11 +487,11 @@ The term Qadd,i can be described as a statistical distribution with a probabilit
 | Engineering                                  | Release from/ reten-tion of water in the landscape                           |                                                                                                                                                                                                                                                                                                                                                                       |                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Potential feedback on ‘anthropogenic’ causes | Space-time process-based model of separating the multiple causes and effects | Heuristic, parsimo-nious ‘null-model’ based on flow pattern only                                                                                                                                                                                                                                                                                                      | LEK/PEK synthesis on expectations & explanations                                                                                                                                                                                                                                                                                                                                                                           |
 
-**Figure 5.1.** Example of the type of ‘fit’ that can be achieved for the 6-parameters FlowPer model 
+**Figure 3.1.** Example of the type of ‘fit’ that can be achieved for the 6-parameters FlowPer model 
 
 If we partition the total flow Qtot into water flow by three pathways (surface runoff, interflow and groundwaterflow), we can obtain Qtot \= Qrunoff \+ Qinterflow \+ Qgwflow. Each type of flow pathway will typically have a different flow persistence, fp,runoff , fp,interflow and fp,gwflow, respectively.
 
-Qtot,t+1 \= (fp,runoff(Qrunoff,t/Qtot,t)+ fp,interflow(Qinterflow,t/Qtot,t)+ fp,gwflow (Qgwflow,t/Qtot,t))Qtot,t\+ Qadd,t
+	Qtot,t+1 \= (fp,runoff(Qrunoff,t/Qtot,t)+ fp,interflow(Qinterflow,t/Qtot,t)+ fp,gwflow (Qgwflow,t/Qtot,t))Qtot,t\+ Qadd,t
 
 As we can expect values for fp,runoff , fp,interflow and fp,gwflow of about 0, 0.5 and close to 1, respectively, we can interpret the relative contributions of the 3 flow pathways from the overall fp value.
 
@@ -499,9 +499,9 @@ In a more detailed model, the daily value of fp will shift according to the pred
 
 Part of the ‘flow persistence’ may in fact derive from ‘rainfall persistence’, or the increased probability of daily rainfall after a rainy day, and/or from the increased probability of dry days to follow dry days, even after a monthly pattern ion rainfall is accounted for.
 
-3. **Starting and Running FlowPer Model**
+### Starting and Running FlowPer Model
 
-   1. **Input parameterization**
+#### Input parameterization
 
 FlowPer Model in excel file is organized into seven sheets, labeled: “READ ME”, “DebitData”, “FlowPerModel”, “Calculation”, “Graphics”, “QAddon”, “FP”, and “Shape and TimeMax” (Figure 5.2).
 
