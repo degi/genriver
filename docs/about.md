@@ -21,7 +21,7 @@ Suggested citation to this software:
 
 - Asmara, D. H., Tanika, L., Mulia, R., & Van Noordwijk, M. (2025). GenRiver (Version 3.0.0) [Computer software]. https://github.com/degi/genriver
 
-##### Disclaimer and Copyright
+#### Disclaimer and Copyright
 
 Although efforts have been made to incorporate relevant process knowledge on a range of interactions, the model is not more (and not less) than a research tool. Model predictions may help in developing specific hypotheses for research, in exploring potential management options and extrapolation domains, but they should not be used as authoritative statements per se.
 
