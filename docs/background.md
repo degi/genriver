@@ -3,11 +3,43 @@ layout: page
 title: Background
 permalink: /background/
 ---
-* [Preface](#preface)
-* [1. GenRiver Model Overview](#1-genriver-model-overview)
-* [2. Description of Model Sectors](#2-description-of-model-sectors)
-  * [Why a River Flow Model](#why-a-river-flow-model)
-* [3. Flow Persistence and the FlowPer model](#3-flow-persistence-and-the-flowper-model)
+- [Preface](#preface)
+- [1. GenRiver Model Overview](#1-genriver-model-overview)
+- [2. Description of Model Sectors](#2-description-of-model-sectors)
+  - [Why a River Flow Model](#why-a-river-flow-model)
+  - [GenRiver Model](#genriver-model)
+  - [Two alternative explanations for steady-river flow](#two-alternative-explanations-for-steady-river-flow)
+  - [Quantification of ‘buffering’ of river flow by watershed areas](#quantification-of-buffering-of-river-flow-by-watershed-areas)
+  - [Target properties of the model](#target-properties-of-the-model)
+  - [Description of GenRiver Component and its Processes](#description-of-genriver-component-and-its-processes)
+  - [Water Balance](#water-balance)
+    - [Rainfall](#rainfall)
+    - [Interception](#interception)
+    - [Infiltration](#infiltration)
+    - [Deep Infiltration](#deep-infiltration)
+    - [Surface Flow](#surface-flow)
+    - [Soil Water](#soil-water)
+    - [Actual Evapotranspiration](#actual-evapotranspiration)
+    - [Percolation](#percolation)
+    - [Subsurface flow or soil discharge](#subsurface-flow-or-soil-discharge)
+    - [Ground Water](#ground-water)
+    - [Irrigation](#irrigation)
+    - [Baseflow](#baseflow)
+  - [Stream Network](#stream-network)
+    - [Total Stream flow](#total-stream-flow)
+    - [Routing time](#routing-time)
+  - [Land Cover](#land-cover)
+  - [Subcatchment Parameter](#subcatchment-parameter)
+- [3. Flow Persistence and the FlowPer model](#3-flow-persistence-and-the-flowper-model)
+  - [Background: temporal autocorrelation of river flow](#background-temporal-autocorrelation-of-river-flow)
+  - [FlowPer Model Overview](#flowper-model-overview)
+  - [Starting and Running FlowPer Model](#starting-and-running-flowper-model)
+    - [Input parameterization](#input-parameterization)
+    - [Running the model](#running-the-model)
+    - [FlowPer model output](#flowper-model-output)
+- [References](#references)
+
+---
 
 ## Preface
 

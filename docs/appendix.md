@@ -3,7 +3,12 @@ layout: page
 title: Appendix
 permalink: /appendix/
 ---
-## Glossary ##
+- [Glossary](#glossary)
+- [Variables](#variables)
+
+---
+
+## Glossary
 
 - **Base flow** is the portion of stream flow that derives from groundwater and is not related to current or recent rainfall.
 - **BD/BDref** is the bulk density of a soil layer relative to the ‘reference bulk density’ that can be expected for soil of similar texture under natural forest conditions

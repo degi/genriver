@@ -3,6 +3,38 @@ layout: page
 title: User Manual
 permalink: /manual/
 ---
+- [How to run the software](#how-to-run-the-software)
+  - [Installation Instructions](#installation-instructions)
+  - [Launching the App](#launching-the-app)
+- [Home Screen](#home-screen)
+- [Input](#input)
+  - [Land Cover](#land-cover)
+    - [Land Cover Map](#land-cover-map)
+    - [Hydrological Properties](#hydrological-properties)
+    - [Evapotranspiration](#evapotranspiration)
+  - [Watershed](#watershed)
+    - [Watershed Map](#watershed-map)
+    - [3D View](#3d-view)
+    - [Lake and DAM](#lake-and-dam)
+    - [Ground Water and River Flow](#ground-water-and-river-flow)
+  - [Soil](#soil)
+    - [Physical and Chemical Properties](#physical-and-chemical-properties)
+    - [Hydraulic Properties](#hydraulic-properties)
+    - [Soil and Plant Water](#soil-and-plant-water)
+    - [Soil Erosion and Sedimentation](#soil-erosion-and-sedimentation)
+  - [Rainfall and Rivers](#rainfall-and-rivers)
+    - [Rainfall](#rainfall)
+    - [River](#river)
+    - [Consistency Check](#consistency-check)
+  - [Options](#options)
+- [Simulation](#simulation)
+  - [Water Balance](#water-balance)
+  - [Watershed Indicator](#watershed-indicator)
+  - [Buffering Indicator](#buffering-indicator)
+- [FlowPer](#flowper)
+
+---
+
 ## How to run the software
 
 GenRiver3 software is web application and the **online** version is available at: https://genriver.agroforestri.id/
