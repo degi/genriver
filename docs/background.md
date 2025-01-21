@@ -5,7 +5,9 @@ permalink: /background/
 ---
 * [Preface](#preface)
 * [1. GenRiver Model Overview](#1-genriver-model-overview)
-* [Why a River Flow Model](#why-a-river-flow-model)
+* [2. Description of Model Sectors](#1-description-of-model-sectors)
+  * [Why a River Flow Model](#why-a-river-flow-model)
+* [3. Flow Persistence and the FlowPer model](#3-flow-persistence-and-the-flowper-model)
 
 ## Preface
 
@@ -52,7 +54,7 @@ A river is treated as a summation of streams, each originating in a sub-catch¬m
 </figure>
 
 
-## 2. Description of Model Sectors
+## 2\. Description of Model Sectors
 
 ### Why a River Flow Model
 
@@ -452,7 +454,7 @@ Other parameters that also use interpolation method are water availability for p
 
 This sector provides number of constant parameters to fill in unavailable data. The parameters are ground water release fraction (I\_GWRelFrac), Actual Maximum Ground Water Dynamic (I\_MaxDynGWat), Soil saturation Class (I\_SoilSatClass), Maximum Infiltration Area (I\_MaxInfArea), Maximum Infiltration sub surface area (I\_MaxInfSubSAreaClass), Potential evapotranspiration (I\_PotEvapTransp). 
 
-## 3. Flow Persistence and the FlowPer model  
+## 3\. Flow Persistence and the FlowPer model  
       
 ### Background: temporal autocorrelation of river flow
 
