@@ -2,6 +2,7 @@
 layout: page
 title: Background
 permalink: /background/
+showMiniToc: true
 ---
 ## Preface
 
