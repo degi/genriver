@@ -5,7 +5,7 @@ permalink: /background/
 ---
 * [Preface](#preface)
 * [1. GenRiver Model Overview](#1-genriver-model-overview)
-* [2. Description of Model Sectors](#1-description-of-model-sectors)
+* [2. Description of Model Sectors](#2-description-of-model-sectors)
   * [Why a River Flow Model](#why-a-river-flow-model)
 * [3. Flow Persistence and the FlowPer model](#3-flow-persistence-and-the-flowper-model)
 
