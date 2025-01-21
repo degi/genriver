@@ -302,7 +302,9 @@ Infiltration is calculated as the minimum of:
 * the amount of water that can reach the groundwater level within a day (I\_DailyRainAmount-D\_InterceptEvap)  
 * When the surface soil layers are saturated, the rate of outflow will determine the possible rate of inflow on the next day.
 
+```
 	D\_Infiltration \= if L\_Lake?\[Subcatchement\]=1 then 0 else min(min(I\_SoilSatClass\[j,i\]-D\_SoilWater\[j,i\],I\_MaxInfArea\[j,i\] x I\_RainTimeAvForInf\[i\]/24), I\_DailyRainAmount\[i,j\]- D\_InterceptEvap\[j,i\])
+```
 
 If the first constraint is active, the model generates ‘infiltration limited runoff’, in the second case ‘saturation overland flow’.
 
@@ -328,8 +330,9 @@ The amount of deep infiltration is calculated as the minimum of:
 * the amount of infiltration of subsurface (I\_MaxInfSubSAreaClass)  
 * unfilled area of ground water (I\_MaxDynGWArea)
 
-
-	D\_DeepInfiltration \= min(min(min(ARRAYSUM(I\_MaxInfArea\[\*,i\]) x I\_RainTimeAvForInf\[i\]/24-ARRAYSUM(I\_SoilSatClass\[\*,i\])+ARRAYSUM(D\_SoilWater\[\*,i\]),  ARRAYSUM(I\_MaxInfSubSAreaClass\[\*,i\])),ARRAYSUM(I\_DailyRainAmount\[i,\*\])-ARRAYSUM(D\_InterceptEvap\[\*,i\])-ARRAYSUM(D\_Infiltration\[\*,i\])),I\_MaxDynGWArea\[i\]-D\_GWArea\[i\])
+```
+D\_DeepInfiltration \= min(min(min(ARRAYSUM(I\_MaxInfArea\[\*,i\]) x I\_RainTimeAvForInf\[i\]/24-ARRAYSUM(I\_SoilSatClass\[\*,i\])+ARRAYSUM(D\_SoilWater\[\*,i\]),  ARRAYSUM(I\_MaxInfSubSAreaClass\[\*,i\])),ARRAYSUM(I\_DailyRainAmount\[i,\*\])-ARRAYSUM(D\_InterceptEvap\[\*,i\])-ARRAYSUM(D\_Infiltration\[\*,i\])),I\_MaxDynGWArea\[i\]-D\_GWArea\[i\])
+```
 
 #### Surface Flow
 
