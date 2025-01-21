@@ -546,27 +546,52 @@ The flow persistence value can be considered as input and output. As input, the 
 
 ## References
 
-Brouwer C; Prins K; Kay M and Heibloem M. 1990\. Irrigation Water Management Training Manual No. 5: Irrigation Methods. FAO. http:// www.fao.org/docrep/S8684E/s8684e0a.htm. 4 Nopember 2003\.  
+Brouwer C; Prins K; Kay M and Heibloem M. 1990\. Irrigation Water Management Training Manual No. 5: Irrigation Methods. FAO. http:// www.fao.org/docrep/S8684E/s8684e0a.htm. 4 Nopember 2003.  
+
 Bandaragoda C, David G and Ross Woods T. 2004\. Application of TOPNET in the distributed model intercomparison project. Journal of hydrology 298: 178-201.  
+
 Croke BFW, Merritt, WS and Jakeman AJ. 2004\. A dynamic model for predicting hydrologic response to land cover changes in gauged and ungauged catchments. Journal of Hydrology 291 (1-2): 115-131.  
+
 Croke BFW, Andrews F, Jakeman A.J, Cuddy S and Luddy A.. 2005\. Redesign of the IHACRES rainfall-runoff model, to appear in the proceedings of the 29th Hydrology and Water Resources Symposium, Engineers Australia, February 2005\.  
+
 Dairaku K, Emori S and Oki T. 2004\. Rainfall Amount, Intensity, Duration, and Frequency Relationships in the Mae Chaem Watershed in Southeast Asia, J. Hydrometeor (5): 458-470.  
+
 Dye PJ. and Croke BFW. 2003\. Evaluation of stream flow predictions by the IHACRES rainfall-runoff model in two South African catchments. Environmental Modelling and Software, vol 18, pp 705-712.  
-Jakeman AJ and Hornberger GM. 1993\. How much complexity is warranted in a rainfall-runoff model? Water Resources Research 29(8): pp2637-2649.  
-Jakeman AJ, Littlewood IG and whitehead PG. 1990\. Computation of the instantaneous unit hydrograph and identifiable components flows with application to the small upland catchments. Journal of hydrology 117: 275-300.  
-Moriasi DNJG, Arnold MW, Van Liew RL, Bingner RD, Harmel TL and Veith. 2007\. Model Evaluation Guidelines For Systematic Quantification Of Accuracy In Watershed Simulations. Transactions of the ASABE Vol. 50(3): 885−900. American Society of Agricultural and Biological Engineers ISSN 0001−2351.  
-Merritt, WS, Croke BFW, Jakeman AJ, Letcher RA, Perez P. 2005\. A Biophysical toolbox for assessment and management of land and water resources in rural catchments in northern Thailand. Ecological Modelling 171: 279–300.  
-Anonymous. 1993\. Storm Rainfall Depth. National Engineering Handbook. USDA  
-Olivera PE. 2001\. Extracting hydrologic information from spatial data For hms modeling. Journal of Hydrologic Engineering 6\.  
-Ortiz C. 2005\. Calibration of GenRiver with GLUE for Northern Vietnamese conditions. M.Sc. thesis 27 pp.  
+
+Jakeman AJ and Hornberger GM. 1993\. How much complexity is warranted in a rainfall-runoff model? Water Resources Research 29(8): pp2637-2649. 
+
+Jakeman AJ, Littlewood IG and whitehead PG. 1990\. Computation of the instantaneous unit hydrograph and identifiable components flows with application to the small upland catchments. Journal of hydrology 117: 275-300.
+
+Moriasi DNJG, Arnold MW, Van Liew RL, Bingner RD, Harmel TL and Veith. 2007\. Model Evaluation Guidelines For Systematic Quantification Of Accuracy In Watershed Simulations.
+
+Transactions of the ASABE Vol. 50(3): 885−900. American Society of Agricultural and Biological Engineers ISSN 0001−2351. 
+
+Merritt, WS, Croke BFW, Jakeman AJ, Letcher RA, Perez P. 2005\. A Biophysical toolbox for assessment and management of land and water resources in rural catchments in northern Thailand. Ecological Modelling 171: 279–300.
+
+Anonymous. 1993\. Storm Rainfall Depth. National Engineering Handbook. USDA 
+
+Olivera PE. 2001\. Extracting hydrologic information from spatial data For hms modeling. Journal of Hydrologic Engineering 6\.
+
+Ortiz C. 2005\. Calibration of GenRiver with GLUE for Northern Vietnamese conditions. M.Sc. thesis 27 pp.
+
 Post DA, Jakeman AJ, Littlewood IG,Whitehead PG and Jayasuriya MDA.. 1996\. Modelling land cover induced variations in hydrologic response: Picaninny Creek. Victoria. Ecological Modelling 86:177-182.  
+
 Saipothong P, Onpraphai T, Ratnamhin A., Sangsrichan T, Natee S, Sepan S, Pitakam A. and Chanpo C. 2007\. Spatial Information on Land Use/Land Cover and Its Change in Mae Chaem Watershed.  
+
 Subagyono K, Marwanto S, Tafakresno C and Dariah A. 2005\. Delineation of Erosion Prone Areas In Sumberjaya Lampung, Indonesia. In Fahmuddin Agus and Meine Van Noordwijk (editors). Alternatives to slash and burn in Indonesia: Fascilitating the development of agroforestry systems:Phase 3 Synthesis and summary report. World Agroforestry centre, Southeast Asia, Bogor, Indonesia.   
-Thanapakpawin PJ, Richey D, Thomas S, Rodda B, Campbell and Logsdon M. 2007\. Effects of Land use Change on the hydrologic regime of the Mae Chaem river Basin, N.W Thailand’.Journal of Hydrology 334 (1-2):215-230.  
-Van Noordwijk M, Farida A, Suyamto D and Lusiana B. 2002\. GenRiver and Spatrain Model Description. World Agroforestry Centre, ICRAF-SE Asia.  
+
+Thanapakpawin PJ, Richey D, Thomas S, Rodda B, Campbell and Logsdon M. 2007\. Effects of Land use Change on the hydrologic regime of the Mae Chaem river Basin, N.W Thailand’.Journal of Hydrology 334 (1-2):215-230. 
+
+Van Noordwijk M, Farida A, Suyamto D and Lusiana B. 2002\. GenRiver and Spatrain Model Description. World Agroforestry Centre, ICRAF-SE Asia. 
+
 Van Noordwijk M, Richey J and Thomas D. 2003\. Functional value of biodiversity – phase 2\. Technical Report For Activity 2\. Landscape and (Sub) Catchment Scale Modelling of Effects of forest Conversion on Watershed Functions and Biodiversity in Southeast Asia. Alternatives to Slash and Burn program, “Forest and Agro ecosystem Tradeoffs in the Humid Tropics”. ICRAF/World Agroforestry Centre, SEA.  
-Van Noordwij M. 2004\. GenRiver 1.0. Presentation of GenRiver in PowerPoint.  
+
+Van Noordwij M. 2004\. GenRiver 1.0. Presentation of GenRiver in PowerPoint. 
+
 Van Noordwijk M, Farida A, Suyamto DA, Lusiana B and Khasanah N. 2003\. Spatial Variability of Rainfall Governs river flow and reduces effects of land use change at landscape scale: GenRiver And Spatrain Simulations. Modsim. Australia.  
-Van Noordwijk M, Farida A, Saipothong P, Agus F, Hairiah K, Suprayogo D and Verbist B. 2006\. Watershed functions in productive agricultural landscapes with trees.World Agroforestry Centre.  
-Verbist B,  Ekadinata A and Budidarsono B. 2005\. Factors driving land use change: Effects on watershed functions in a coffee agroforestry system in Sumberjaya (Lampung, Sumatra). Agricultural Systems 85: 254-270.  
+
+Van Noordwijk M, Farida A, Saipothong P, Agus F, Hairiah K, Suprayogo D and Verbist B. 2006\. Watershed functions in productive agricultural landscapes with trees.World Agroforestry Centre.
+
+Verbist B,  Ekadinata A and Budidarsono B. 2005\. Factors driving land use change: Effects on watershed functions in a coffee agroforestry system in Sumberjaya (Lampung, Sumatra). Agricultural Systems 85: 254-270. 
+
 Verbist B, Widodo RH, Susanto S, van Noordwijk M, Poesen J, Deckers S. (2008). Assessment of Flows and Sediment Loads in a Largely Deforested Catchment in Sumberjaya, Lampung, Sumatra, Indonesia.
