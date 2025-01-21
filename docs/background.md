@@ -406,31 +406,31 @@ The portion of stream flow that comes from groundwater (D\_GWaDisc) depend on ho
 
 A river in the model is treated as the sum of streams, each originating in a subcatchment with its own daily rainfall, land cover fraction, total area and distance to the outlet of the river. These streams are all streams that are listed in the previous section (surface flow, sub-surface flow and base flow), it will be gathered in the river and become a total stream flow (D\_TotalStreamInFlow).
 
-D\_TotalStreamInFlow \= (D\_SurfaceFlow\[i\]+D\_GWaDisch\[i\] x (1-D\_FracGWtoLake\[i\])+ARRAYSUM(D\_SoilDischarge\[\*,i\]))+D\_SubCResOutflow\[i\] x (1-I\_DaminThisStream?\[i\])
+	D\_TotalStreamInFlow \= (D\_SurfaceFlow\[i\]+D\_GWaDisch\[i\] x (1-D\_FracGWtoLake\[i\])+ARRAYSUM(D\_SoilDischarge\[\*,i\]))+D\_SubCResOutflow\[i\] x (1-I\_DaminThisStream?\[i\])
 
-|                      ![][image11]                      |
-| :----------------------------------------------------: |
-| **Figure 4.11.** Array dimensions is used in the model |
+<figure>
+  <img src="../docs/images/back11.png" width="400"/>
+  <figcaption><b>Figure 2.11</b>Array dimensions is used in the model.</figcaption>
+</figure>
 
-***Routing time***
+#### Routing time
 
-	After entered into river, those streams will flow from subcatchment center to observation point. Routing time controls the flow of water from subcatchment centre to final outlet. Some input parameters controls this routing time are distance from the centre of subcatchment to final outlet, velocity and tortuocity.
+After entered into river, those streams will flow from subcatchment center to observation point. Routing time controls the flow of water from subcatchment centre to final outlet. Some input parameters controls this routing time are distance from the centre of subcatchment to final outlet, velocity and tortuocity.
 
-D\_RoutingTime \= I\_RoutingDistance\[i,ObsPoint\]/(I\_RivFlowTimeNow\[i\] x I\_RoutVeloc\_m\_per\_s x 3.6 x 24 x I\_Tortuosity) 
+	D\_RoutingTime \= I\_RoutingDistance\[i,ObsPoint\]/(I\_RivFlowTimeNow\[i\] x I\_RoutVeloc\_m\_per\_s x 3.6 x 24 x I\_Tortuosity) 
 
 There are two types of routing time:  
-1\. If the value of routing time is between 0-1 then the water enter to the final outlet on the same day. The amount of direct river flow (D\_RivLakeSameDay) is depending on parameters fraction release value (I\_ReleaseFrac).
+1 If the value of routing time is between 0-1 then the water enter to the final outlet on the same day. The amount of direct river flow (D\_RivLakeSameDay) is depending on parameters fraction release value (I\_ReleaseFrac).
 
-D\_RivLakeSameDay \= if D\_RoutingTime\[i,ObsPoint\]\>=0 and D\_RoutingTime\[i,ObsPoint\]\<1  then D\_TotalStreamInflow\[i,ObsPoint\] x   
-(I\_ReleaseFrac\[i,ObsPoint\]) else 0
+	D\_RivLakeSameDay \= if D\_RoutingTime\[i,ObsPoint\]\>=0 and D\_RoutingTime\[i,ObsPoint\]\<1  then D\_TotalStreamInflow\[i,ObsPoint\] x (I\_ReleaseFrac\[i,ObsPoint\]) else 0
 
-2\. If the value of routing time is more than 1 then the flow process have delay before enter to the final outlet
+2 If the value of routing time is more than 1 then the flow process have delay before enter to the final outlet
 
-**4.3.3 Land Cover** 
+### Land Cover 
 
-	Land cover sector is a sector to generate proportion of land cover for each year in each subcathment. Linear interpolation is a method used to generate the land cover. Four of three times series of land cover data with certain year gaps is needed.
+Land cover sector is a sector to generate proportion of land cover for each year in each subcathment. Linear interpolation is a method used to generate the land cover. Four of three times series of land cover data with certain year gaps is needed.
 
-	There are eleven types of land cover and four time series data (start simulation, first transition, second transition and end transition) as a default that provided by GenRiver model. Fraction of land cover change for each year is a result of interpolation. Figure 4.12. and below equation shows calculation for interpolation of fraction of land cover for each year in each subctachment.
+There are eleven types of land cover and four time series data (start simulation, first transition, second transition and end transition) as a default that provided by GenRiver model. Fraction of land cover change for each year is a result of interpolation. Figure 4.12. and below equation shows calculation for interpolation of fraction of land cover for each year in each subctachment.
 
 |                                                                                                                                                                                                ![][image12]                                                                                                                                                                                                |
 | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
