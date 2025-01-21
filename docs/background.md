@@ -4,7 +4,7 @@ title: Background
 permalink: /background/
 ---
 * [Preface](#preface)
-* [1. GenRiver Model Overview](#1.-GenRiver-Model-Overview)
+* [1. GenRiver Model Overview](#genriver-model-overview)
 * [Why a River Flow Model](#why-a-river-flow-model)
 
 ## Preface
