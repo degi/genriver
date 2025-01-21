@@ -133,7 +133,7 @@ The software can also be launched as a standalone app using R and RStudio. The f
 
 #### Soil Erosion and Sedimentation
 
-<img src="../docs/images/eosion_map.png" width="400"/>
+<img src="../docs/images/erosion_map.png" width="400"/>
 
 <img src="../docs/images/erosion_par.png" width="400"/>
 
