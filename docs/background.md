@@ -278,10 +278,10 @@ Rainfall duration determines the â€˜fraction of time available for infiltrationâ
 
 Rainfall will be distributed to each component of water balance, interception-evaporation (D\_InterceptEvap), infiltration (D\_Infiltration), deep infiltration (D\_DeepInfiltration) and run off (D\_SurfaceFlow).
 
-|                     ![][image8]                      |
-| :--------------------------------------------------: |
-| **Figure 4.8.** Water  balance in soil surface level |
-
+<figure>
+  <img src="../docs/images/back8.png" width="400"/>
+  <figcaption><b>Figure 2.8</b>Water balance in soil surface level.</figcaption>
+</figure>
 	   
 ***Interception***
 
