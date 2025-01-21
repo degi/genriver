@@ -167,7 +167,7 @@ If a greater model sensitivity to land use change is important for the question 
 
 <figure>
   <img src="../docs/images/back3.png" width="400"/>
-  <figcaption><b>Figure 2.3</b>The basic framework for a patch or plot level water balance.</figcaption>
+  <figcaption><b>Figure 2.3</b> The basic framework for a patch or plot level water balance.</figcaption>
 </figure>
 
 **Table 2.1** Models concepts of river flow
@@ -185,7 +185,7 @@ The model was initially designed as a ‘simple’ (few parameters) model that s
 
 <figure>
   <img src="../docs/images/back4.png" width="400"/>
-  <figcaption><b>Figure 2.4</b>Overview of the GenRiver model; the multiple sub-catchments that make up the catchment as a whole can differ in basic soil properties, land cover fractions that affect interception, soil structure (infiltration rate) and seasonal pattern of water use by the vegetation. The sub-catchment will also typically differ in ‘routing time’ or in the time it takes the streams and river to reach the observation point of main interest.</figcaption>
+  <figcaption><b>Figure 2.4</b> Overview of the GenRiver model; the multiple sub-catchments that make up the catchment as a whole can differ in basic soil properties, land cover fractions that affect interception, soil structure (infiltration rate) and seasonal pattern of water use by the vegetation. The sub-catchment will also typically differ in ‘routing time’ or in the time it takes the streams and river to reach the observation point of main interest.</figcaption>
 </figure>
 
 The core of the model is a ‘patch level representation of a daily water balance, driven by local rainfall and modified by the land cover and soil properties of the patch. The patch can contribute to three types of stream flow: surface-quick flow on the day of the rainfall event, soil-quick flow on the next day and base flow, via the gradual release of groundwater (Figure 4.4).
@@ -212,7 +212,7 @@ There is, however, an alternative explanation for even river flow patterns, that
 
 <figure>
   <img src="../docs/images/back5.png" width="400"/>
-  <figcaption><b>Figure 2.5</b>Models for watershed functions at catchment scale need to combine explicit rules for effects of land use on interception, infiltration and transport to the stream network at ‘patch’ scale, with assemblage and filter rules that reflect the river network and the changes that this can cause to the overall flow.</figcaption>
+  <figcaption><b>Figure 2.5</b> Models for watershed functions at catchment scale need to combine explicit rules for effects of land use on interception, infiltration and transport to the stream network at ‘patch’ scale, with assemblage and filter rules that reflect the river network and the changes that this can cause to the overall flow.</figcaption>
 </figure>
 
 A distinction between these two types of explanation for patterns in river flow is thus essential to evaluate the likely impact of current land use change in forested areas and the types of interventions that may be effective or not. The relative importance of the two explanations clearly depends on the scale of consideration. In small subcatchments there is hardly any space for the second explanation, and the first must dominate. 
@@ -223,7 +223,7 @@ The GenRiver models were first designed to answer this rather specific question:
  
 <figure>
   <img src="../docs/images/back6.png" width="400"/>
-  <figcaption><b>Figure 2.6</b>Two alternative models for steady river flow:  the ‘sponge’ and ‘patchy rain’ version that are likely to dominate at the scale of plot level research (left) and at landscape scale (right).</figcaption>
+  <figcaption><b>Figure 2.6</b> Two alternative models for steady river flow:  the ‘sponge’ and ‘patchy rain’ version that are likely to dominate at the scale of plot level research (left) and at landscape scale (right).</figcaption>
 </figure>
 
 **Table 2.3.** Well-documented impacts of land use change by basin size (Kiersch and Tognetti, 2002); x = Measured impact; - = No well-documented impact
@@ -297,7 +297,7 @@ Rainfall at subcatchment level is implemented as daily amounts (I_RainPerDay) fr
 
 <figure>
   <img src="../docs/images/back7.png" width="400"/>
-  <figcaption><b>Figure 2.7</b>Implementation process of daily rainfall at subcatchment level from long time records.</figcaption>
+  <figcaption><b>Figure 2.7</b> Implementation process of daily rainfall at subcatchment level from long time records.</figcaption>
 </figure>
 
 	I_RainPerDay = if I_UseSpatVarRain? = 1 then I_SpatRainTime[i] else I_DailyRain[i]
@@ -318,7 +318,7 @@ Rainfall will be distributed to each component of water balance, interception-ev
 
 <figure>
   <img src="../docs/images/back8.png" width="400"/>
-  <figcaption><b>Figure 2.8</b>Water balance in soil surface level.</figcaption>
+  <figcaption><b>Figure 2.8</b> Water balance in soil surface level.</figcaption>
 </figure>
 	   
 #### Interception
@@ -389,7 +389,7 @@ During a rain event the soil may get saturated, but within one day it is suppose
 
 <figure>
   <img src="../docs/images/back9.png" width="400"/>
-  <figcaption><b>Figure 2.9</b>The process of soil water dynamic.</figcaption>
+  <figcaption><b>Figure 2.9</b> The process of soil water dynamic.</figcaption>
 </figure>
 
 After a rain event, the soil starts to drain and will reach field capacity after one day (or depending on further parameter 1-3 days). The water held between saturation and field capacity is distributed in the order transpiration, drainage to the groundwater reserve or drain to the rivers as “soil quick flow” (van Noordwijk et al, 2003). The Soil water retention curve (saturation, field capacity, wilting point) is estimated based on pedotransfer functions using the soil type to indicate the soil texture. The groundwater was driven by the ‘differential storage’ in ‘active groundwater’ and the groundwater release’ fraction which representing the recession phase of actual river flow during periods without rainfall.
@@ -421,7 +421,7 @@ Percolation and deep infiltration are the source of ground water. The ground wat
 
 <figure>
   <img src="../docs/images/back10.png" width="400"/>
-  <figcaption><b>Figure 2.10</b>Water balance in ground water level.</figcaption>
+  <figcaption><b>Figure 2.10</b> Water balance in ground water level.</figcaption>
 </figure>
 
 #### Irrigation
@@ -448,7 +448,7 @@ A river in the model is treated as the sum of streams, each originating in a sub
 
 <figure>
   <img src="../docs/images/back11.png" width="400"/>
-  <figcaption><b>Figure 2.11</b>Array dimensions is used in the model.</figcaption>
+  <figcaption><b>Figure 2.11</b> Array dimensions is used in the model.</figcaption>
 </figure>
 
 #### Routing time
@@ -472,7 +472,7 @@ There are eleven types of land cover and four time series data (start simulation
 
 <figure>
   <img src="../docs/images/back12.png" width="400"/>
-  <figcaption><b>Figure 2.12</b>Interpolation of land cover fraction inside GenRiver. Number 1, 2, …, 11 on  I_Frac1_1 1, I_Frac2_1 1, …, I_Frac11_4, the first number = land cover type, the second number = the transition year. I_FracVegClass1, I_FracVegClass2, I_FracVegClass3 and I_FracVegClass4 is land cover fraction for start simulation, first transition, second transition and end transition.</figcaption>
+  <figcaption><b>Figure 2.12</b> Interpolation of land cover fraction inside GenRiver. Number 1, 2, …, 11 on  I_Frac1_1 1, I_Frac2_1 1, …, I_Frac11_4, the first number = land cover type, the second number = the transition year. I_FracVegClass1, I_FracVegClass2, I_FracVegClass3 and I_FracVegClass4 is land cover fraction for start simulation, first transition, second transition and end transition.</figcaption>
 </figure>
 
 	I_FracVegClassNow = if I_RelArea[i]>0  then   
@@ -547,7 +547,7 @@ The only input required is a (partial) time series of daily river flow data, to 
 
 <figure>
   <img src="../docs/images/back13.png" width="400"/>
-  <figcaption><b>Figure 3.2</b>The main interface of FlowPer Model.</figcaption>
+  <figcaption><b>Figure 3.2</b> The main interface of FlowPer Model.</figcaption>
 </figure>
 
 #### Running the model
@@ -573,7 +573,7 @@ Table 3.2. Input parameters of FlowPerModel
 
 <figure>
   <img src="../docs/images/back14.png" width="400"/>
-  <figcaption><b>Figure 3.3</b>The interface of FlowPer Model.</figcaption>
+  <figcaption><b>Figure 3.3</b> The interface of FlowPer Model.</figcaption>
 </figure>
 
 #### FlowPer model output
