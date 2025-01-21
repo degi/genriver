@@ -328,50 +328,49 @@ The amount of deep infiltration is calculated as the minimum of:
 * the amount of infiltration of subsurface (I\_MaxInfSubSAreaClass)  
 * unfilled area of ground water (I\_MaxDynGWArea)
 
+
 	D\_DeepInfiltration \= min(min(min(ARRAYSUM(I\_MaxInfArea\[\*,i\]) x I\_RainTimeAvForInf\[i\]/24-ARRAYSUM(I\_SoilSatClass\[\*,i\])+ARRAYSUM(D\_SoilWater\[\*,i\]),  ARRAYSUM(I\_MaxInfSubSAreaClass\[\*,i\])),ARRAYSUM(I\_DailyRainAmount\[i,\*\])-ARRAYSUM(D\_InterceptEvap\[\*,i\])-ARRAYSUM(D\_Infiltration\[\*,i\])),I\_MaxDynGWArea\[i\]-D\_GWArea\[i\])
 
-***Surface Flow***
+#### Surface Flow
 
-	When the net rainfall (rainfall minus interception-evaporation (D\_InterceptEvap)) exceeds the infiltration capacity of the soil (D\_Infiltration and D\_DeepInfiltration) possibly become surface flow (D\_SurfaceFlow). 
+When the net rainfall (rainfall minus interception-evaporation (D\_InterceptEvap)) exceeds the infiltration capacity of the soil (D\_Infiltration and D\_DeepInfiltration) possibly become surface flow (D\_SurfaceFlow). 
 
-D\_SurfaceFlow \=   
-if L\_Lake?\[i\]=1 then ARRAYSUM(I\_DailyRainAmount\[i,\*\]) else  
-ARRAYSUM(I\_DailyRainAmount\[i,\*\])-  
-ARRAYSUM(D\_InterceptEvap\[\*,i\])-ARRAYSUM(D\_Infiltration\[\*,i\])-D\_DeepInfiltration\[i\]
+	D\_SurfaceFlow \= if L\_Lake?\[i\]=1 then ARRAYSUM(I\_DailyRainAmount\[i,\*\]) else 
+ 	ARRAYSUM(I\_DailyRainAmount\[i,\*\])-ARRAYSUM(D\_InterceptEvap\[\*,i\])-ARRAYSUM(D\_Infiltration\[\*,i\])-D\_DeepInfiltration\[i\]
 
-***Soil Water***
+#### Soil Water
 
-	During a rain event the soil may get saturated, but within one day it is supposed to drain till ‘field capacity’ (with an operational definition of the soil water content 24 hours after a heavy rainfall event). The difference between saturation and field capacity can be either:
+During a rain event the soil may get saturated, but within one day it is supposed to drain till ‘field capacity’ (with an operational definition of the soil water content 24 hours after a heavy rainfall event). The difference between saturation and field capacity can be either:
 
 * Used for transpiration (but canopy intercepted rainfall takes priority to meet the demand) (D\_ActEvapTransp)  
 * Drain to the groundwater reserve, calculated as the minimum of the amount that can be transported downwards and the fraction of soil water that will drain on any given day (D\_Percolation)  
 * Drain to the rivers as ‘soil quick flow’: any water left above field capacity by the two preceding processes (D\_SoilDischarge)
 
-|                    ![][image9]                     |
-| :------------------------------------------------: |
-| **Figure 4.9.**  The process of soil water dynamic |
+<figure>
+  <img src="../docs/images/back9.png" width="400"/>
+  <figcaption><b>Figure 2.9</b>The process of soil water dynamic.</figcaption>
+</figure>
 
-	After a rain event, the soil starts to drain and will reach field capacity after one day (or depending on further parameter 1-3 days). The water held between saturation and field capacity is distributed in the order transpiration, drainage to the groundwater reserve or drain to the rivers as “soil quick flow” (van Noordwijk et al, 2003). The Soil water retention curve (saturation, field capacity, wilting point) is estimated based on pedotransfer functions using the soil type to indicate the soil texture. The groundwater was driven by the ‘differential storage’ in ‘active groundwater’ and the groundwater release’ fraction which representing the recession phase of actual river flow during periods without rainfall.
+After a rain event, the soil starts to drain and will reach field capacity after one day (or depending on further parameter 1-3 days). The water held between saturation and field capacity is distributed in the order transpiration, drainage to the groundwater reserve or drain to the rivers as “soil quick flow” (van Noordwijk et al, 2003). The Soil water retention curve (saturation, field capacity, wilting point) is estimated based on pedotransfer functions using the soil type to indicate the soil texture. The groundwater was driven by the ‘differential storage’ in ‘active groundwater’ and the groundwater release’ fraction which representing the recession phase of actual river flow during periods without rainfall.
 
-***Actual Evapotranspiration***
+#### Actual Evapotranspiration
 
-	The amount of actual evapotranspiration is proportionally changed by potential evapotranpiration (I\_PotEvapTransp), available soil water (D\_RelWaterAv) and transpiration of intercepted water (I\_InterceptEffectonTransp x D\_InterceptEvap).
+The amount of actual evapotranspiration is proportionally changed by potential evapotranpiration (I\_PotEvapTransp), available soil water (D\_RelWaterAv) and transpiration of intercepted water (I\_InterceptEffectonTransp x D\_InterceptEvap).
 
-D\_ActEvapTransp \=  (I\_PotEvapTransp\[j,i\]-I\_InterceptEffectonTransp x D\_InterceptEvap\[j,i\]) x D\_RelWaterAv\[j,i\]
+	D\_ActEvapTransp \=  (I\_PotEvapTransp\[j,i\]-I\_InterceptEffectonTransp x D\_InterceptEvap\[j,i\]) x D\_RelWaterAv\[j,i\]
 
-***Percolation***
+#### Percolation
 
-	The amount of percolation is calculated as the minimum of:  
+The amount of percolation is calculated as the minimum of:  
 Maximum infiltration of subsurface area (I\_MaxInfSubSAreaClass)  
 Soil water which can percolate into ground water (D\_SoilWater x I\_PercFracMultiplier x I\_GWRelFrac)  
 Unfilled area of ground water (I\_MaxDynGWArea-D\_GWArea)
 
-D\_Percolation \= min(I\_MaxInfSubSAreaClass\[j,i\], min(D\_SoilWater\[j,i\] x I\_PercFracMultiplier x I\_GWRelFrac\[i\],I\_MaxDynGWArea\[i\]-D\_GWArea\[i\]))   
-\- D\_IrrigEfficiency\[i\] x D\_Irrigation\[i,j\] else \- D\_IrrigEfficiency\[i\] x D\_Irrigation\[i,j\]
+	D\_Percolation \= min(I\_MaxInfSubSAreaClass\[j,i\], min(D\_SoilWater\[j,i\] x I\_PercFracMultiplier x I\_GWRelFrac\[i\],I\_MaxDynGWArea\[i\]-D\_GWArea\[i\]))\- D\_IrrigEfficiency\[i\] x D\_Irrigation\[i,j\] else \- D\_IrrigEfficiency\[i\] x D\_Irrigation\[i,j\]
 
-***Subsurface flow or soil discharge***
+#### Subsurface flow or soil discharge
 
-	Unused soil water by plants has potential to become sub surface flow or soil discharge (D\_SoilWater-I\_AvailWaterClass). The actual of soil discharge depend on how fraction of soil discharge is initialized (D\_SoilQFlowRelFrac).
+Unused soil water by plants has potential to become sub surface flow or soil discharge (D\_SoilWater-I\_AvailWaterClass). The actual of soil discharge depend on how fraction of soil discharge is initialized (D\_SoilQFlowRelFrac).
 
 D\_SoilDischarge \= D\_SoilQflowRelFrac\[i\] x (D\_SoilWater\[j,i\]-I\_AvailWaterClass\[j,i\])
 
