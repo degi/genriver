@@ -225,7 +225,7 @@ The model was developed with the following target properties. The model should b
 * able to predict river flow (hydrograph) at multiple points of interest  
 * transparent in structure (assumptions) and easy to operate
 
-### Description of GenRiver Component and its Processes**
+### Description of GenRiver Component and its Processes
 
 A river is treated as a summation of streams, each originating in a subcatchment with its own daily rainfall, yearly land cover fractions and constant total area and distance to the river outflow (or measurement) point. Interactions between streams in their contribution to the river are considered to be negligible (i.e. there is no ‘backflow’ problem). Spatial patterns in daily rainfall events are translated into average daily rainfall in each subcatchment in a separate module. The subcatchment model represents interception, infiltration into soil, rapid percolation into subsoil, surface flow of water and rapid lateral subsurface flow into streams with parameters that can vary between land cover classes.
 
@@ -283,17 +283,17 @@ Rainfall will be distributed to each component of water balance, interception-ev
   <figcaption><b>Figure 2.8</b>Water balance in soil surface level.</figcaption>
 </figure>
 	   
-***Interception***
+#### Interception
 
-	Evaporation of intercepted water (D\_InterceptEvap) has priority over plant transpiration demand. The proportionality factor for reducing plant transpiration demand on the basis of evaporation of intercepted water can be less than 1 (reflecting the typical time of day of rainfall). The number of interception evaporation value is directly proportional with the storage capacity of land cover class (I\_CanIntercAreaClass) and the daily rain amount (I\_DailyRainAmount).
+Evaporation of intercepted water (D\_InterceptEvap) has priority over plant transpiration demand. The proportionality factor for reducing plant transpiration demand on the basis of evaporation of intercepted water can be less than 1 (reflecting the typical time of day of rainfall). The number of interception evaporation value is directly proportional with the storage capacity of land cover class (I\_CanIntercAreaClass) and the daily rain amount (I\_DailyRainAmount).
 
-D\_InterceptEvap \= I\_CanIntercAreaClass\[j,i\] x (1-exp(-I\_DailyRainAmount\[i,j\]/I\_CanIntercAreaClass\[j,i\]))
+	D\_InterceptEvap \= I\_CanIntercAreaClass\[j,i\] x (1-exp(-I\_DailyRainAmount\[i,j\]/I\_CanIntercAreaClass\[j,i\]))
 
-	The thickness of the water layer that can be stored on leaves and branches (I\_InterceptClass) is treated as a constant value for each land cover type and thus the interception storage capacity  is linearly related to leaf area index and it is reflected by its land cover type (I\_FracVegClassnow). 
+The thickness of the water layer that can be stored on leaves and branches (I\_InterceptClass) is treated as a constant value for each land cover type and thus the interception storage capacity  is linearly related to leaf area index and it is reflected by its land cover type (I\_FracVegClassnow). 
 
-I\_CanIntercAreaClass \= I\_InterceptClass\[j\] x I\_FracVegClassNow\[j,i\] x I\_RelArea\[i\]
+	I\_CanIntercAreaClass \= I\_InterceptClass\[j\] x I\_FracVegClassNow\[j,i\] x I\_RelArea\[i\]
 
-***Infiltration***
+#### Infiltration
 
 Infiltration is calculated as the minimum of: 
 
@@ -302,36 +302,33 @@ Infiltration is calculated as the minimum of:
 * the amount of water that can reach the groundwater level within a day (I\_DailyRainAmount-D\_InterceptEvap)  
 * When the surface soil layers are saturated, the rate of outflow will determine the possible rate of inflow on the next day.
 
-D\_Infiltration \= if L\_Lake?\[Subcatchement\]=1 then 0 else  
-min(min(I\_SoilSatClass\[j,i\]-D\_SoilWater\[j,i\],I\_MaxInfArea\[j,i\] x I\_RainTimeAvForInf\[i\]/24), I\_DailyRainAmount\[i,j\]- D\_InterceptEvap\[j,i\])
+	D\_Infiltration \= if L\_Lake?\[Subcatchement\]=1 then 0 else min(min(I\_SoilSatClass\[j,i\]-D\_SoilWater\[j,i\],I\_MaxInfArea\[j,i\] x I\_RainTimeAvForInf\[i\]/24), I\_DailyRainAmount\[i,j\]- D\_InterceptEvap\[j,i\])
 
-	If the first constraint is active, the model generates ‘infiltration limited runoff’, in the second case ‘saturation overland flow’.
+If the first constraint is active, the model generates ‘infiltration limited runoff’, in the second case ‘saturation overland flow’.
 
-	Infiltration capacity (I\_MaxInfArea) driven by maximum infiltration area (I\_MaxInf) in patch water balance of GenRiver. The change of the parameter due to land cover change over the time was estimated by power equation and soil bulk density relative to the reference bulk density. 
+Infiltration capacity (I\_MaxInfArea) driven by maximum infiltration area (I\_MaxInf) in patch water balance of GenRiver. The change of the parameter due to land cover change over the time was estimated by power equation and soil bulk density relative to the reference bulk density. 
 
-I\_MaxInfArea \= I\_MaxInf x I\_RelArea\[i\] x I\_FracVegClassNow\[j,i\] x (0.7/I\_BD\_BDRefVegNow\[i\])I\_PowerInfiltRed.
+	I\_MaxInfArea \= I\_MaxInf x I\_RelArea\[i\] x I\_FracVegClassNow\[j,i\] x (0.7/I\_BD\_BDRefVegNow\[i\])I\_PowerInfiltRed.
 
 where I\_PowerInfiltRed set with range value 3 to 3.5. 
 
-	The reference bulk density is derived from a pedotransfer function with soil texture (clay and silt) and soil organic matter (SOM) as the main inputs . The BD/BDref ratio depends on land cover, with defaults values: 0.7 for the forest soil, 1 for well manage agricultural soil and 1.3 for compacted and degraded soil (Van Noordwijk et al, 2002). Generic estimation of bulk density reference per soil type is: 
+The reference bulk density is derived from a pedotransfer function with soil texture (clay and silt) and soil organic matter (SOM) as the main inputs . The BD/BDref ratio depends on land cover, with defaults values: 0.7 for the forest soil, 1 for well manage agricultural soil and 1.3 for compacted and degraded soil (Van Noordwijk et al, 2002). Generic estimation of bulk density reference per soil type is: 
 
-If ((Clay+silt)\>50 then:  
-BDref1 \= 1 / (1.984 \+ 0.01841 x (SOM) \+ 0.032 x 1 \+ 0.00003576 x (Clay \+ Silt)2 \+ 67.5 / 290 \+ 0.424 x LN(290))
+	If ((Clay+silt)\>50 then:  
+	BDref1 \= 1 / (1.984 \+ 0.01841 x (SOM) \+ 0.032 x 1 \+ 0.00003576 x (Clay \+ Silt)2 \+ 67.5 / 290 \+ 0.424 x LN(290))
 
-if ((Clay+Silt)\<50 then:   
-BDref2=1 / (0.603 \+ 0.003975 x Clay \+ 0.00207 x SOM x SOM \+ 0.01781 x LN(SOM)))  
+	if ((Clay+Silt)\<50 then:   
+	BDref2=1 / (0.603 \+ 0.003975 x Clay \+ 0.00207 x SOM x SOM \+ 0.01781 x LN(SOM)))  
 			  
-***Deep Infiltration***
+#### Deep Infiltration
 
-	The amount of deep infiltration is calculated as the minimum of:
+The amount of deep infiltration is calculated as the minimum of:
 
 * the soil saturation (I\_SoilSatClass), soil water (D\_SoilWater), infiltration of subsurface (D\_Infiltration), rainfall amount (I\_DailyRainAmount).  
 * the amount of infiltration of subsurface (I\_MaxInfSubSAreaClass)  
 * unfilled area of ground water (I\_MaxDynGWArea)
 
-D\_DeepInfiltration \= min(min(min(ARRAYSUM(I\_MaxInfArea\[\*,i\]) x I\_RainTimeAvForInf\[i\]/24-ARRAYSUM(I\_SoilSatClass\[\*,i\])+ARRAYSUM(D\_SoilWater\[\*,i\]),  
-ARRAYSUM(I\_MaxInfSubSAreaClass\[\*,i\])),ARRAYSUM(I\_DailyRainAmount\[i,\*\])-ARRAYSUM(D\_InterceptEvap\[\*,i\])-ARRAYSUM(D\_Infiltration\[\*,i\]))  
-,I\_MaxDynGWArea\[i\]-D\_GWArea\[i\])
+	D\_DeepInfiltration \= min(min(min(ARRAYSUM(I\_MaxInfArea\[\*,i\]) x I\_RainTimeAvForInf\[i\]/24-ARRAYSUM(I\_SoilSatClass\[\*,i\])+ARRAYSUM(D\_SoilWater\[\*,i\]),  ARRAYSUM(I\_MaxInfSubSAreaClass\[\*,i\])),ARRAYSUM(I\_DailyRainAmount\[i,\*\])-ARRAYSUM(D\_InterceptEvap\[\*,i\])-ARRAYSUM(D\_Infiltration\[\*,i\])),I\_MaxDynGWArea\[i\]-D\_GWArea\[i\])
 
 ***Surface Flow***
 
