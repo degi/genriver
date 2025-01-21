@@ -37,7 +37,7 @@ permalink: /manual/
 
 ## How to run the software
 
-GenRiver3 software is web application and the **online** version is available at: https://genriver.agroforestri.id/
+GenRiver3 software is web application and the **online** version is available at: <https://genriver.agroforestri.id/>
 
 The software can also be launched as a standalone app using R and RStudio. The following is a step-by-step guide for running the software from the source code as a standalone app.
 
