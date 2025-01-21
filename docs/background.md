@@ -303,7 +303,7 @@ Infiltration is calculated as the minimum of:
 * When the surface soil layers are saturated, the rate of outflow will determine the possible rate of inflow on the next day.
 
 ```
-	D\_Infiltration \= if L\_Lake?\[Subcatchement\]=1 then 0 else min(min(I\_SoilSatClass\[j,i\]-D\_SoilWater\[j,i\],I\_MaxInfArea\[j,i\] x I\_RainTimeAvForInf\[i\]/24), I\_DailyRainAmount\[i,j\]- D\_InterceptEvap\[j,i\])
+D\_Infiltration \= if L\_Lake?\[Subcatchement\]=1 then 0 else min(min(I\_SoilSatClass\[j,i\]-D\_SoilWater\[j,i\],I\_MaxInfArea\[j,i\] x I\_RainTimeAvForInf\[i\]/24), I\_DailyRainAmount\[i,j\]- D\_InterceptEvap\[j,i\])
 ```
 
 If the first constraint is active, the model generates ‘infiltration limited runoff’, in the second case ‘saturation overland flow’.
@@ -375,35 +375,36 @@ Unfilled area of ground water (I\_MaxDynGWArea-D\_GWArea)
 
 Unused soil water by plants has potential to become sub surface flow or soil discharge (D\_SoilWater-I\_AvailWaterClass). The actual of soil discharge depend on how fraction of soil discharge is initialized (D\_SoilQFlowRelFrac).
 
-D\_SoilDischarge \= D\_SoilQflowRelFrac\[i\] x (D\_SoilWater\[j,i\]-I\_AvailWaterClass\[j,i\])
+	D\_SoilDischarge \= D\_SoilQflowRelFrac\[i\] x (D\_SoilWater\[j,i\]-I\_AvailWaterClass\[j,i\])
 
-***Ground Water***
+#### Ground Water
 
-	Percolation and deep infiltration are the source of ground water. The ground water then will be used for irrigation and base flow. Figure 4.10. shows the flows to and from the ground water level.
+Percolation and deep infiltration are the source of ground water. The ground water then will be used for irrigation and base flow. Figure 4.10. shows the flows to and from the ground water level.
 
-|                      ![][image10]                      |
-| :----------------------------------------------------: |
-| **Figure 4.10.**  Water balance  in ground water level |
+<figure>
+  <img src="../docs/images/back10.png" width="400"/>
+  <figcaption><b>Figure 2.10</b>Water balance in ground water level.</figcaption>
+</figure>
 
-***Irrigation***
+#### Irrigation
 
-	The amount of ground water that used for irrigation is controlled by number of input parameters, utilization fraction of ground water (D\_GW\_Utilization), relative water available (D\_RelWaterAv), irrigation efficiency (D\_IrrgEfficiency) and potential evapotranspiration (I\_PotEvapTransp).
+The amount of ground water that used for irrigation is controlled by number of input parameters, utilization fraction of ground water (D\_GW\_Utilization), relative water available (D\_RelWaterAv), irrigation efficiency (D\_IrrgEfficiency) and potential evapotranspiration (I\_PotEvapTransp).
 
-D\_WaterEvapIrrigation \= D\_Irrigation\[i,j\] x (1-D\_IrrigEfficiency\[i\])
+	D\_WaterEvapIrrigation \= D\_Irrigation\[i,j\] x (1-D\_IrrigEfficiency\[i\])
 
-D\_Irrigation \= min(D\_GWArea\[i\] x D\_GWUseFacility?\[i,j\] x D\_GW\_Utilization\_fraction\[i\] x (1-D\_RelWaterAv\[j,i\])/D\_IrrigEfficiency\[i\],I\_PotEvapTransp\[j,i\]) 
+	D\_Irrigation \= min(D\_GWArea\[i\] x D\_GWUseFacility?\[i,j\] x D\_GW\_Utilization\_fraction\[i\] x (1-D\_RelWaterAv\[j,i\])/D\_IrrigEfficiency\[i\],I\_PotEvapTransp\[j,i\]) 
 
-***Baseflow***
+#### Baseflow
 
-	The portion of stream flow that comes from groundwater (D\_GWaDisc) depend on how fraction of released ground water (I\_GWRelFrac) is initialized.
+The portion of stream flow that comes from groundwater (D\_GWaDisc) depend on how fraction of released ground water (I\_GWRelFrac) is initialized.
 
-D\_GWaDisc \= D\_GWArea\[i\] x I\_GWRelFrac\[i\]
+	D\_GWaDisc \= D\_GWArea\[i\] x I\_GWRelFrac\[i\]
 
-**4.3.2 Stream Network**
+### Stream Network
 
-***Total Stream flow***
+#### Total Stream flow
 
-	A river in the model is treated as the sum of streams, each originating in a subcatchment with its own daily rainfall, land cover fraction, total area and distance to the outlet of the river. These streams are all streams that are listed in the previous section (surface flow, sub-surface flow and base flow), it will be gathered in the river and become a total stream flow (D\_TotalStreamInFlow).
+A river in the model is treated as the sum of streams, each originating in a subcatchment with its own daily rainfall, land cover fraction, total area and distance to the outlet of the river. These streams are all streams that are listed in the previous section (surface flow, sub-surface flow and base flow), it will be gathered in the river and become a total stream flow (D\_TotalStreamInFlow).
 
 D\_TotalStreamInFlow \= (D\_SurfaceFlow\[i\]+D\_GWaDisch\[i\] x (1-D\_FracGWtoLake\[i\])+ARRAYSUM(D\_SoilDischarge\[\*,i\]))+D\_SubCResOutflow\[i\] x (1-I\_DaminThisStream?\[i\])
 
