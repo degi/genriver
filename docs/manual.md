@@ -37,7 +37,7 @@ permalink: /manual/
 
 ## How to run the software
 
-GenRiver3 software is web application and the **online** version is available at: **<https://genriver.agroforestri.id/>**
+GenRiver3 software is web application and the **online version** is available at: **<https://genriver.agroforestri.id/>**
 
 The software can also be launched as a standalone app using R and RStudio. The following is a step-by-step guide for running the software from the source code as a standalone app.
 
@@ -63,11 +63,11 @@ The software can also be launched as a standalone app using R and RStudio. The f
     ```R
     runApp("path/to/your/app")
     ```
-    > If you have the **source code** on the local folder, you will need an internet connection to run it for the first time. An internet connection is required to update and initialize the R libraries. Once the updates are completed, you will be able to run the app **without an internet connection**.<br/>
+> [!IMPORTANT]
+> If you have the **source code** on the local folder, you will need an internet connection to run it for the first time. An internet connection is required to update and initialize the R libraries. Once the updates are completed, you will be able to run the app **without an internet connection**.<br/>
     
-    > [!NOTE]
-    > 
-    > *To be noted*: You might still need an internet connection to download the DEM. However, you can go without it once you have it in your saved parameters. 
+> [!NOTE]
+> *To be noted*: You might still need an internet connection to download the DEM. However, you can go without it once you have it in your saved parameters. 
 
 ## Home Screen
 
