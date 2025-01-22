@@ -95,7 +95,7 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 
 <img src="../docs/images/lc_prop.png" width="400"/>
 
-
+- **BD/BDref** is the bulk density of a soil layer relative to the ‘reference bulk density’ that can be expected for soil of similar texture under natural forest conditions
 
 #### Evapotranspiration
 
