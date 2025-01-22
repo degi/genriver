@@ -147,6 +147,8 @@ Make sure the key was correctly copied into 'API key' input
 
 <img src="../docs/images/soil_water.png" width="400"/>
 
+Soil hydraulic at a potential of 0 kPa is in a state of saturation. At saturation, all soil pores are filled with water, and water typically drains from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand), soil is at field capacity. Typically, at field capacity, air is in the macropores, and water in the micropores. Field capacity is viewed as the optimal condition for plant growth and microbial activity. At a potential of −1500 kPa, the soil is at its permanent wilting point, at which plant roots cannot extract the water through osmotic diffusion. <https://en.wikipedia.org/wiki/Water_potential>
+
 <img src="../docs/images/soil_water_lc.png" width="400"/>
 
 ####  Soil and Plant Water
