@@ -63,9 +63,10 @@ The software can also be launched as a standalone app using R and RStudio. The f
     ```R
     runApp("path/to/your/app")
     ```
+
 > If you have the **source code** on the local folder, you will need an internet connection to run it for the first time. An internet connection is required to update and initialize the R libraries. Once the updates are completed, you will be able to run the app **without an internet connection**.<br/>
     
-> <img src="https://github.com/FortAwesome/Font-Awesome/blob/6.x/svgs/solid/circle-info.svg" width="18" height="18"> **Note:**<br>
+> <img src="../docs/images/info-circle.svg" width="18" height="18"> **Note:**<br>
 > You might still need an internet connection to download the DEM. However, you can go without it once you have it in your saved parameters. 
 
 ## Home Screen
