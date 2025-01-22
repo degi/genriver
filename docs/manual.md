@@ -107,6 +107,12 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 
 <img src="../docs/images/dem_map.png" width="400"/>
 
+If the DEM download fails. You may do the following:
+* Make sure the internet connection is stable
+* Try another DEM sources
+* Register to  <a href='https://portal.opentopography.org/' target='_blank'>opentopography.org</a> and get your own API key.
+Make sure the key was correctly copied into 'API key' input
+
 #### Watershed Map
 
 <img src="../docs/images/ws2.png" width="400"/>
