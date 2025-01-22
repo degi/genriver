@@ -73,7 +73,11 @@ The software can also be launched as a standalone app using R and RStudio. The f
 
 <img src="../docs/images/home.png" width="400"/>
 
-The User Interface to work with the model is divided into Input, Simulation, and Flopper Model sections.  
+The main interface to work with the model is divided into **Input**, **Simulation**, and **Flopper** sections.
+
+- **Input:** The input parameters required for running the model
+- **Simulation:** Run the model simulation after the required parameters are completed
+- **Flopper:** Analyzing the river and rain data on its persistence
 
 ## Input
 
@@ -90,6 +94,8 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 #### Hydrological Properties
 
 <img src="../docs/images/lc_prop.png" width="400"/>
+
+
 
 #### Evapotranspiration
 
