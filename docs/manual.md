@@ -64,7 +64,8 @@ The software can also be launched as a standalone app using R and RStudio. The f
     runApp("path/to/your/app")
     ```
     > If you have the **source code** on the local folder, you will need an internet connection to run it for the first time. An internet connection is required for updating and initializing the R libraries. Once the updates are completed, you will be able to run the app **without an internet connection**.<br/>
-    >
+    
+    > [!NOTE]
     > *To be noted*: You might still need an internet connection to download the DEM. However, once you have it in your saved parameters, you can go without it. 
 
 ## Home Screen
