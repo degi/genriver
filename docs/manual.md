@@ -67,13 +67,13 @@ The software can also be launched as a standalone app using R and RStudio. The f
 > If you have the **source code** on the local folder, you will need an internet connection to run it for the first time. An internet connection is required to update and initialize the R libraries. Once the updates are completed, you will be able to run the app **without an internet connection**.<br/>
     
 > <img src="../docs/images/info-circle.svg" width="18" height="18"> **Note:**<br>
-> You might still need an internet connection to download the DEM. However, you can go without it once you have it in your saved parameters. 
+> You might still need an internet connection to download the DEM. However, you can go without it once it is in your saved parameters. 
 
 ## Home Screen
 
 <img src="../docs/images/home.png" width="400"/>
 
-The main interface to work with the model is divided into **Input**, **Simulation**, and **Flopper** sections.
+The main interface for working with the model is divided into sections titled **Input**, **Simulation**, and **Flopper**.
 
 - **Input:** The input parameters required for running the model
 - **Simulation:** Run the model simulation after the required parameters are completed
@@ -105,7 +105,7 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 
 ### Watershed
 
-The DEM data is acquired from <a href='https://opentopography.org/' target='_blank'><b>opentopography.org</b></a>. OpenTopography provides open and free access to DEM dataset. Please visit the website for further info and follow the instructions at <a href='https://opentopography.org/citations' target='_blank'>         https://opentopography.org/citations</a>
+The DEM data is acquired from <a href='https://opentopography.org/' target='_blank'><b>opentopography.org</b></a>. OpenTopography provides open and free access to DEM dataset. Please visit the website for more information about data collection. Find the instructions at <a href='https://opentopography.org/citations' target='_blank'> https://opentopography.org/citations</a> for the citation
           
 <img src="../docs/images/dem_map.png" width="400"/>
 
