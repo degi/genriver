@@ -84,6 +84,8 @@ The User Interface to work with the model is divided into Input, Simulation, and
 
 <img src="../docs/images/landcover.png" width="400"/>
 
+Once the map is uploaded, it will be displayed on the page. The map IDs will be displayed on the right side as landcover IDs. A default landcover label is generated for all the IDs. You may edit the landcover label in place, or upload it from a predefined CSV file.    
+
 #### Hydrological Properties
 
 <img src="../docs/images/lc_prop.png" width="400"/>
