@@ -105,7 +105,7 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 
 ### Watershed
 
-The DEM data is acquired from <a href='https://opentopography.org/' target='_blank'><b>opentopography.org</b></a>. OpenTopography provides open and free access to DEM dataset. Please visit the website for more information about data collection. Find the instructions at <a href='https://opentopography.org/citations' target='_blank'> https://opentopography.org/citations</a> for the citation
+The DEM data is acquired from <a href='https://opentopography.org/' target='_blank'><b>opentopography.org</b></a>. OpenTopography provides open and free access to the DEM dataset. Please visit the website for more information about its data collection. Find the instructions at <a href='https://opentopography.org/citations' target='_blank'> https://opentopography.org/citations</a> for the citation
           
 <img src="../docs/images/dem_map.png" width="400"/>
 
@@ -132,6 +132,8 @@ Make sure the key was correctly copied into 'API key' input
 <img src="../docs/images/ground_water.png" width="400"/>
 
 ### Soil
+
+The soil data is acquired from **Harmonized World Soil Database version 2.0** (HWSD v2.0). **HWSD** is a comprehensive global soil inventory that offers detailed insights into soil properties, including their morphology, chemistry, and physical characteristics, with a focus on a 1 km resolution. Please visit <a href='https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20/en/' target='_blank'>**FAO SOILS PORTAL**</a> for more information on the database and their suggested citation
 
 #### Physical and Chemical Properties
 
