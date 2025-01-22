@@ -105,6 +105,8 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 
 ### Watershed
 
+The DEM data is acquired from <a href='https://opentopography.org/' target='_blank'><b>opentopography.org</b></a>. OpenTopography provides open and free access to DEM dataset. Please visit the website for further info and follow the instructions at <a href='https://opentopography.org/citations' target='_blank'>         https://opentopography.org/citations</a>
+          
 <img src="../docs/images/dem_map.png" width="400"/>
 
 If the DEM download fails. You may do the following:
