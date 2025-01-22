@@ -72,9 +72,13 @@ The software can also be launched as a standalone app using R and RStudio. The f
 
 <img src="../docs/images/home.png" width="400"/>
 
+The User Interface to work with the model is divided into Input, Simulation, and Flopper Model sections.  
+
 ## Input
 
 ### Land Cover
+
+**Land cover** is one of the main factors in the watershed dynamics. A time series of land cover maps follows the dynamic changes in soil properties. You may provide land cover maps for the observed periods. The boundary box of the land cover map will be used as the area for the DEM query. The DEM is later delineated to generate the watershed boundary.
 
 #### Land Cover Map
 
