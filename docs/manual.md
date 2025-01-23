@@ -93,6 +93,8 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 
 #### Hydrological Properties
 
+The GenRiver model was set up to compare the impacts of land cover change on hydrology. These impacts are based on four steps in the water cycle: interception by the canopy, impact on the topsoil structure (BD/BDref) that influences infiltration (or runoff generation as its complement), the seasonal pattern of water use (here expressed as the fraction of the potential ET per month), and a drought threshold that indicates the relative soil water content where evapotranspiration is affected. Distinctions between land cover types for any simulation should be based on the primary research question, the availability of data on land cover fractions, and the importance of the land cover type in the catchment area. Most spatial data include a "no data" category (clouds and cloud shadow). normally the fractions of land cover elsewhere are assumed to apply to these pixels as well.
+
 <img src="../docs/images/lc_prop.png" width="400"/>
 
 - **BD/BDref** is the bulk density of a soil layer relative to the ‘reference bulk density’ that can be expected for soil of similar texture under natural forest conditions
