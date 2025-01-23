@@ -171,6 +171,8 @@ Soil hydraulic at a potential of 0 kPa is in a state of saturation. At saturatio
 
 #### Rainfall
 
+**Rainfall** or **precipitation** is all forms of water particles, whether liquid or solid, that fall from the atmosphere to the ground. Distinguished from cloud, fog, dew, and frost, precipitation includes rain, drizzle, snow, and hail.
+
 <img src="../docs/images/rainfall.png" width="400"/>
 
 #### River
