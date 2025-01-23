@@ -191,6 +191,12 @@ Soil hydraulic at a potential of 0 kPa is in a state of saturation. At saturatio
 
 <img src="../docs/images/sim_cum.png" width="400"/>
 
+- **O_CumRain**	is the cumulative amount of daily rainfall for the whole sub-catchment and vegetation class
+- **O_CumPercolation** is the cumulative amount of percolation water for the whole sub-catchment
+- **O_CumDeepInfilt**	is a cumulative amount of water deeply infiltrated to the soil for the whole sub-catchment
+- **O_CumBaseFlow**	is the cumulative amount of base flow the whole sub-catchment and vegetation class
+- **O_CumSoilQFlow** is the cumulative amount of soil quick flow for the whole sub-catchment and vegetation class
+
 ### Watershed Indicator
 
 <img src="../docs/images/sim_avg.png" width="400"/>
