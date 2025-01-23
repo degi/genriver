@@ -28,3 +28,7 @@ GenRiver3 is an update to the original [GenRiver version 2](https://www.worldagr
 Although efforts have been made to incorporate relevant process knowledge on a range of interactions, the model is not more (and not less) than a research tool. Model predictions may help develop specific hypotheses for research, explore potential management options, and extrapolate domains, but they should not be used as authoritative statements per se.
 
 Copy right, but do not copy wrong. The GenRiver model was developed based on publicly funded research at the World Agroforestry Centre (ICRAF) and may be used for non-commercial research purposes in the interest of the smallholder agroforesters of the world.
+
+---
+
+&copy; World Agroforestry (ICRAF) - 2025
