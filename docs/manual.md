@@ -153,6 +153,8 @@ The soil data is acquired from **Harmonized World Soil Database version 2.0** (H
 
 #### Physical and Chemical Properties
 
+Average texture (or soil type in a way that allows texture to be estimated) as input to ‘pedotransfer’ functions to estimate soil water retention curve (saturation, field capacity, wilting point)
+
 <img src="../docs/images/soil_global_db.png" width="400"/>
 
 <img src="../docs/images/soil_list_global.png" width="400"/>
