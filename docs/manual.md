@@ -77,7 +77,7 @@ The main interface for working with the model is divided into sections titled **
 
 - **Input:** The input parameters required for running the model
 - **Simulation:** Run the model simulation after the required parameters are completed
-- **Flopper:** Analyzing the river and rain data on its persistence
+- **Flopper:** Analyzing the river and rain data on its flow persistence
 
 ## Input
 
@@ -198,6 +198,8 @@ Soil hydraulic at a potential of 0 kPa is in a state of saturation. At saturatio
 <img src="../docs/images/sim_buf.png" width="400"/>
 
 ## FlowPer
+
+**Flow persistence** is the minimum volume of river flow that can be expected as a fraction of flow on the previous day
 
 <img src="../docs/images/flowper.png" width="400"/>
 
