@@ -229,6 +229,8 @@ Evaluation of model performance can be done by comparing simulation results to m
 
 The Nash-Sutcliffe efficiency (NSE) is a normalized statistic that determines the relative magnitude of the residual variance (“noise”) compared to the measured data variance (Nash and Sutcliffe, 1970). NSE indicates how well the plot of observed versus simulated data fits the 1:1 line
 
+<img src="../docs/images/nse.png" width="400"/>
+
 where Yiobs is the observation for the constituent being evaluated, Yisim is the simulated value for the constituent being evaluated, Ymean is the mean of observed data for the constituent being evaluated, and n is the total number of observations.
 
 NSE ranges between −∞ and 1.0 (1 inclusive), with NSE \= 1 being the optimal value. Values between 0.0 and 1.0 are generally viewed as acceptable levels of performance, whereas values \< 0.0 indicate that the mean observed value is a better predictor than the simulated value, which indicates unacceptable performance. The performance of the model and the result will be evaluated annually and will be accepted when NSE criteria are more than 0.50 (Table 2.4).
