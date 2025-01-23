@@ -77,7 +77,7 @@ The main interface for working with the model is divided into sections titled **
 
 - **Input:** The input parameters required for running the model
 - **Simulation:** Run the model simulation after the required parameters are completed
-- **Flopper:** Analyzing the river and rain data on its flow persistence
+- **Flopper:** Analyzing the river flow persistence
 
 ## Input
 
