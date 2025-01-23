@@ -189,6 +189,10 @@ Soil hydraulic at a potential of 0 kPa is in a state of saturation. At saturatio
 
 <img src="../docs/images/rainfall.png" width="400"/>
 
+A number of formats are possible, as long as they allow a reconstruction of monthly exceedance curves of daily rainfall intensity:
+-	30 (or at least 20) years of daily rainfall records for a station that can represent the area (or multiple stations if these are supposed to be similar) or
+-	Any ‘rainfall simulator’ equation with the appropriate parameters that can be used to generate a 30-year dataset for the site (e.g. MarkSim).
+
 #### River
 
 <img src="../docs/images/river.png" width="400"/>
