@@ -9,7 +9,7 @@ Last Update: January 12, 2025
 
 GenRiver3 is an open-source and free web application. The source code is available at https://github.com/degi/genriver, and the online version can be accessed from https://genriver.agroforestri.id/. The application was developed using R and JavaScript on the [R-Shiny](https://shiny.posit.co/) platform. It can be launched as a standalone application from the source code using [R](https://www.r-project.org/) or [RStudio](https://posit.co/products/open-source/rstudio/) (go to the [source code website](https://github.com/degi/genriver) and follow the instructions).
 
-GenRiver3 is an update to the original [GenRiver version 2](https://www.worldagroforestry.org/output/genriver-generic-river-model-river-flow) developed by World Agroforestry (ICRAF). GenRiver v2 was created using a combination of [ISEE Stella](https://www.iseesystems.com/) and an Excel macro script. GenRiver3 uses an algorithm similar to GenRiver v2 on its core module and adopts a similar variable name in the source code. 
+GenRiver3 is an update to the original [GenRiver version 2](https://www.worldagroforestry.org/output/genriver-generic-river-model-river-flow) developed by World Agroforestry (ICRAF). GenRiver v2 was created using a combination of [ISEE Stella](https://www.iseesystems.com/) and an MS Excel macro script. GenRiver3 uses an algorithm similar to GenRiver v2 on its core module and adopts a similar variable name in the source code. 
 
 - **Application Author and Maintainer**: Degi Harja Asmara
 - **Model Authors**: Meine van Noordwijk, Rudy Harto Widodo, Ai Farida, Desi Suyamto, Betha Lusiana, Ni’matul Khasanah, Lisa Tanika, Rachmat Mulia, Degi Harja Asmara
@@ -25,6 +25,6 @@ GenRiver3 is an update to the original [GenRiver version 2](https://www.worldagr
 
 #### Disclaimer and Copyright
 
-Although efforts have been made to incorporate relevant process knowledge on a range of interactions, the model is not more (and not less) than a research tool. Model predictions may help in developing specific hypotheses for research, in exploring potential management options and extrapolation domains, but they should not be used as authoritative statements per se.
+Although efforts have been made to incorporate relevant process knowledge on a range of interactions, the model is not more (and not less) than a research tool. Model predictions may help develop specific hypotheses for research, explore potential management options, and extrapolate domains, but they should not be used as authoritative statements per se.
 
-Copy right, but do not copy wrong. The GenRiver model was developed on the basis of publicly funded research at the World Agroforestry Centre (ICRAF) and may be used for non-commercial research purposes in the interest of the smallholder agroforesters of the world.
+Copy right, but do not copy wrong. The GenRiver model was developed based on publicly funded research at the World Agroforestry Centre (ICRAF) and may be used for non-commercial research purposes in the interest of the smallholder agroforesters of the world.
