@@ -221,6 +221,47 @@ If available, river debit data for any period of time (expressed in m3 s-1 in th
 
 ### Watershed Indicator
 
+#### Evaluation of Model Performance
+
+Evaluation of model performance can be done by comparing simulation results to measurement data.  Statistical indicators proposed by Nash and Sutcliffe (1970) are used for checking the performance of the model. The performance of the model can also be checked using coefficient correlation or double mass cumulative rainfall-river flow curve. “PerformanceTestGenRiver” is a file consists an explanation of the process of this evaluation.
+
+##### Nash-Sutcliffe Efficiency
+
+The Nash-Sutcliffe efficiency (NSE) is a normalized statistic that determines the relative magnitude of the residual variance (“noise”) compared to the measured data variance (Nash and Sutcliffe, 1970). NSE indicates how well the plot of observed versus simulated data fits the 1:1 line
+
+where Yiobs is the observation for the constituent being evaluated, Yisim is the simulated value for the constituent being evaluated, Ymean is the mean of observed data for the constituent being evaluated, and n is the total number of observations.
+
+NSE ranges between −∞ and 1.0 (1 inclusive), with NSE \= 1 being the optimal value. Values between 0.0 and 1.0 are generally viewed as acceptable levels of performance, whereas values \< 0.0 indicate that the mean observed value is a better predictor than the simulated value, which indicates unacceptable performance. The performance of the model and the result will be evaluated annually and will be accepted when NSE criteria are more than 0.50 (Table 2.4).
+
+ **Table 2.4.** Reference Stream flow model Performance (Moriasi, D.N. et. al., 2007\)
+
+| Performance Rating | NSE |
+| :---: | :---: |
+| Very Good | 0.75\<NSE≤1.00 |
+| Good | 0.65\<NSE≤0.75 |
+| Satisfactory | 0.50\<NSE≤0.65 |
+| Unsatisfactory | NSE≤0.5 |
+
+##### Coefficient of correlation
+
+The coefficient of correlation representing the change direction of simulation data compare with the observation data.
+
+where xi is observation data, yi is simulation result, xmean is mean observation data and ymean is mean simulation.
+
+When applying the GenRiver model to landscapes where at least some river flow data are available, there is an opportunity to assess the ‘lack of fit’ between the model and measurements. Lack of fit can be due to 1\) inaccuracy or error in the data (e.g. with incomplete representation of spatial variability on rainfall, and/or errors in the data records), 2\) suboptimal model parameterization, 3\) error and/or oversimplification in the model process description. Component 3 can only be assessed if components 1 and 2 can be quantified. Tests of data consistency can be used to assess component 1, e.g. at the seasonal aggregate level. Steps can include:
+
+1. SP \- SQ gives an estimate of top total evapotranspiration. Values below 500 or above 1500 mm/year are suspect. These may indicate errors in P or Q registration, errors in the area, or deviation from the ‘closed catchment’ assumption (e.g. subsurface flows out of or into the catchment are non-negligible).  
+2. ‘Double Mass’ curves of cumulative SQ versus SP during the year: large jumps will require explanation (see next section).  
+3. Flow persistence Qi+I versus Qi plots may indicate gaps in the data or ‘outliers’ that indicate errors (see further in Chapter 5).
+
+#### Analysis of Indicators of Watershed Functions: water quantity and quality
+
+The assessment of the hydrological situation of the watershed is determined by the criteria and indicators of water transmission (total water yield per unit rainfall), buffering capacity (relationship of peak river flow and peak rainfall, linked to flooding risk), and gradual release of (ground) water in the dry season, based on recharge in the rainy season (Table 2.5). These indicators all relate the flows of water to the preceding rainfall and by doing so; allow the analysis of the relatively small land use effects, superimposed on substantial year-to-year variation in rainfall. We provide a file “IndicatorWatershed” to ease users doing this analysis.
+
+**Table 2.5.** Criteria and indicators of watershed hydrological functions that are relevant to downstream stakeholders (Van Noordwijk, et al., 2006\)
+
+If there is a shortage of reliable data on river flow, you can first calibrate and validate a water balance model for the area, and then used this for further exploration of scenarios. If no continuous data on sedimentation or erosion exists, you can assess the risk of erosion through the level of runoff. This is with an underlying assumption that high run-off would lead to a high risk of erosion or you can use the run-off output as the input of other erosion models on the Catchment level.
+
 <img src="../docs/images/sim_avg.png" width="400"/>
 
 ### Buffering Indicator
