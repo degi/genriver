@@ -101,13 +101,21 @@ The GenRiver model was set up to compare the impacts of land cover change on hyd
 
 <img src="../docs/images/lc_prop.png" width="400"/>
 
-- **BD/BDref** is the bulk density of a soil layer relative to the ‘reference bulk density’ that can be expected for soil of similar texture under natural forest conditions
+The first column of the first table is the storage capacity for intercepted water (I_InterceptClass) of each land cover type, mm day-1. It is treated as a linear function of leaf + branch area index of the land cover, with the option of modifiers for surface properties that determine the thickness of the water film, forest = 4, young secondary forest/young agroforestry = 3.
+
+The second column is drought limitation to transpiration per land cover class relative to field capacity (I_RelDroughtFact). The values depend on drought resistance, the highest resistance = 1 (teak), and the lowest resistance = 0.1 (Durian).
+
+The third column is **BD/BDref**, which is the bulk density of a soil layer relative to the ‘reference bulk density’ that can be expected for soil of similar texture under natural forest conditions
+
+The second table is the monthly pattern of potential evapotranspiration for each land cover type is calculated by multiplying these monthly values by daily potential evapotranspiration (I_MultiplierEvapoTrans[LandCoverType]). These multiplier values follow the seasonal pattern of crop, tree, and paddy. The highest value = 1 (rice field, pine), and the lowest = 0.1 (houses).
 
 #### Evapotranspiration
 
 **Evapotranspiration** is a term used to describe the sum of evaporation and plant transpiration from the earth’s land surface to the atmosphere. Evaporation accounts for the movement of water to the air from sources such as the soil, canopy interception, and waterbodies. Transpiration accounts for the movement of water within a plant and the subsequent loss of water as vapor through stomata in its leaves.
 
 <img src="../docs/images/evapot.png" width="400"/>
+
+The potential evapotranspiration, mm day-1 data can be either daily data or monthly data. These values can be derived from open pan evaporation measurements or from equations such as Penman’s that calibrate on such data.
 
 <img src="../docs/images/evapot_month.png" width="400"/>
 
