@@ -262,7 +262,7 @@ The assessment of the hydrological situation of the watershed is determined by t
 
 **Table 2.5.** Criteria and indicators of watershed hydrological functions that are relevant to downstream stakeholders (Van Noordwijk, et al., 2006\)
 
-<img src="../docs/images/ws_ci.png" width="600"/>
+<img src="../docs/images/ws_ci.png" width="700"/>
 
 If there is a shortage of reliable data on river flow, you can first calibrate and validate a water balance model for the area, and then used this for further exploration of scenarios. If no continuous data on sedimentation or erosion exists, you can assess the risk of erosion through the level of runoff. This is with an underlying assumption that high run-off would lead to a high risk of erosion or you can use the run-off output as the input of other erosion models on the Catchment level.
 
