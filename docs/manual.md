@@ -229,7 +229,7 @@ Evaluation of model performance can be done by comparing simulation results to m
 
 The Nash-Sutcliffe efficiency (NSE) is a normalized statistic that determines the relative magnitude of the residual variance (“noise”) compared to the measured data variance (Nash and Sutcliffe, 1970). NSE indicates how well the plot of observed versus simulated data fits the 1:1 line
 
-<img src="../docs/images/nse.png" width="400"/>
+<img src="../docs/images/nse.png" />
 
 where Yiobs is the observation for the constituent being evaluated, Yisim is the simulated value for the constituent being evaluated, Ymean is the mean of observed data for the constituent being evaluated, and n is the total number of observations.
 
@@ -261,6 +261,8 @@ When applying the GenRiver model to landscapes where at least some river flow da
 The assessment of the hydrological situation of the watershed is determined by the criteria and indicators of water transmission (total water yield per unit rainfall), buffering capacity (relationship of peak river flow and peak rainfall, linked to flooding risk), and gradual release of (ground) water in the dry season, based on recharge in the rainy season (Table 2.5). These indicators all relate the flows of water to the preceding rainfall and by doing so; allow the analysis of the relatively small land use effects, superimposed on substantial year-to-year variation in rainfall. We provide a file “IndicatorWatershed” to ease users doing this analysis.
 
 **Table 2.5.** Criteria and indicators of watershed hydrological functions that are relevant to downstream stakeholders (Van Noordwijk, et al., 2006\)
+
+<img src="../docs/images/ws_ci.png" width="600"/>
 
 If there is a shortage of reliable data on river flow, you can first calibrate and validate a water balance model for the area, and then used this for further exploration of scenarios. If no continuous data on sedimentation or erosion exists, you can assess the risk of erosion through the level of runoff. This is with an underlying assumption that high run-off would lead to a high risk of erosion or you can use the run-off output as the input of other erosion models on the Catchment level.
 
