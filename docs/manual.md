@@ -195,6 +195,8 @@ A number of formats are possible, as long as they allow a reconstruction of mont
 
 #### River
 
+If available, river debit data for any period of time (expressed in m3 s-1 in the river or mm day-1 over the whole contributing subcatchments) will be valuable in ‘constraining’ the simulations. If not available, we will simply have to ‘believe’ the model predictions as such
+
 <img src="../docs/images/river.png" width="400"/>
 
 #### Consistency Check
