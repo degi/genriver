@@ -101,6 +101,8 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 
 <img src="../docs/images/evapot.png" width="400"/>
 
+- Evapotranspiration is a term used to describe the sum of evaporation and plant transpiration from the earth’s land surface to the atmosphere. Evaporation accounts for the movement of water to the air from sources such as the soil, canopy interception, and waterbodies. Transpiration accounts for the movement of water within a plant and the subsequent loss of water as vapor through stomata in its leaves.
+
 <img src="../docs/images/evapot_month.png" width="400"/>
 
 ### Watershed
