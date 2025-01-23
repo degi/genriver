@@ -59,7 +59,7 @@ The software can also be launched as a **standalone app** using R and RStudio. T
     ```R
     shiny::runGitHub("genriver", "degi")
     ```
-    Another option is to download all the source codes from https://github.com/degi/genriver. Extract all files to a local folder and execute the script below 
+    Another option is to download all the source codes from [https://github.com/degi/genriver](https://github.com/degi/genriver). Extract all files to a local folder and execute the script below 
     ```R
     runApp("path/to/your/app")
     ```
