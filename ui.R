@@ -501,7 +501,18 @@ ui <-
         tags$link(rel = "stylesheet", href = "jsuites.css", type = "text/css"),
         tags$link(rel = "stylesheet", type = "text/css", href = "table.css"),
         tags$link(rel = "stylesheet", type = "text/css", href = "yinyang.css"),
-        tags$link(rel = "stylesheet", type = "text/css", href = "wave.css")
+        tags$link(rel = "stylesheet", type = "text/css", href = "wave.css"),
+        
+        tags$head(tags$script(src="https://www.googletagmanager.com/gtag/js?id=G-KJN0VTGXHG")),
+        tags$head(tags$script(HTML(
+          "window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        
+        gtag('config', 'G-KJN0VTGXHG');
+        "
+        )))
+          
       ),
     window_title = "GenRiver3",
     title =
