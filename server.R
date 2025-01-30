@@ -5664,9 +5664,10 @@ server <- function(input, output, session) {
       return()
     }
     
-    if (is.null(max_sim_days()))
+    if (is.null(max_sim_days())) {
       sim_running(F)
       return()
+    }
     
     ndays <- input$ndays_input
     if (ndays <= 0) {

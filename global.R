@@ -36,7 +36,7 @@ install_load <- function (package1, ...)  {
   }
 }
 
-install_load(
+libs <- c(
   "shiny",
   "remotes",
   "devtools",
@@ -55,7 +55,7 @@ install_load(
   "leafem",
   "terra",
   "yaml",
-  "RSQLite",
+
   
   "zip",
   "paletteer",
@@ -72,6 +72,8 @@ install_load(
   "lwgeom"
 )
 
+install_load(libs)
+
 library("remotes")
 
 if (!("flowdem" %in% rownames(installed.packages()))) {
@@ -82,6 +84,12 @@ if (!("shinycssloaders" %in% rownames(installed.packages()))) {
   install_github("daattali/shinycssloaders")
 }
 
+# lib_df <- data.frame(Library = sort(c(libs, "flowdem", "shinycssloaders")))
+# lib_df$References <- lapply(lib_df$Library, function(x) {
+#   gsub("[\r\n]", "", format(citation(x), style = "text"))
+# })
+# md <- knitr::kable(lib_df, format = "markdown", row.names = F)
+# write(md, "lib.md")
 
 library("shiny")
 
@@ -183,6 +191,20 @@ show_spinner <- function(label) {
 tooltip_blue <- function(...) {
   tooltip(..., options = list(customClass = "custom-tooltip"))
 }
+
+### variable def ################
+
+var_cols <- c("variable", "definition", "category", "unit", "min", "max", "default")
+variable_df <- read.csv("docs/variable_df.csv")
+# variable_df$no <- c(1:nrow(variable_df))
+# variable_df <- variable_df[c("no", var_cols)]
+# names(variable_df) <- tools::toTitleCase(names(variable_df))
+# variable_df$Min <- lapply(variable_df$Min, function(x) format(x, digits = 2))
+# variable_df$Max <- lapply(variable_df$Max, function(x) format(x, digits = 2))
+# variable_df$Default <- lapply(variable_df$Default, function(x) format(x, digits = 2))
+# variable_df[variable_df == "NA"] <- ""
+# md <- knitr::kable(variable_df, format = "markdown", row.names = F)
+# write(md, "variable.md")
 
 ### opentopography.org ########################
 
