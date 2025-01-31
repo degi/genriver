@@ -1,0 +1,140 @@
+﻿variable,definition,category,unit,min,max,default
+C_CattleSale,Sale Factor Rate number of Cattle ,cattle,,,,0
+C_DailyIntake,The daily factor of  ,cattle,,,,-1
+C_DailyTrampFac,daily soil tramping factor,cattle,,,,-1
+D_FeedingIntoLake,The Option to determine the contributory of subcathment to lake ,dynamic,,,,
+D_InitLakeVol,Initial lake water volume,dynamic,mm,,,
+D_SubCResUseFrac,Fraction of water use by Reservoir on the subcathment level,dynamic,,,,
+D_TotRiver flowNoDelay,Cumulative amount of river flow without delay,dynamic,mm,,,
+G_GrassLitConv,Weighting value of grass to contribute the litter,grass,,,,-1
+G_GrassMortFrac,Mortality factor of the grass ,grass,,,,-0.03
+G_GrazingManConv,Weighting value of artificial grazing  factor,grass,,,,-0.1
+G_SurfLitDecFrac,Fraction of decaying litter on the soil surface ,grass,,,,-0.03
+G_SurfManureDecFrac,Fraction of decaying manure on the soil surface ,grass,,,,-0.01
+G_TramplingMultiplier,Multiplication of Trampling factor,grass,,0,2,0
+G_WUE,,grass,,,,-0.04
+I_Area,Area of each subcatchment,input,km2,,,
+I_AvailWaterConst,Constant value of water availability for plant,input,mm,0,1000,300
+I_CaDOYStart,Day of year at which simulation starts,input,julian days,0,365,0
+I_DailyETYear,Daily potential evapotranspiration,input,mm,,,
+I_DailyRain,,input,,,,
+I_DailyRainYearr,Daily rainfall for each unit Subcatchment,input,mm,,,
+I_DamInThisStream,To Opt the Dam position in the subcathment ,input,boolean,,,
+I_Evapotrans,Potential evapotranspiration (Penmann type),input,mm,,,
+I_EvapotransMethod,,input,,1,2,1
+I_FracVegClass,Land cover class frequency for each subcatchment for four of years of landcover change transition,input,,,,
+I_GWRelFrac,Daily groundwater release fraction for each subcatchment for four of years of landcover change transition,input,,,,
+I_GWRelFracConst,Constant value of daily groundwater release fraction,input,mm,0,1,0.03
+I_GWRelFracConst_q,"Switch to decide an option to have a constant groundwater release fraction and constant maximum groundwater store. Value 0 means constant for groundwater release fraction and irregular for maximum groundwater storage capacity, value 1 means irregular for groundwater release fraction and constant for maximum groundwater storage capacity.",input,,0,1,0
+I_InitRelGW,Initial groundwater store relative to maximum value,input,,0,1,1
+I_InitRelSoil,Initial soil water content relative to field capacity ,input,,0,2,1
+I_InputDataYears,Year of transition of land cover change,input,year,,,
+I_InterceptClass,Interception storage capacity per land cover class,input,mm,,,
+I_InterceptEffectonTransp,Weighted factor of Transpiration affected by water Interception ,input,,0,1,0.5
+I_MaxDynGWConst,Constant value of dynamic groundwater storage capacity,input,mm,1,2000,350
+I_MaxDynGWSub,Dynamic groundwater storage capacity for each subcatchment for four of years of landcover change transition,input,mm,,,
+I_MaxInf,Maximum infiltration capacity,input,mm day -1,30,1000,720
+I_MaxInfSSoil,Maximum infiltration capacity of sub soil,input,mm day -1,0,1000,-120
+I_MultiplierEvapoTrans,Multiplier of potential evapotranspiration for each vegetation class and subcatchment,input,,,,
+I_PercFracMultiplier,Multiplier of fraction of water percolation,input,,0,10,0.13
+I_PlantAvWatSub,Value of water availability for plant for each subcatchment for four of years of landcover change transition,input,mm,,,
+I_PowerInfiltRed,Degree of Power equation,input,,3,3.5,3.5
+I_PWPSub,Permanent wilting point Parameter,input,mm,,,
+I_RainCycle,"Parameter governing ways to read rainfall data. 0 = use multiple year rainfall data, 1 = use 1 year data in cycle/continuously)",input,boolean,,,
+I_RainGenSeed,Seed random generator for rainfall rate,input,,,,-300
+I_RainIntensCoefVar,Coefficient of variation of rainfall intensity,input,,0,1,0.3
+I_RainIntensMean,Average rain intensity per hour. Rain intensity is a factor affecting water infiltration.  It is assumes to follow normal distribution with an average of Rain_IntensMean and standard deviation Rain_IntensMean*Rain_IntensCoefVar,input,mm day-1,1,100,30
+I_RainIntercDripRt,The rate of water dripping from water on interception surface,input,mm hr-1,5,15,10
+I_RainMaxIntDripDur,Maximum value of water interception delay before start to dripping,input,mm hr-1,0,5,0.5
+I_RainMultiplier,Multiplier of rainfall for quick modifications of rainfall amount,input,,0,5,1
+I_RainYearStart,Initial year based on rainfall data at which simulation starts,input,,0,25,0
+I_RelDroughtFact,Drought limitation to transpiration per land cover class relative to field capacity,input,,,,
+I_RFlowData mmday,Daily amount of actual river flow data for the whole subcatchment,input,mm,,,
+I_RFlowDataYear,Daily discharge data for each unit Subcatchment,input,mm,,,
+I_River flowDispersalFactor,The dispersal pattern flow patch of river ,input,,0.01,1,0.3
+I_RivFlowTime,Ratio of time arrival of river flow per subcatchment,input,,,,
+I_RoutingDistance,Distance from centre of subcatchment to measurement point,input,km,,,
+I_RoutVeloc_m_Per_s,River flow velocity ,input,m sec-1,0.001,25,0.4
+I_SoilPropConst,"Switch to decide an option to have a constant value of water availability for plant and soil saturation. Value 0 means irregular, value 1 means constant.",input,boolean,,,0
+I_SoilQFlowFrac,,input,,0,2,1
+I_SoilSatminFCConst,Constant value of difference between saturation water storage capacity and field capacity of the soil,input,mm,0,500,100
+I_SoilSatMinFCSub,Difference between saturation water storage capacity and field capacity of the soil for each vegetation class and subcatchment for four years of simulation transition,input,mm,,,
+I_SpatRain,Daily rainfall for each unit Subcatchment generated from SpatRain module.,input,mm,,,
+I_SurfLossFrac,Fraction of surface flow loses,input,,0,1,0
+I_TopSoilBD_BDRef,Value of Top soil BD/BDref,input,,,,
+I_Tortuosity,Measured distance/real path length of streams,input,,0,1,0.4
+I_UseSpatVarRain,Switch to decide an option to use spatial rainfall distribution generated from SpatRain module. Value 1 means using spatial rainfall distribution generated from SpatRain module.,input,boolean,,,
+I_WarmUpTime,Time to initialize the values of water stocks ,input,day,0,730,365
+L_CumHEPPUse,Cumulative Water use to operate HEPP ,lake,kwh,,,
+L_FloodTresh,Beginning of the flooding event ,lake,m,,,-363
+L_HEPP kwh,,lake,,,,
+L_HEPPActive,Option to switch on the HEPP operating procesures,lake,boolean,,,
+L_HEPPOpTimeRel,Optimalization of time Operating HEPP,lake,,,,
+L_HEPPWatUseFlow,The flow of Water use by HEPP,lake,mm,,,
+L_InflowtoLake,Daily amount of river water flows to Lake ,lake,mm,,,
+L_Lake,Switch to decide an option whether the subcatchment lake or not. Value 1 means lake,lake,boolean,,,
+L_LakeBottomElev,Bottom Lake Elevation,lake,m (asl),,,-160
+L_LakeElevPreHEPP,Lake Elevation of pre Operating HEPP,lake,m (asl),,,-362.3
+L_LakeLevel,Level of water in the lake,lake,m,,,
+L_LakeLevelFullHEPP,Lake level of Full Operating HEPP,lake,m,,,-362.3
+L_LakeLevelHalfHEPP,Lake level of Full Operating HEPP,lake,m,,,-361.8
+L_LakeLevelNoHEPP,Lake level of Full Operating HEPP,lake,m,,,-359.5
+L_LakeOverFlowFrac,Fraction of Overflow ,lake,,,,-0.1
+L_LakeOverFlPostHEPP,Overflow post operating HEPP,lake,m,,,-362.6
+L_LakeOverFlPow,Overflow power,lake,m,,,-4
+L_LakeTranspMultiplier,Multiplication of Lake Evapotranspiration rate,lake,,0,5,1
+L_LakeVol,Volume water in the lake,lake,m3,,,
+L_m3_per_kwh,Water requirement  to produce Electricity per kwh,lake,m3,,,-1584
+L_QmecsHEPP,Inflow to HEPP,lake,m3,,,-47.1
+L_QmecsSanFlow,Sanitary Flow,lake,,,,-3
+L_ResrDepth,The depth of reservoir,lake,m,,,-10000
+L_RivOutFlow,Lake Outflow to the river,lake,mm,,,
+O_BaseFlowAcc,Daily amount of base flow for the whole subcatchment and vegetation class,output,mm,,,
+O_BestYHEPP,The Best year Estimation of HEPP operating ,output,kwh,,,
+O_ChkAllCatchmAccFor,Overall balance of input and output of water in catchment level,output,mm,,,
+O_ChkAllLakeAccFor,Overall balance of input and output of water in lake level,output,mm,,,
+O_ChkAllRiverAccFor,Overall balance of input and output of water in river level,output,mm,,,
+O_CumBaseFlow,Cumulative amount of base flow the whole subcatchment and vegetation class,output,mm,,,
+O_CumBaseFlowMP,Cumulative amount of base flow for the whole subcatchment and vegetation class for each transition period,output,mm,,,
+O_CumDebitDataMP,Cumulative amount of actual river flow data for the whole subcatchment for each transition period,output,mm,,,
+O_CumDebitPredMP,Cumulative amount of prediction river flow data for the whole subcatchment for each transition period,output,mm,,,
+O_CumDeepInfilt,Cumulative amount of water deeply infiltrate to the soil for the whole subcatchment,output,mm,,,
+O_CumETLandMP,Cumulative amount of evapotranspiration for the whole subcatchment and vegetation class for each transition period,output,mm,,,
+O_CumEvapotrans,,output,,,,
+O_CumEvapotransMP,,output,,,,
+O_CumHEPPOutflowMP,Cumulative HEPP Outflow on Each Transition Period,output,mm,,,
+O_CumInfiltration,Cumulative amount of water  infiltrate to the soil for the whole subcatchment,output,mm,,,
+O_CumInfiltrationMP,,output,,,,
+O_CumInterceptEvap,Cumulative amount of water evaporated from intercepted water for the whole subcatchment and vegetation class ,output,mm,,,
+O_CumInterceptEvapMP,,output,,,,
+O_CumPercolation,Cumulative amount of percolation water for the whole subcatchment,output,mm,,,
+O_CumRain,Cumulative amount of daily rainfall for the whole subcatchment and vegetation class,output,mm,,,
+O_CumRainMP,Cumulative amount of daily rainfall for the whole subcatchment and vegetation class for each transition period,output,mm,,,
+O_CumRivInflowToLakeMP,Cumulative amount of river water flows to Lake on each transition period,output,mm,,,
+O_CumRivOutFlowMP,Cumulative amount of river water out flow for each transition period,output,mm,,,
+O_CumSoilQFlow,Cumulative amount of soil quick flow for the whole subcatchment and vegetation class,output,mm,,,
+O_CumSoilQFlowMP,Cumulative amount of soil quick flow for the whole subcatchment and vegetation class for each transition period,output,mm,,,
+O_CumSurfQFlow,Cumulative amount of surface quick flow for the whole subcatchment and vegetation class,output,mm,,,
+O_CumSurfQFlowMP,Cumulative amount of surface quick flow for the whole subcatchment and vegetation class for each transition period,output,mm,,,
+O_CumTransp,Cumulative amount of evapotranspiration for the whole subcatchment and vegetation class,output,mm,,,
+O_CumTranspMP,,output,,,,
+O_DeepInfAcc,,output,,,,
+O_DeltaGWStock,Changing in ground water stock ,output,mm,,,
+O_EvapotransAcc,,output,,,,
+O_FrBaseFlow,Cumulative amount of base flow relative to cumulative amount of river flow,output,mm,,,
+O_FrSoilQuickflow,Cumulative amount of soil quick flow relative to cumulative amount of river flow,output,mm,,,
+O_FrSurfQuickFlow,Cumulative amount of surface quick flow relative to cumulative amount of river flow,output,mm,,,
+O_HEPP kwh per day,Amount of water used in mm day-1 for whole catchment,output,mm,,,
+O_InfAcc,,output,,,,
+O_IntercAcc,Daily amount of water evaporated from intercepted water for the whole subcatchment and vegetation class,output,mm,,,
+O_MperiodeLength,Daily simulation period ,output,day,,,-365
+O_PercAcc,,output,,,,
+O_RainAcc,Daily amount of rainfall for the whole subcatchment,output,mm,,,
+O_RelOpTimeHEPP,Time operating of HEPP per simulation period,output,mm,,,
+O_SoilQFlowAcc,Daily amount of soil quick flow for the whole subcatchment and vegetation class,output,mm,,,
+O_StartDOY,Starting day to begin simulation ,output,day,,,0
+O_StartMYear,Starting year of begin simulation ,output,year,,,
+O_SurfQFlowAcc,Daily amount of surface quick flow for the whole subcatchment and vegetation class,output,mm,,,
+O_TotStream flow,"Cumulative amount of surface quick flow, soil quick flow and base flow for the whole subcatchment and vegetation class ",output,mm,,,
+O_WorstYHEPP,The Worse year Estimation of HEPP operating,output,kwh,,,
+S_TrampMax,Maximum soil tramping factor,soil,,,,-100
