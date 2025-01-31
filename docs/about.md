@@ -14,6 +14,7 @@ GenRiver3 is an update to the original [GenRiver version 2](https://www.worldagr
 - **Application Author and Maintainer**: Degi Harja Asmara
 - **Model Authors**: Meine van Noordwijk, Rudy Harto Widodo, Ai Farida, Desi Suyamto, Betha Lusiana, Ni’matul Khasanah, Lisa Tanika, Rachmat Mulia, Degi Harja Asmara
 - **Hydrology Expert**: Lisa Tanika
+- **IT Support**: Yusi Septriandi
 
 *Suggested citation to the original model*:
 
