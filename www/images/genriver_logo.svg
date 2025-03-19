@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   viewBox="-40 -40 80 80"
+   viewBox="-40 -40 75.799995 75.799995"
    version="1.1"
    id="svg10"
-   sodipodi:docname="genriver_logo2.svg"
-   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   sodipodi:docname="genriver_logo.svg"
+   inkscape:version="1.2-alpha1 (b6a15bbbed, 2022-02-23)"
+   width="75.799995"
+   height="75.799995"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -22,25 +24,25 @@
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
      inkscape:zoom="6.41875"
-     inkscape:cx="49.230769"
-     inkscape:cy="63.330088"
+     inkscape:cx="37.390458"
+     inkscape:cy="61.382668"
      inkscape:window-width="1844"
      inkscape:window-height="1301"
      inkscape:window-x="731"
-     inkscape:window-y="346"
+     inkscape:window-y="100"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg10"
      inkscape:showpageshadow="2" />
   <circle
      id="circle2"
-     cx="-4.7784914e-07"
-     cy="-8.8454073e-07"
+     cx="-2.8483207"
+     cy="-0.8408854"
      transform="rotate(28.552269)"
-     style="fill:#1b9ff7;fill-opacity:1;stroke-width:0.971793;opacity:1"
+     style="opacity:1;fill:#1b9ff7;fill-opacity:1;stroke-width:0.971793"
      r="37.899998" />
   <path
      fill="#ffffff"
-     d="m -19.00312,32.908587 a 38,38 0 0 1 38,-65.81793 A 19,19 0 0 1 -0.00311966,-3.7848563e-4 19,19 0 0 0 -19.00312,32.908587"
+     d="m -21.103122,30.808586 a 38,38 0 0 1 38,-65.81793 19,19 0 0 1 -19,32.9089642 19,19 0 0 0 -19,32.9089658"
      id="path4-31"
      style="fill:#7deb06;fill-opacity:1" />
 </svg>
