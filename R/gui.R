@@ -152,7 +152,6 @@ table_edit_server <- function(id,
   moduleServer(id, function(input, output, session) {
     output$table_edit <- excelR::renderExcel({
       data <- reactive_data()
-      # print(data)
       if (is.null(data)) {
         return()
       }

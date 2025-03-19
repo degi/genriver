@@ -184,6 +184,7 @@ server <- function(input, output, session) {
     
     watershed_map_stars = NULL,
     subcatchment_map_sf = NULL,
+    
     subcatchment_desc_df = NULL,
     outlet_map_sf = NULL,
     
@@ -222,7 +223,7 @@ server <- function(input, output, session) {
     evapotran_df = NULL,
     rain_df = NULL,
     river_df = NULL,
-
+    
     rain_par_cfg = default_par(rain_par_df),
     river_par_cfg = default_par(river_par_df),
     
@@ -256,8 +257,13 @@ server <- function(input, output, session) {
     ),
     riparian_sf = NULL,
     erosion_cfg = NULL,
-    sedimentation_df = NULL
-
+    sedimentation_df = NULL,
+    
+    lake_sf = NULL,
+    lake_ws_sf = NULL,
+    subcatchment_map_nolake_sf = NULL,
+    subcatchment_map_lake_sf = NULL,
+    ws_lake_boundary_sf = NULL
   )
   
   vd <- reactiveValues(
@@ -513,10 +519,10 @@ server <- function(input, output, session) {
     return(map_id_counter)
   }
   
-  observeEvent(input$rfalow_lc_map_inp, {
+  observeEvent(input$lc_map_inp, {
     toggle_popover("add_lc_pop", show = F)
-    dpaths <- input$rfalow_lc_map_inp$datapath
-    fnames <- input$rfalow_lc_map_inp$name
+    dpaths <- input$lc_map_inp$datapath
+    fnames <- input$lc_map_inp$name
     lc_df <- isolate(v$lc_df)
     for (i in 1:length(dpaths)) {
       dpath <- dpaths[i]
@@ -853,7 +859,7 @@ server <- function(input, output, session) {
   
   observe({
     v$evapot_month_data_df <- evapot_month_df_edited()
-    if(is.null(isolate(v$evapot_month_data_df))) {
+    if (is.null(isolate(v$evapot_month_data_df))) {
       v$evapot_month_data_df <- data.frame(
         n = month_cols$month,
         month = month_cols$var,
@@ -1074,6 +1080,8 @@ server <- function(input, output, session) {
   
   output$ws_area <- renderText(f_number(v$genriver_cfg$total_area_m2 / 10000, digits = 5))
   
+  output$ws_n <- renderText(nrow(v$subcatchment_map_sf))
+  
   output$ws_unclassified_area <- renderText({
     df <- as.data.frame(v$subcatchment_map_sf)
     a <- v$genriver_cfg$total_area_m2 / 10000 - sum(df[df$ws_id != 999, "area"])
@@ -1178,20 +1186,15 @@ server <- function(input, output, session) {
     if (is.null(v$dem_map_stars))
       return()
     withProgress(message = 'Processing DEM', value = 0, {
-      # if (is_update_dem()) {
-      #   is_update_dem(F)
       dem_out <- flowdem(v$dem_map_stars)
       v$dem_direction_terra <- dem_out$dem_direction_terra
       v$dem_flow_bb_stars <- dem_out$dem_flow_stars
-      # }
       setProgress(0.9, detail = "Generating stream path")
       print("DEM -> stream")
       v$dem_stream_bb_sf <- generate_stream(isolate(v$dem_flow_bb_stars), flow_threshold)
-      # write_sf(v$dem_stream_bb_sf, "stream.shp")
       setProgress(1, detail = "Done!")
       print("DEM -> done!")
     })
-    
     leafletProxy(active_watershed_lf, session) |>
       clearShapes() |>
       clearImages() |>
@@ -1241,11 +1244,12 @@ server <- function(input, output, session) {
       addProviderTiles(base_tiles)
   }
   
-  repaint_subcatchment_map <- function() {
+  paint_subcatchment_map <- function() {
     leafletProxy(active_watershed_lf, session) |>
       clearMarkers() |>
       clearControls() |>
       clearShapes() |>
+      removeHomeButton() |>
       fit_map_view(isolate(v$dem_stream_sf)) |>
       addHomeButton(
         ext = st_bbox(v$dem_stream_sf),
@@ -1255,6 +1259,17 @@ server <- function(input, output, session) {
       plot_watershed_boundary() |>
       show_stream(isolate(v$dem_stream_sf), opacity = 1) |>
       plot_subcatchment()
+    
+  }
+  
+  repaint_subcatchment_map <- function() {
+    leafletProxy(active_watershed_lf, session) |>
+      # fit_map_view(isolate(v$subcatchment_map_sf)) |>
+      clearShapes() |>
+      plot_watershed_boundary() |>
+      show_stream(isolate(v$dem_stream_sf), opacity = 1) |>
+      plot_subcatchment()
+    
   }
   
   output$watershed_map_leaflet <- renderLeaflet({
@@ -1746,7 +1761,7 @@ server <- function(input, output, session) {
     } else {
       return()
     }
-    isolate(repaint_subcatchment_map())
+    isolate(paint_subcatchment_map())
     reactable(
       ws_df,
       pagination = F,
@@ -3892,7 +3907,7 @@ server <- function(input, output, session) {
     ws_sf <- v$ws_boundary_sf
     if (is.null(dflow) || is.null(ws_sf))
       return()
-    rm <- v$routing_map_stars
+    rm <- isolate(v$routing_map_stars)
     if (is.null(rm)) {
       rm <- generate_routing_distance(v$dem_flow_stars, v$genriver_cfg$flow_threshold)
       v$routing_map_stars <- rm
@@ -3983,7 +3998,7 @@ server <- function(input, output, session) {
   
   observe({
     v$sedimentation_df <- sedimentation_df_edited()
-    if(is.null(isolate(v$sedimentation_df))) {
+    if (is.null(isolate(v$sedimentation_df))) {
       v$sedimentation_df = data.frame(
         date = as.Date(character()),
         sedimentation = numeric(),
@@ -4005,7 +4020,7 @@ server <- function(input, output, session) {
   
   observe({
     v$evapotran_df <- evapotran_df_edited()
-    if(is.null(isolate(v$evapotran_df))) {
+    if (is.null(isolate(v$evapotran_df))) {
       v$evapotran_df = data.frame(
         date = as.Date(character()),
         evapotranspiration = numeric(),
@@ -4111,7 +4126,7 @@ server <- function(input, output, session) {
   
   observe({
     v$rain_df <- rain_df_edited()
-    if(is.null(isolate(v$rain_df))) {
+    if (is.null(isolate(v$rain_df))) {
       v$rain_df = data.frame(
         date = as.Date(character()),
         rainfall = numeric(),
@@ -4213,7 +4228,7 @@ server <- function(input, output, session) {
   
   observe({
     v$river_df <- river_df_edited()
-    if(is.null(isolate(v$river_df))) {
+    if (is.null(isolate(v$river_df))) {
       v$river_df = data.frame(
         date = as.Date(character()),
         river_flow = numeric(),
@@ -4907,9 +4922,7 @@ server <- function(input, output, session) {
     #   I_RivFlowTime3[Subcatchement]+(I_RivFlowTime4[Subcatchement]-I_RivFlowTime3[Subcatchement])*(int(I_Simulation_Time/365)-I_InputDataYears[Trans2])/(I_InputDataYears[End]-I_InputDataYears[Trans2])
     subc_df$I_RivFlowTimeNow <- 1 #TODO:?
     # ini fraksi kecepatan 0-1 untuk masing2 tahun land cover map.. kalau lebih cepat < 1, kalau gak ada perubahan = 1
-    
-    
-    
+
     # D_RoutingTime[Subcatchement,ObsPoint] = I_RoutingDistance[Subcatchement,ObsPoint]/(I_RivFlowTimeNow[Subcatchement]*I_RoutVeloc_m_per_s*3.6*24*I_Tortuosity)
     subc_df$D_RoutingTime <- subc_df$I_RoutingDistance / (
       subc_df$I_RivFlowTimeNow *
@@ -5406,22 +5419,39 @@ server <- function(input, output, session) {
     names(lc_evapot_df) <- c("lc_id", "I_MultiplierEvapoTrans")
     subc_lc_df <- merge(subc_lc_df, lc_evapot_df, by = "lc_id", all.x = T)
     
-    #### Stream and Lake init #######################
+    #### Stream init #######################
     # print("* stream")
     lake_input_pars$I_TotalArea <- I_TotalArea
     I_WarmUpTime <- input$I_WarmUpTime
+    subc_df$I_SubcContr <- 1
+    
     #TODO: will be parameterize through UI
+    # subc_df$L_Lake <- 0
+    # subc_lc_df$L_Lake <- 0 #TODO: this should be subcat
+    
+    #### Lake init #######################
+    # TODO:: to be tested and calibrated
     subc_df$L_Lake <- 0
-    subc_lc_df$L_Lake <- 0 #TODO: this should be subcat
+    subc_lc_df$L_Lake <- 0
+    subc_df$D_FeedingIntoLake <- 0
+    if (input$apply_lake) {
+      if(!is.null(v$lake_sf)) {
+        subc_df[subc_df$ws_id %in% v$lake_sf$ws_id,"L_Lake"] <- 1
+        subc_lc_df[subc_lc_df$ws_id %in% v$lake_sf$ws_id,"L_Lake"] <- 1
+      }
+      if(!is.null(v$lake_ws_sf)) {
+        subc_df[subc_df$ws_id %in% v$lake_ws_sf$ws_id,"D_FeedingIntoLake"] <- 1
+      }
+    }
     
     subc_df$D_FracGWtoLake <- 0
     subc_df$I_DaminThisStream <- 0
-    subc_df$D_FeedingIntoLake <- 1
     # D_ReservoirVol[Subcatchement] = L_ResrDepth*L_Lake?[Subcatchement]*I_RelArea[Subcatchement]
     subc_df$D_ReservoirVol <- lake_input_pars$L_ResrDepth * subc_df$L_Lake * subc_df$I_RelArea
     # INIT D_SubcResVol[Subcatchement] = D_ReservoirVol[Subcatchement]*I_DaminThisStream?[Subcatchement]
     subc_df$D_SubcResVol <- subc_df$D_ReservoirVol * subc_df$I_DaminThisStream
-    subc_df$I_SubcContr <- 1
+    
+    
     # print("* return")
     return(
       list(
@@ -5650,7 +5680,7 @@ server <- function(input, output, session) {
       return(NULL)
     sim_running(T)
     print("run simulation")
-
+    
     if (is.null(v$lc_par_df)) {
       showNotification("Land cover map was not set! Please complete the parameters",
                        type = "error")
@@ -6698,7 +6728,7 @@ server <- function(input, output, session) {
   output$flowper_yearly_table <- renderReactable({
     df <- v$river_df
     rdf <- v$rain_df
-    if (is.null(df) || is.null(rdf))
+    if (is.null(df) || is.null(rdf) || nrow(df) == 0)
       return()
     
     df$year <- year(df$date)
@@ -6862,4 +6892,284 @@ server <- function(input, output, session) {
         title = list(text = paste("Seasonal Fp-Value VS Rainfall"))
       )
   })
+  
+  ### LAKE INPUT ########################
+  
+  shp_ext <- c("shp", "dbf", "shx", "prj")
+  lake_columns <- c("lake_id", "lake_ws_id", subcathment_columns)
+  
+  get_routing_dist <- function(boundary_sf, rm) {
+    b <- st_sf(st_geometry(boundary_sf))
+    # print(b)
+    temp <- rm["upstream"]
+    temp[[1]] <- NA
+    lrast <- st_rasterize(b, temp, align = F)
+    rm1 <- rm["upstream"]
+    rm1[is.na(lrast)] <- NA
+    d1 <- mean(rm1[[1]], na.rm = T)
+    if (is.na(d1)) {
+      rm1 <- rm["routing"]
+      rm1[is.na(lrast)] <- NA
+      d1 <- mean(rm1[[1]], na.rm = T)
+    }
+    return(d1 / 1000)
+  }
+  
+  observeEvent(input$lake_map_inp, {
+    toggle_popover("add_lake_pop", show = F)
+    wsb <- isolate(v$ws_boundary_sf)
+    if (is.null(wsb)) {
+      showNotification("Please upload the land cover map before uploading the lake map.",
+                       type = "error")
+      return()
+    }
+    ids <- isolate(v$subcatchment_map_sf)$ws_id
+    max_id <- max(ids[ids != 999])
+    
+    dpaths <- input$lake_map_inp$datapath
+    fnames <- input$lake_map_inp$name
+    is_zip <- F
+    if (length(fnames) == 1) {
+      #check for an archive file
+      file_list <- NULL
+      try(file_list <- utils::unzip(dpaths, list = TRUE), silent = T)
+      if (!is.null(file_list)) {
+        utils::unzip(dpaths, exdir = data_dir, junkpaths = T)
+        is_zip <- T
+        dpaths <- paste0(data_dir, "/", file_list$Name)
+        fnames <- file_list$Name
+      }
+    }
+    names <- unique(unlist(lapply(fnames, function(x)
+      prefix(x, sep = "."))))
+    if (length(names) > 1) {
+      showNotification(
+        "All files should have a similar names with different extension (.shp, .dbf, .shx and .prj)",
+        type = "error"
+      )
+      return()
+    }
+    exts <- unlist(lapply(fnames, function(x)
+      suffix(x, sep = ".")))
+    exts_miss <- setdiff(shp_ext, exts)
+    if (length(exts_miss) > 0) {
+      p <- paste(names, exts_miss, sep = ".")
+      showNotification(paste("Missing files:", paste(p, collapse = ", "), "!"), type = "error")
+      return()
+    }
+    
+    d <- dirname(dpaths[1])
+    fpaths <- paste0(d, "/", fnames)
+    file.rename(dpaths, fpaths)
+    setwd(d)
+    fpath <- fpaths[which(exts == "shp", arr.ind = T)]
+    m <- st_read(fpath, quiet = T)
+    ps <- m |> st_bbox() |> st_as_sfc() |> st_transform(crs = "+proj=longlat +datum=WGS84") |> st_as_sf()
+    suppressMessages({
+      int <- st_intersects(wsb, ps, sparse = F)
+      if (!all(int)) {
+        showNotification(
+          paste(
+            "The lake map is outside the observed map boundary.",
+            "Please upload the map within the observed boundary."
+          ),
+          type = "error"
+        )
+        return()
+      }
+    })
+    
+    withProgress(message = 'Uploading lake map', value = 0, {
+      # initiate lake object
+      m <- st_intersection(m, wsb)
+      lake_m <- st_sf(
+        lake_id = c(1:nrow(m)),
+        lake_ws_id = c(1:nrow(m)),
+        ws_id = max_id  + c(1:nrow(m)),
+        distance = 0,
+        geometry = st_geometry(m)
+      )
+      lake_m$area <- as.numeric(st_area(lake_m)) / 10000
+      lake_m$color <- "#007FFF"
+      lake_m$rel_area <- lake_m$area * 10000 / v$genriver_cfg$total_area_m2
+      lake_m$n_outlet <- 0
+      lake_m$uncheck <- T
+      lake_m$label <- paste("Lake", lake_m$lake_id)
+      setProgress(0.1)
+      # prepare routing map
+      rm <- isolate(v$routing_map_stars)
+      if (is.null(rm)) {
+        rm <- generate_routing_distance(v$dem_flow_stars, v$genriver_cfg$flow_threshold)
+        v$routing_map_stars <- rm
+      }
+      
+      temp <- rm["upstream"]
+      temp[[1]] <- NA
+      # iterate all the lakes
+      max_id <- max(lake_m$ws_id)
+      wsl <- NULL
+      setProgress(0.2)
+      suppressMessages({
+        vp <- 0.5 / nrow(lake_m)
+        for (i in 1:nrow(lake_m)) {
+          lm <- lake_m[i, "lake_id"]
+          lake_m[i, "distance"] <- get_routing_dist(lm, rm)
+          ws <- st_as_stars(watershed(isolate(v$dem_direction_terra), lm))
+          suppressMessages({
+            sf <- st_union(st_as_sf(
+              ws,
+              as_points = F,
+              merge = T,
+              connect8 = T
+            ))
+          })
+          sf <- st_transform(sf, crs = 4326)
+          if (is.null(v$ws_lake_boundary_sf)) {
+            v$ws_lake_boundary_sf <- sf
+          } else {
+            v$ws_lake_boundary_sf <- st_union(v$ws_lake_boundary_sf, sf)
+          }
+          sf <- st_difference(sf, lm)
+          m_sf <- st_sf(
+            lake_id = lm$lake_id,
+            lake_ws_id = lm$lake_id,
+            ws_id = max_id + lm$lake_id,
+            geometry = sf
+          )
+          d <- get_routing_dist(m_sf["lake_id"], rm)
+          m_sf$distance <- d
+          if (is.null(wsl)) {
+            wsl <- m_sf
+          } else {
+            sfc <- m_sf
+            wsl <- rbind(wsl, sfc)
+          }
+          incProgress(vp)
+        }
+      })
+      wsl$area <- as.numeric(st_area(wsl)) / 10000
+      wsl$color <- "#568203"
+      wsl$rel_area <- lake_m$area * 10000 / v$genriver_cfg$total_area_m2
+      wsl$n_outlet <- 0
+      wsl$uncheck <- T
+      wsl$label <- paste("Subc of Lake", wsl$lake_id)
+      
+      v$lake_sf <- lake_m[lake_columns]
+      v$lake_ws_sf <- wsl[lake_columns]
+      
+      # modify subcathment
+      if (is.null(v$subcatchment_map_nolake_sf)) {
+        m <- v$subcatchment_map_sf
+      } else {
+        m <- v$subcatchment_map_nolake_sf
+      }
+      v$subcatchment_map_nolake_sf <- m
+      max_id <- max(m$ws_id)
+      rm <- isolate(v$routing_map_stars)
+      if (is.null(rm)) {
+        rm <- generate_routing_distance(v$dem_flow_stars, v$genriver_cfg$flow_threshold)
+        v$routing_map_stars <- rm
+      }
+      m <- st_difference(m, v$ws_lake_boundary_sf)
+      setProgress(0.7)
+      # append as new sub-catchments
+      m$area <- as.numeric(st_area(m)) / 10000
+      setProgress(0.8)
+      m <- m[m$area > 1, ]
+      m$distance <- unlist(lapply(m$geometry, get_routing_dist, rm))
+      setProgress(0.9)
+      l <- rbind(v$lake_sf[subcathment_columns], v$lake_ws_sf[subcathment_columns])
+      m <- rbind(m, l)
+      v$subcatchment_map_lake_sf <- m
+      setProgress(1)
+    })
+    showNotification(paste("Lake map uploaded! No. of lakes:", nrow(lake_m)))
+  })
+  
+  #### Lake Leaflet #########################
+  
+  output$lake_leaflet <- renderLeaflet({
+    stream <- v$dem_stream_sf
+    lake <- v$lake_sf
+    lake_ws <- v$lake_ws_sf
+    if (is.null(stream) || is.null(lake) || is.null(lake))
+      return()
+    lake_label <- map_label(
+      paste(
+        "Lake ID:",
+        lake$lake_id,
+        "<br>Area size:",
+        sprintf("%0.1f", lake$area),
+        "ha<br>Routing distance:",
+        sprintf("%0.1f", lake$distance),
+        "km"
+      ),
+      "Lake"
+    )
+    ws_label <- map_label(
+      paste(
+        "Sub-catchment to lake ID:",
+        lake_ws$lake_id,
+        "<br>Area size:",
+        sprintf("%0.1f", lake_ws$area),
+        "ha<br>Routing distance:",
+        sprintf("%0.1f", lake_ws$distance),
+        "km"
+      ),
+      "Sub-Catchment to Lake"
+    )
+    h <- highlightOptions(fillOpacity = 0.8, fillColor = theme_color$danger)
+    
+    lf <- base_leaflet() |>
+      clearShapes() |>
+      plot_watershed_boundary() |>
+      fit_map_view(v$dem_stream_sf) |>
+      show_stream(v$dem_stream_sf,
+                  opacity = 0.6,
+                  is_show_label = F) |>
+      addFeatures(
+        lake,
+        group = "lake",
+        color = "#000",
+        fillColor = ~ color,
+        fillOpacity = 0.6,
+        opacity = 0.8,
+        weight = 1,
+        label = lake_label,
+        labelOptions = labelOptions(
+          className = "map_label",
+          offset = c(0, -10),
+          direction = "top"
+        ),
+        highlightOptions = h
+      ) |>
+      addFeatures(
+        v$lake_ws_sf,
+        group = "lake_ws",
+        color = "#000",
+        fillColor = ~ color,
+        fillOpacity = 0.6,
+        opacity = 0.8,
+        weight = 1,
+        label = ws_label,
+        labelOptions = labelOptions(
+          className = "map_label",
+          offset = c(0, -10),
+          direction = "top"
+        ),
+        highlightOptions = h
+      )
+  })
+  
+  observeEvent(input$apply_lake, {
+    if (is.null(v$subcatchment_map_lake_sf))
+      return()
+    if (input$apply_lake) {
+      v$subcatchment_map_sf <- v$subcatchment_map_lake_sf
+    } else {
+      v$subcatchment_map_sf <- v$subcatchment_map_nolake_sf
+    }
+    repaint_subcatchment_map()
+  })
+  
 }

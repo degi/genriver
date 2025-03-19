@@ -151,7 +151,7 @@ generate_river_dist <- function(flow_map, threshold = 20) {
 
 # profiling lib
 # library(profvis)
-
+# LAYER: flow, routing, order, outlet, upstream
 generate_routing_dist_map <- function(flow_map, river_threshold = 20, progress = NULL) {
   if(is.null(progress)) progress <- function(x) {}
   #set the cell width from the map resolution in m unit
@@ -640,7 +640,14 @@ shift_idx <- function(o, s) {
   return(o)
 }
 
-generate_watershed <- function(direction_map, lon, lat, outlet_radius = 10) {
+# generate_lake_watershed <- function(dem_direction_terra, lake_sf) {
+#   #generate watershed
+#   ws <- watershed(dem_direction_terra, lake_sf)
+#   m <- st_as_stars(ws)
+#   return(m)
+# }
+
+generate_watershed <- function(dem_direction_terra, lon, lat, outlet_radius = 10) {
   #create outlet shape
   pt.df   <- data.frame(pt = 1, x = lon, y = lat)
   p   <- st_as_sf(pt.df, coords = c("x", "y"))
@@ -649,7 +656,7 @@ generate_watershed <- function(direction_map, lon, lat, outlet_radius = 10) {
   circle <-  st_buffer(p, outlet_radius)
   circle <- st_transform(circle, crs = 4326)
   #generate watershed
-  ws <- watershed(direction_map, circle)
+  ws <- watershed(dem_direction_terra, circle)
   m <- st_as_stars(ws)
   return(m)
 }

@@ -1,4 +1,6 @@
 
+
+
 #jekyll-theme-minimal
 
 wave_div <- HTML(
@@ -503,16 +505,22 @@ ui <-
         tags$link(rel = "stylesheet", type = "text/css", href = "yinyang.css"),
         tags$link(rel = "stylesheet", type = "text/css", href = "wave.css"),
         
-        tags$head(tags$script(src="https://www.googletagmanager.com/gtag/js?id=G-KJN0VTGXHG")),
-        tags$head(tags$script(HTML(
-          "window.dataLayer = window.dataLayer || [];
+        tags$head(
+          tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-KJN0VTGXHG")
+        ),
+        tags$head(tags$script(
+          HTML(
+            "window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        
+
         gtag('config', 'G-KJN0VTGXHG');
         "
-        )))
-          
+          )
+        ))
+        
+        
+        
       ),
     window_title = "GenRiver3",
     title =
@@ -593,6 +601,10 @@ ui <-
                   
                   card_body(
                     padding = 0,
+                    # actionButton(
+                    #   "test_button",
+                    #   "Test"
+                    # ),
                     div(
                       actionButton(
                         "add_lc_button",
@@ -603,7 +615,7 @@ ui <-
                         popover(
                           id = "add_lc_pop",
                           fileInput(
-                            "rfalow_lc_map_inp",
+                            "lc_map_inp",
                             "Add land cover map files",
                             accept = c(".tif", ".zip"),
                             multiple = T,
@@ -683,9 +695,8 @@ ui <-
                     top = "70px",
                     left = "80px",
                     div(
-                      "Total area:",
-                      tags$b(textOutput("ws_area", inline = T)),
-                      "ha",
+                      div("Total area:", tags$b(textOutput("ws_area", inline = T)), "ha"),
+                      div("Number of sub-catchment:", tags$b(textOutput("ws_n", inline = T))),
                       class = "transparent_bg",
                       style = "padding: 5px 10px; border-radius:5px;"
                     )
@@ -710,41 +721,72 @@ ui <-
               nav_panel(
                 title = "Lake and DAM",
                 icon = icon("fish"),
-                card_body(padding = 0, navset_card_pill(
-                  nav_panel(
-                    title = "Lake and DAM Location",
-                    card_body(
+                card_body(
+                  padding = 0,
+                  navset_card_pill(
+                    # nav_panel(
+                    #   title = "Lake and DAM Location",
+                    #   card_body(
+                    #     padding = 0,
+                    #     leafletOutput("lake_map_leaflet"),
+                    #     conditionalPanel(
+                    #       condition = "output.is_lake_df",
+                    #       absolutePanel(
+                    #         lake_table,
+                    #         draggable = T,
+                    #         right = "300px",
+                    #         top = "70px",
+                    #         width = "260px"
+                    #       )
+                    #     ),
+                    #     conditionalPanel(
+                    #       condition = "output.is_dam_df",
+                    #       absolutePanel(
+                    #         dam_table,
+                    #         draggable = T,
+                    #         right = "20px",
+                    #         top = "70px",
+                    #         width = "260px"
+                    #       )
+                    #     )
+                    #   )
+                    # ),
+                    
+                    nav_panel(title = "Lake Map", card_body(
                       padding = 0,
-                      leafletOutput("lake_map_leaflet"),
-                      conditionalPanel(
-                        condition = "output.is_lake_df",
-                        absolutePanel(
-                          lake_table,
-                          draggable = T,
-                          right = "300px",
-                          top = "70px",
-                          width = "260px"
-                        )
-                      ),
-                      conditionalPanel(
-                        condition = "output.is_dam_df",
-                        absolutePanel(
-                          dam_table,
-                          draggable = T,
-                          right = "20px",
-                          top = "70px",
-                          width = "260px"
+                      leafletOutput("lake_leaflet"),
+                      absolutePanel(
+                        top = "70px",
+                        left = "80px",
+                        div(
+                          flowLayout(
+                            cellArgs = list(style = "width:auto; margin:10px;"),
+                            actionButton("add_lake_button", "Upload Lake Map", icon = icon("folder-open")) |>
+                              popover(
+                                id = "add_lake_pop",
+                                fileInput(
+                                  "lake_map_inp",
+                                  'Upload lake map in shape format (".shp", ".dbf", ".shx", ".prj")',
+                                  accept = c(".shp", ".dbf", ".shx", ".prj", ".zip"),
+                                  multiple = T
+                                )
+                              ),
+                            div(style = "margin-top:10px;",
+                            input_switch("apply_lake", "Apply Lake Sub-catchment", width = "100%")),
+                          ),
+                          class = "transparent_bg",
+                          style = "padding:0px; border-radius:5px;"
                         )
                       )
-                    )
-                  ),
-                  nav_panel(title = "Lake Outflows", card_body(
-                    flowLayout(
-                      cellArgs = list(style = "width:auto; margin:0px;"),
-                      !!!numeric_input_ui("lake_par_input", lake_par_df, width = "200px")
-                    )
-                  ))
-                ))
+                    )),
+                    nav_panel(title = "Lake Outflows", card_body(
+                      flowLayout(
+                        cellArgs = list(style = "width:auto; margin:0px;"),
+                        !!!numeric_input_ui("lake_par_input", lake_par_df, width = "200px")
+                      )
+                    ))
+                  )
+                )
               ),
               nav_panel(
                 title = "Ground water and river flow",
@@ -798,10 +840,9 @@ ui <-
                         ), div(
                           table_edit_ui("soil_type_table", is_label = T, vspace = "30px")
                         ))),
-                        conditionalPanel(
-                          condition = "input.soil_type_select == 'soil_type_global'",
-                          card_body(padding = 0,
-                            markdown(desc$soil_db),
+                        conditionalPanel(condition = "input.soil_type_select == 'soil_type_global'", card_body(
+                          padding = 0,
+                          markdown(desc$soil_db),
                           navset_card_tab(
                             nav_panel(
                               title = "Soil Types",
@@ -816,8 +857,8 @@ ui <-
                               card_body(padding = 0, leafletOutput("soil_map_leaflet"))
                             ),
                             height = "100%"
-                          ))
-                        )
+                          )
+                        ))
                       )
                     ),
                     nav_panel(
