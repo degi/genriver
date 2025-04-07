@@ -1,4 +1,8 @@
 
+
+
+#jekyll-theme-minimal
+
 wave_div <- HTML(
   '<div><svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
     viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
@@ -227,9 +231,7 @@ soil_segment_setting_ui <- layout_sidebar(
     title = h5("Segmentation Setting", style = "margin:15px 20px"),
     card_body(padding = 0, navset_card_tab(
       nav_panel(
-        title = span(
-          "Segmentation"
-        ),
+        title = span("Segmentation"),
         icon = icon("draw-polygon"),
         "Parameter setting on soil depth and procedural map segmentation.
         The segmentation calculated based on slope map and elevation map factors",
@@ -309,7 +311,7 @@ soil_segment_setting_ui <- layout_sidebar(
 erosion_setting_ui <- card_body(
   class = "subpanel",
   padding = 0,
-  navset_card_underline(
+  navset_card_pill(
     nav_panel(title = "Riparian Zone", card_body(
       padding = 0,
       leafletOutput("riparian_leaflet"),
@@ -319,18 +321,22 @@ erosion_setting_ui <- card_body(
         width = "250px",
         card(
           class = "transparent_bg",
-          card_body(gap = 5,
-          numericInput("riparian_dist_input", "Riparian distance (m)", 500, 0),
-          span("Riparian area:", tags$b(textOutput("riparian_area", inline = T)), "ha"),
-          tags$br(),
-          tags$b("Zone shape modifier"),
-          numericInput("pre_Simple_input", "Pre-simplify (tolerance)", 100, 0),
-          numericInput("post_Simple_input", "Post-simplify (tolerance)", 0, 0))
+          card_body(
+            gap = 5,
+            numericInput("riparian_dist_input", "Riparian distance (m)", 500, 0),
+            span("Riparian zone area:", tags$b(textOutput(
+              "riparian_area", inline = T
+            )), "ha"),
+            tags$br(),
+            tags$b("Zone shape modifier"),
+            numericInput("pre_Simple_input", "Pre-simplify (tolerance)", 100, 0),
+            numericInput("post_Simple_input", "Post-simplify (tolerance)", 0, 0)
+          )
         )
       )
     )),
     nav_panel(title = "Erosion Level", table_edit_ui("lc_erosion_table")),
-    nav_panel(title = "Sedimentation Level", table_edit_ui("Sedimentation_table")),
+    nav_panel(title = "Sedimentation Level", table_edit_ui("sedimentation_table")),
     nav_panel(title = "Conservation Scenario", table_edit_ui("conservation_table"))
   )
 )
@@ -351,7 +357,8 @@ ui <-
       font_scale = 0.9
       
     ),
-    bg = theme_color$primary,
+    navbar_options = navbar_options(bg=theme_color$primary),
+    # bg = theme_color$primary,
     header =
       tags$head(
         tags$style(
@@ -455,9 +462,9 @@ ui <-
             .border_right {
               border-right: 1px solid rgba(0, 0, 0, 0.05);
             }
-
+/*
             .leaflet-control-container { position:absolute; top:35px; width = 300P }
-
+*/
             .highlight_label {
               color: black;
               background-color: white;
@@ -497,7 +504,24 @@ ui <-
         tags$link(rel = "stylesheet", href = "jsuites.css", type = "text/css"),
         tags$link(rel = "stylesheet", type = "text/css", href = "table.css"),
         tags$link(rel = "stylesheet", type = "text/css", href = "yinyang.css"),
-        tags$link(rel = "stylesheet", type = "text/css", href = "wave.css")
+        tags$link(rel = "stylesheet", type = "text/css", href = "wave.css"),
+        
+        tags$head(
+          tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-KJN0VTGXHG")
+        ),
+        tags$head(tags$script(
+          HTML(
+            "window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-KJN0VTGXHG');
+        "
+          )
+        ))
+        
+        
+        
       ),
     window_title = "GenRiver3",
     title =
@@ -551,7 +575,7 @@ ui <-
           "is a generic river model on river flow",
           style = "margin-bottom:60px"
         ),
-        HTML("&copy; World Agroforestry (ICRAF) - 2024")
+        HTML("&copy; World Agroforestry (ICRAF) - 2025")
       ))
     ),
     nav_panel(
@@ -572,12 +596,16 @@ ui <-
               nav_panel(
                 title = "Land Cover Map",
                 icon = icon("layer-group"),
-                p(desc$landcover),
+                markdown(desc$landcover),
                 layout_column_wrap(
                   class = "bordercard",
                   
                   card_body(
                     padding = 0,
+                    # actionButton(
+                    #   "test_button",
+                    #   "Test"
+                    # ),
                     div(
                       actionButton(
                         "add_lc_button",
@@ -588,7 +616,7 @@ ui <-
                         popover(
                           id = "add_lc_pop",
                           fileInput(
-                            "rfalow_lc_map_inp",
+                            "lc_map_inp",
                             "Add land cover map files",
                             accept = c(".tif", ".zip"),
                             multiple = T,
@@ -668,9 +696,8 @@ ui <-
                     top = "70px",
                     left = "80px",
                     div(
-                      "Total area:",
-                      tags$b(textOutput("ws_area", inline = T)),
-                      "ha",
+                      div("Total area:", tags$b(textOutput("ws_area", inline = T)), "ha"),
+                      div("Number of sub-catchment:", tags$b(textOutput("ws_n", inline = T))),
                       class = "transparent_bg",
                       style = "padding: 5px 10px; border-radius:5px;"
                     )
@@ -695,41 +722,72 @@ ui <-
               nav_panel(
                 title = "Lake and DAM",
                 icon = icon("fish"),
-                card_body(padding = 0, navset_card_pill(
-                  nav_panel(
-                    title = "Lake and DAM Location",
-                    card_body(
+                card_body(
+                  padding = 0,
+                  navset_card_pill(
+                    # nav_panel(
+                    #   title = "Lake and DAM Location",
+                    #   card_body(
+                    #     padding = 0,
+                    #     leafletOutput("lake_map_leaflet"),
+                    #     conditionalPanel(
+                    #       condition = "output.is_lake_df",
+                    #       absolutePanel(
+                    #         lake_table,
+                    #         draggable = T,
+                    #         right = "300px",
+                    #         top = "70px",
+                    #         width = "260px"
+                    #       )
+                    #     ),
+                    #     conditionalPanel(
+                    #       condition = "output.is_dam_df",
+                    #       absolutePanel(
+                    #         dam_table,
+                    #         draggable = T,
+                    #         right = "20px",
+                    #         top = "70px",
+                    #         width = "260px"
+                    #       )
+                    #     )
+                    #   )
+                    # ),
+                    
+                    nav_panel(title = "Lake Map", card_body(
                       padding = 0,
-                      leafletOutput("lake_map_leaflet"),
-                      conditionalPanel(
-                        condition = "output.is_lake_df",
-                        absolutePanel(
-                          lake_table,
-                          draggable = T,
-                          right = "300px",
-                          top = "70px",
-                          width = "260px"
-                        )
-                      ),
-                      conditionalPanel(
-                        condition = "output.is_dam_df",
-                        absolutePanel(
-                          dam_table,
-                          draggable = T,
-                          right = "20px",
-                          top = "70px",
-                          width = "260px"
+                      leafletOutput("lake_leaflet"),
+                      absolutePanel(
+                        top = "70px",
+                        left = "80px",
+                        div(
+                          flowLayout(
+                            cellArgs = list(style = "width:auto; margin:10px;"),
+                            actionButton("add_lake_button", "Upload Lake Map", icon = icon("folder-open")) |>
+                              popover(
+                                id = "add_lake_pop",
+                                fileInput(
+                                  "lake_map_inp",
+                                  'Upload lake map in shape format (".shp", ".dbf", ".shx", ".prj")',
+                                  accept = c(".shp", ".dbf", ".shx", ".prj", ".zip"),
+                                  multiple = T
+                                )
+                              ),
+                            div(style = "margin-top:10px;",
+                            input_switch("apply_lake", "Apply Lake Sub-catchment", width = "100%")),
+                          ),
+                          class = "transparent_bg",
+                          style = "padding:0px; border-radius:5px;"
                         )
                       )
-                    )
-                  ),
-                  nav_panel(title = "Lake Outflows", card_body(
-                    flowLayout(
-                      cellArgs = list(style = "width:auto; margin:0px;"),
-                      !!!numeric_input_ui("lake_par_input", lake_par_df, width = "200px")
-                    )
-                  ))
-                ))
+                    )),
+                    nav_panel(title = "Lake Outflows", card_body(
+                      flowLayout(
+                        cellArgs = list(style = "width:auto; margin:0px;"),
+                        !!!numeric_input_ui("lake_par_input", lake_par_df, width = "200px")
+                      )
+                    ))
+                  )
+                )
               ),
               nav_panel(
                 title = "Ground water and river flow",
@@ -783,22 +841,25 @@ ui <-
                         ), div(
                           table_edit_ui("soil_type_table", is_label = T, vspace = "30px")
                         ))),
-                        conditionalPanel(
-                          condition = "input.soil_type_select == 'soil_type_global'",
+                        conditionalPanel(condition = "input.soil_type_select == 'soil_type_global'", card_body(
+                          padding = 0,
+                          markdown(desc$soil_db),
                           navset_card_tab(
                             nav_panel(
                               title = "Soil Types",
                               icon = icon("mountain"),
+                              markdown(desc$soil_list),
                               reactableOutput("soil_type_global_table")
                             ),
                             nav_panel(
                               title = "Global Soil Database",
                               icon = icon("database"),
+                              
                               card_body(padding = 0, leafletOutput("soil_map_leaflet"))
                             ),
                             height = "100%"
                           )
-                        )
+                        ))
                       )
                     ),
                     nav_panel(
@@ -886,7 +947,7 @@ ui <-
           )
         ),
         
-        
+        ### RAINFALL AND RIVER #############################################
         
         nav_panel(
           title = "Rainfall and Rivers",
@@ -1231,9 +1292,14 @@ ui <-
           card_body(includeMarkdown("docs/about.md"))
         ),
         nav_panel(
+          title = "Background",
+          icon = icon("book"),
+          card_body(includeMarkdown("docs/background.md"))
+        ),
+        nav_panel(
           title = "Tutorial",
           icon = icon("book"),
-          card_body(includeMarkdown("docs/tutorial.md"))
+          card_body(includeMarkdown("docs/manual.md"))
         ),
         nav_panel(
           title = "References",
@@ -1241,9 +1307,9 @@ ui <-
           card_body(includeMarkdown("docs/references.md"))
         ),
         nav_panel(
-          title = "Software Library",
+          title = "Appendix",
           icon = icon("screwdriver-wrench"),
-          card_body(includeMarkdown("docs/library.md"))
+          card_body(includeMarkdown("docs/appendix.md"))
         )
       )
     )
