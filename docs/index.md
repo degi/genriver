@@ -1,6 +1,2 @@
----
-layout: page
-title: 
-permalink: /
----
+apa atuh
 GenRiver Documentation 
