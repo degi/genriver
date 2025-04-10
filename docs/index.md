@@ -1,7 +1,6 @@
 ---
 layout: page
-title: Docs
+title: 
 permalink: /
 ---
-anu
 # GenRiver Documentation #
