@@ -26,13 +26,21 @@ plugins:
 
 # If you want to link only specific pages in your header, use this and add the path to the pages
 # in order as they should show up.
-header_pages:
-  - docs/about.md
-  - docs/manual.md
-  - docs/background.md
-  - docs/references.md
-  - docs/appendix.md
+# header_pages:
+#   - docs/about.md
+#   - docs/manual.md
+#   - docs/background.md
+#   - docs/references.md
+#   - docs/appendix.md
 
+minima:
+  nav_pages:
+    - docs/about.md
+    - docs/manual.md
+    - docs/background.md
+    - docs/references.md
+    - docs/appendix.md
+    
 # Set to `true` to show excerpts on the homepage.
 #show_excerpts: false
 
