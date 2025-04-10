@@ -1,1 +1,1 @@
-# GenRiver User Manual #
+# GenRiver Documentation #
