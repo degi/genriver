@@ -1,4 +1,6 @@
-
-### GenRiver Documentation  
+---
+layout: home
+---
+# GenRiver Documentation  
 
 ini adalah sesuatu
