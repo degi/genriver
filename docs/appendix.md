@@ -1,6 +1,6 @@
 ---
 layout: page
-title: 
+title: Appendix
 permalink: /appendix/
 ---
 - [Glossary](#glossary)
