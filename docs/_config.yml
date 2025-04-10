@@ -1,7 +1,7 @@
 title: GenRiver3
-author:
-  name: Degi Harja Asmara
-  email: degi.ecomodels@gmail.com
+#author:
+#  name: Degi Harja Asmara
+#  email: degi.ecomodels@gmail.com
   
 description: >
   GenRiver is a generic river model on river flow.
@@ -32,8 +32,8 @@ minima:
   #   the `path` property (as represented via Liquid) of the pages in the order they
   #   should be rendered.
   nav_pages:
-    - about.md
-    - manual.md
+    - /about.md
+    - /manual.md
     - background.md
     - references.md
     - appendix.md
