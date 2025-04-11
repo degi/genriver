@@ -5,9 +5,9 @@ permalink: /about/
 ---
 Last Update: January 12, 2025
 
-<img src="../images/genriver_2010.svg" width="200"/>
+<img src="./images/genriver_2010.svg" width="200"/>
 
-coba lagi
+coba lagi sekali
 
 <img src="/images/genriver_2010.svg" alt="Alternative Text">
 
