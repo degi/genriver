@@ -5,7 +5,7 @@ permalink: /about/
 ---
 Last Update: January 12, 2025
 
-<img src="/images/genriver_2010.svg" width="200"/>
+![](./images/genriver_2010.svg)
 
 bandingin path nya md dan html
 
@@ -19,11 +19,11 @@ nambah tes
 
 image lain
 
-<img src="./images/back4.png" width="200"/>
+![](./images/back2.png =200x200)
 
-<img src="./images/back5.png" width="200"/>
+![](./images/back3.png =x200)
 
-<img src="./images/back1.png" width="200"/>
+
 
 GenRiver3 is an open-source and free web application. The **source code** is available at [https://github.com/degi/genriver](https://github.com/degi/genriver), and the **online version** can be accessed at [https://genriver.agroforestri.id/](https://genriver.agroforestri.id/). The application was developed using R and JavaScript with the [R-Shiny](https://shiny.posit.co/) platform. It can be launched as a standalone application from the source code using [R](https://www.r-project.org/) or [RStudio](https://posit.co/products/open-source/rstudio/) (go to the [source code website](https://github.com/degi/genriver) and follow the instructions).
 
