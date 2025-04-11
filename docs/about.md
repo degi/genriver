@@ -11,7 +11,7 @@ bandingin path nya md dan html
 
 ![GenRiver](images/genriver_2010.svg)
 
-![](./images/back1.png =200x)
+![](./images/back1.png)
 
 nambah tes
 
@@ -19,9 +19,9 @@ nambah tes
 
 image lain
 
-![](./images/back2.png =200x200)
+![](./images/back2.png)
 
-![](./images/back3.png =x200)
+![anu](./images/back3.png)
 
 
 
