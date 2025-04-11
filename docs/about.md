@@ -7,7 +7,7 @@ Last Update: January 12, 2025
 
 <img src="/docs/images/genriver_2010.svg" width="200"/>
 
-coba lagi sekali docs
+pindah ke roots 
 
 <img src="docs/images/genriver_2010.svg" alt="Alternative Text">
 
