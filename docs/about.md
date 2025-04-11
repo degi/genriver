@@ -11,7 +11,7 @@ bandingin path nya md dan html
 
 ![GenRiver](images/genriver_2010.svg)
 
-![GenRiver](./images/back1.png)
+![](./images/back1.png =200x)
 
 nambah tes
 
