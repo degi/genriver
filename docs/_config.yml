@@ -59,3 +59,9 @@ minima:
     - title: Jekyll at X (formerly Twitter)
       icon: x-twitter
       url: "https://x.com/jekyllrb"
+      
+defaults:
+  - scope:
+      path: "images"
+    values:
+      image: true
