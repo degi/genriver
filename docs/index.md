@@ -1,7 +1,6 @@
 ---
 layout: home
-title:
 ---
-<h1>apasih Docs</h1>  
+<h1>GenRiver3 Documentation</h1>  
 
 ini adalah sesuatu
