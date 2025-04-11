@@ -62,6 +62,6 @@ minima:
       
 defaults:
   - scope:
-      path: "docs/images"
+      path: "images"
     values:
       image: true
