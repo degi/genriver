@@ -1,12 +1,10 @@
-title: Your awesome title
-author:
-  name: GitHub User
-  email: your-email@domain.com
-
+title: GenRiver3
+#author:
+#  name: Degi Harja Asmara
+#  email: degi.ecomodels@gmail.com
+  
 description: >
-  Write an awesome description for your new site here. You can edit this line
-  in _config.yml. It will appear in your document head meta (for Google search
-  results) and in your feed.xml site description.
+  GenRiver is a generic river model on river flow.
 
 theme: minima
 
@@ -35,7 +33,11 @@ minima:
   #   should be rendered.
   nav_pages:
     - about.md
-
+    - manual.md
+    - background.md
+    - references.md
+    - appendix.md
+    
   # Set to `true` to show excerpts on the homepage.
   show_excerpts: false
 
