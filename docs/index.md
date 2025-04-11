@@ -2,6 +2,6 @@
 layout: home
 title:
 ---
-<h1>GenRiver Documentation</h1>  
+<h1>Docs</h1>  
 
 ini adalah sesuatu
