@@ -7,7 +7,7 @@ Last Update: January 12, 2025
 
 <img src="images/genriver_2010.svg" width="200"/>
 
-coba path nya md
+bandingin path nya md dan html
 
 ![GenRiver](images/genriver_2010.svg)<!-- -->
 
