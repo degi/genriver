@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: home
 title: Docs
 ---
 # GenRiver Documentation  
