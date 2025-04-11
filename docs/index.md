@@ -2,6 +2,6 @@
 layout: home
 title:
 ---
-# GenRiver Documentation  
+<h1>GenRiver Documentation</h1>  
 
 ini adalah sesuatu
