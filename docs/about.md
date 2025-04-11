@@ -7,21 +7,11 @@ Last Update: January 12, 2025
 
 ![](./images/genriver_2010.svg)
 
-bandingin path nya md dan html
-
-![GenRiver](images/genriver_2010.svg)
-
-![](./images/back1.png)
-
-nambah tes
-
-<img src="./images/genriver_2010.svg" width="200"/>
-
 image lain
 
 ![](./images/back2.png)
 
-![anu](./images/back3.png)
+![](./images/back3.png)
 
 
 
