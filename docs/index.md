@@ -1,6 +1,6 @@
 ---
-layout: page
-title:
+layout: base
+title: Docs
 ---
 # GenRiver Documentation  
 
