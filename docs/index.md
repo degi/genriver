@@ -1,7 +1,7 @@
 ---
 layout: home
 ---
-<h1>GenRiver3 Documentation</h1>  
+<h1>Gen<b>River</b>3 Documentation</h1>  
 
 * [About](https://degi.github.io/genriver/about/)
 * [Background](https://degi.github.io/genriver/background/)
