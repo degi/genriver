@@ -1,6 +1,7 @@
 ---
 layout: home
 ---
+![](./images/genriver_logo.png) 
 <h1>Gen<b>River</b>3 Documentation</h1>  
 
 * [About](https://degi.github.io/genriver/about/)
