@@ -66,7 +66,7 @@ The software can also be launched as a **standalone app** using R and RStudio. T
 
 > If you have the **source code** on the local folder, you will need an internet connection to run it for the first time. An internet connection is required to update and initialize the R libraries. Once the updates are completed, you will be able to run the app **without an internet connection**.<br/>
     
-> <img src="../docs/images/info-circle.svg" width="18" height="18"> **Note:**<br>
+> ![](./images/info-circle.png) **Note:**<br>
 > You might still need an internet connection to download the DEM. However, you can go without it once it is in your saved parameters. 
 
 ## Home Screen
@@ -75,7 +75,7 @@ GenRiver model is a generic model of river flow in a catchment that is subdivide
 
 The model treats a river as a summation of streams, each originating in a sub-catchment with its own daily rainfall, yearly landcover fractions, and constant total area and distance to the river outflow or measurement point. Interactions between streams in their contribution to the river are considered to be negligible (i.e. there is no 'backflow' problem). Spatial patterns in daily rainfall events are translated into average daily rainfall in each sub-catchment in a separate module. The sub-catchment model represents interception, infiltration into the soil, rapid percolation into the subsoil, surface flow of water, and rapid lateral subsurface flow into streams with parameters that can vary between land cover classes.
 
-<img src="../docs/images/home.png" width="400"/>
+![](./images/home.png)
 
 The main interface for working with the model is divided into sections titled **Input**, **Simulation**, and **Flopper**.
 
@@ -91,7 +91,7 @@ The main interface for working with the model is divided into sections titled **
 
 #### Land Cover Map
 
-<img src="../docs/images/landcover.png" width="400"/>
+![](./images/landcover.png)
 
 Once the map is uploaded, it will be displayed on the page. The map IDs will be displayed on the right side as landcover IDs. A default landcover label is generated for all the IDs. You may edit the landcover label in place, or upload it from a predefined CSV file.    
 
@@ -99,7 +99,7 @@ Once the map is uploaded, it will be displayed on the page. The map IDs will be 
 
 The GenRiver model was set up to compare the impacts of land cover change on hydrology. These impacts are based on four steps in the water cycle: interception by the canopy, impact on the topsoil structure (BD/BDref) that influences infiltration (or runoff generation as its complement), the seasonal pattern of water use (here expressed as the fraction of the potential ET per month), and a drought threshold that indicates the relative soil water content where evapotranspiration is affected. Distinctions between land cover types for any simulation should be based on the primary research question, the availability of data on land cover fractions, and the importance of the land cover type in the catchment area. Most spatial data include a "no data" category (clouds and cloud shadow). normally the fractions of land cover elsewhere are assumed to apply to these pixels as well.
 
-<img src="../docs/images/lc_prop.png" width="400"/>
+![](./images/lc_prop.png)
 
 The first column of the first table is the storage capacity for intercepted water (I_InterceptClass) of each land cover type, mm day-1. It is treated as a linear function of leaf + branch area index of the land cover, with the option of modifiers for surface properties that determine the thickness of the water film, forest = 4, young secondary forest/young agroforestry = 3.
 
@@ -113,17 +113,17 @@ The second table is the monthly pattern of potential evapotranspiration for each
 
 **Evapotranspiration** is a term used to describe the sum of evaporation and plant transpiration from the earth’s land surface to the atmosphere. Evaporation accounts for the movement of water to the air from sources such as the soil, canopy interception, and waterbodies. Transpiration accounts for the movement of water within a plant and the subsequent loss of water as vapor through stomata in its leaves.
 
-<img src="../docs/images/evapot.png" width="400"/>
+![](./images/evapot.png)
 
 The potential evapotranspiration, mm day-1 data can be either daily data or monthly data. These values can be derived from open pan evaporation measurements or from equations such as Penman’s that calibrate on such data.
 
-<img src="../docs/images/evapot_month.png" width="400"/>
+![](./images/evapot_month.png)
 
 ### Watershed
 
 The DEM data is acquired from <a href='https://opentopography.org/' target='_blank'><b>opentopography.org</b></a>. OpenTopography provides open and free access to the DEM dataset. Please visit the website for more information about its data collection. Find the instructions at <a href='https://opentopography.org/citations' target='_blank'> https://opentopography.org/citations</a> for the citation
           
-<img src="../docs/images/dem_map.png" width="400"/>
+![](./images/dem_map.png)
 
 If the DEM download fails. You may do the following:
 * Make sure the internet connection is stable
@@ -133,19 +133,19 @@ Make sure the key was correctly copied into 'API key' input
 
 #### Watershed Map
 
-<img src="../docs/images/ws2.png" width="400"/>
+![](./images/ws2.png)
 
 #### 3D View
 
-<img src="../docs/images/ws_3d.png" width="400"/>
+![](./images/ws_3d.png)
 
 #### Lake and DAM
 
-<img src="../docs/images/lake.png" width="400"/>
+![](./images/lake.png)
 
 #### Ground Water and River Flow
 
-<img src="../docs/images/ground_water.png" width="400"/>
+![](./images/ground_water.png)
 
 ### Soil
 
@@ -155,33 +155,33 @@ The soil data is acquired from **Harmonized World Soil Database version 2.0** (H
 
 Average texture (or soil type in a way that allows texture to be estimated) as input to ‘pedotransfer’ functions to estimate soil water retention curve (saturation, field capacity, wilting point)
 
-<img src="../docs/images/soil_global_db.png" width="400"/>
+![](./images/soil_global_db.png)
 
-<img src="../docs/images/soil_list_global.png" width="400"/>
+![](./images/soil_list_global.png)
 
-<img src="../docs/images/soil_map_global.png" width="400"/>
+![](./images/soil_map_global.png)
 
-<img src="../docs/images/soil_seg_sett.png" width="400"/><img src="../docs/images/soil_seg_sett2.png" height="400"/><img src="../docs/images/soil_seg_sett3.png" height="400"/>
+![](./images/soil_seg_sett.png)![](./images/soil_seg_sett2.png" height="400"/>![](./images/soil_seg_sett3.png" height="400"/>
 
 #### Hydraulic Properties
 
 **Field capacity** is the volumetric soil water content measured 1 day after a saturating rainfall event, when rapid drainage and interflow have removed excess water to streams or groundwater
 
-<img src="../docs/images/soil_water.png" width="400"/>
+![](./images/soil_water.png)
 
 Soil hydraulic at a potential of 0 kPa is in a state of saturation. At saturation, all soil pores are filled with water, and water typically drains from large pores by gravity. At a potential of −33 kPa, or −1/3 bar, (−10 kPa for sand), soil is at field capacity. Typically, at field capacity, air is in the macropores, and water in the micropores. Field capacity is viewed as the optimal condition for plant growth and microbial activity. At a potential of −1500 kPa, the soil is at its permanent wilting point, at which plant roots cannot extract the water through osmotic diffusion. <https://en.wikipedia.org/wiki/Water_potential>
 
-<img src="../docs/images/soil_water_lc.png" width="400"/>
+![](./images/soil_water_lc.png)
 
 ####  Soil and Plant Water
 
-<img src="../docs/images/soil_water_par.png" width="400"/>
+![](./images/soil_water_par.png)
 
 #### Soil Erosion and Sedimentation
 
-<img src="../docs/images/erosion_map.png" width="400"/>
+![](./images/erosion_map.png)
 
-<img src="../docs/images/erosion_par.png" width="400"/>
+![](./images/erosion_par.png)
 
 ### Rainfall and Rivers
 
@@ -189,7 +189,7 @@ Soil hydraulic at a potential of 0 kPa is in a state of saturation. At saturatio
 
 **Rainfall** or **precipitation** is all forms of water particles, whether liquid or solid, that fall from the atmosphere to the ground. Distinguished from cloud, fog, dew, and frost, precipitation includes rain, drizzle, snow, and hail.
 
-<img src="../docs/images/rainfall.png" width="400"/>
+![](./images/rainfall.png)
 
 A number of formats are possible, as long as they allow a reconstruction of monthly exceedance curves of daily rainfall intensity:
 -	30 (or at least 20) years of daily rainfall records for a station that can represent the area (or multiple stations if these are supposed to be similar) or
@@ -199,11 +199,11 @@ A number of formats are possible, as long as they allow a reconstruction of mont
 
 If available, river debit data for any period of time (expressed in m3 s-1 in the river or mm day-1 over the whole contributing subcatchments) will be valuable in ‘constraining’ the simulations. If not available, we will simply have to ‘believe’ the model predictions as such
 
-<img src="../docs/images/river.png" width="400"/>
+![](./images/river.png)
 
 #### Consistency Check
 
-<img src="../docs/images/rain_river_check.png" width="400"/>
+![](./images/rain_river_check.png)
 
 ### Options
 
@@ -211,7 +211,7 @@ If available, river debit data for any period of time (expressed in m3 s-1 in th
 
 ### Water Balance
 
-<img src="../docs/images/sim_cum.png" width="400"/>
+![](./images/sim_cum.png)
 
 - **O_CumRain**	is the cumulative amount of daily rainfall for the whole sub-catchment and vegetation class
 - **O_CumPercolation** is the cumulative amount of percolation water for the whole sub-catchment
@@ -229,7 +229,7 @@ Evaluation of model performance can be done by comparing simulation results to m
 
 The Nash-Sutcliffe efficiency (NSE) is a normalized statistic that determines the relative magnitude of the residual variance (“noise”) compared to the measured data variance (Nash and Sutcliffe, 1970). NSE indicates how well the plot of observed versus simulated data fits the 1:1 line
 
-<img src="../docs/images/nse.png" />
+![](./images/nse.png" />
 
 where Yiobs is the observation for the constituent being evaluated, Yisim is the simulated value for the constituent being evaluated, Ymean is the mean of observed data for the constituent being evaluated, and n is the total number of observations.
 
@@ -262,20 +262,20 @@ The assessment of the hydrological situation of the watershed is determined by t
 
 **Table 2.5.** Criteria and indicators of watershed hydrological functions that are relevant to downstream stakeholders (Van Noordwijk, et al., 2006\)
 
-<img src="../docs/images/ws_ci.png" width="700"/>
+![](./images/ws_ci.png" width="700"/>
 
 If there is a shortage of reliable data on river flow, you can first calibrate and validate a water balance model for the area, and then used this for further exploration of scenarios. If no continuous data on sedimentation or erosion exists, you can assess the risk of erosion through the level of runoff. This is with an underlying assumption that high run-off would lead to a high risk of erosion or you can use the run-off output as the input of other erosion models on the Catchment level.
 
-<img src="../docs/images/sim_avg.png" width="400"/>
+![](./images/sim_avg.png)
 
 ### Buffering Indicator
 
-<img src="../docs/images/sim_buf.png" width="400"/>
+![](./images/sim_buf.png)
 
 ## FlowPer
 
 **Flow persistence** is the minimum volume of river flow that can be expected as a fraction of flow on the previous day
 
-<img src="../docs/images/flowper.png" width="400"/>
+![](./images/flowper.png)
 
 *To be updated...*
