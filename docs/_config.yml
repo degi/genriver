@@ -65,3 +65,5 @@ minima:
       icon: youtube
       url: "https://www.youtube.com/@DegiHarja"
       
+  hide_site_feed_link: true 
+  
