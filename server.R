@@ -4957,7 +4957,6 @@ server <- function(input, output, session) {
     D_GWtoLake <- sum(subc_df$D_GWLakeSub, na.rm = T)
     # L_InFlowtoLake =  D_RiverFlowtoLake+D_GWtoLake
     L_InFlowtoLake <- D_RiverFlowtoLake + D_GWtoLake
-    
     # L_LakeArea[Subcatchement] = if L_Lake?[Subcatchement]=1 then L_Lake?[Subcatchement]*I_RelArea[Subcatchement] else 0
     subc_df$L_LakeArea <- ifelse(subc_df$L_Lake == 1, subc_df$L_Lake * subc_df$I_RelArea, 0)
     sum_L_LakeArea <- sum(subc_df$L_LakeArea, na.rm = T)
@@ -5211,6 +5210,7 @@ server <- function(input, output, session) {
     ### Output ######################
     
     stream_vars <- list()
+    # L_InFlowtoLake is main outlet river
     stream_vars$L_InFlowtoLake <- L_InFlowtoLake
     stream_vars$L_RivOutFlow <- L_RivOutFlow
     stream_vars$O_EvapoTransAcc <- O_EvapoTransAcc
@@ -5424,7 +5424,7 @@ server <- function(input, output, session) {
     lake_input_pars$I_TotalArea <- I_TotalArea
     I_WarmUpTime <- input$I_WarmUpTime
     subc_df$I_SubcContr <- 1
-    
+    #########################################################################
     #TODO: will be parameterize through UI
     # subc_df$L_Lake <- 0
     # subc_lc_df$L_Lake <- 0 #TODO: this should be subcat
@@ -5433,16 +5433,19 @@ server <- function(input, output, session) {
     # TODO:: to be tested and calibrated
     subc_df$L_Lake <- 0
     subc_lc_df$L_Lake <- 0
-    subc_df$D_FeedingIntoLake <- 0
-    if (input$apply_lake) {
-      if(!is.null(v$lake_sf)) {
-        subc_df[subc_df$ws_id %in% v$lake_sf$ws_id,"L_Lake"] <- 1
-        subc_lc_df[subc_lc_df$ws_id %in% v$lake_sf$ws_id,"L_Lake"] <- 1
-      }
-      if(!is.null(v$lake_ws_sf)) {
-        subc_df[subc_df$ws_id %in% v$lake_ws_sf$ws_id,"D_FeedingIntoLake"] <- 1
-      }
-    }
+    # TODO: lake here.. means the final outlet?! all subcathment by default feed into final outlet, then the val should 1
+    subc_df$D_FeedingIntoLake <- 1
+    # TODO: the commented to be re designed for lakes!
+    # if (input$apply_lake) {
+    #   if(!is.null(v$lake_sf)) {
+    #     subc_df[subc_df$ws_id %in% v$lake_sf$ws_id,"L_Lake"] <- 1
+    #     subc_lc_df[subc_lc_df$ws_id %in% v$lake_sf$ws_id,"L_Lake"] <- 1
+    #   }
+    #   if(!is.null(v$lake_ws_sf)) {
+    #     subc_df[subc_df$ws_id %in% v$lake_ws_sf$ws_id,"D_FeedingIntoLake"] <- 1
+    #   }
+    # }
+    ###################################################################
     
     subc_df$D_FracGWtoLake <- 0
     subc_df$I_DaminThisStream <- 0
@@ -5600,6 +5603,7 @@ server <- function(input, output, session) {
         } else {
           output_df <- rbind(output_df, df)
         }
+        # print(df$I_RFlowdata_mmday)
       }
       
       ### Params for next loop ############
@@ -6396,7 +6400,6 @@ server <- function(input, output, session) {
       "SumSoilQFlow",
       "Baseflow"
     )
-    
     max_df <- aggregate(idf[c("I_DailyRain", "I_RFlowdata_mmday", "L_InFlowtoLake")], list(idf$year), max, na.rm = T)
     colnames(max_df) <- c("year", "PdailyMax", "QdailyMax", "QsdailyMax")
     sum_df <- merge(sum_df, max_df, by = "year")
@@ -6411,8 +6414,6 @@ server <- function(input, output, session) {
     mt_min_df <- aggregate(sum_mt_df[c("Qmonthly", "Qsmonthly")], list(sum_mt_df$year), min, na.rm = T)
     colnames(mt_min_df) <- c("year", "QmonthlyMin", "QsmonthlyMin")
     sum_df <- merge(sum_df, mt_min_df, by = "year")
-    
-    
     
     sum_df$TotDischargeFrac <- sum_df$Qtot / sum_df$Ptot
     sum_df$BufferingIndicator <- 1 - (sum_df$QabAvg / sum_df$PabAvg)
@@ -6442,9 +6443,7 @@ server <- function(input, output, session) {
     vd$buffering_df <- sum_df
     
     ##### Average of Indicators of Watershed Functions #################
-    
     avg_df <- data.frame(var = buff_var_df$label)
-    
     min_v <- sapply(sum_df, min, na.rm = T)
     mean_v <- sapply(sum_df, mean, na.rm = T)
     max_v <- sapply(sum_df, max, na.rm = T)
@@ -6460,7 +6459,6 @@ server <- function(input, output, session) {
     vd$wb_ind_avg <- avg_df
     
     #### Average of Water Balance  ###########
-    
     avg_wb_df <- data.frame(var = water_balance_avg)
     wb_field <- c("Ptot", "", "Qtot", "", "", "")
     wb_field_sim <- c("Ptot",

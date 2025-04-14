@@ -357,7 +357,8 @@ ui <-
       font_scale = 0.9
       
     ),
-    bg = theme_color$primary,
+    navbar_options = navbar_options(bg=theme_color$primary),
+    # bg = theme_color$primary,
     header =
       tags$head(
         tags$style(
@@ -1291,6 +1292,11 @@ ui <-
           card_body(includeMarkdown("docs/about.md"))
         ),
         nav_panel(
+          title = "Background",
+          icon = icon("book"),
+          card_body(includeMarkdown("docs/background.md"))
+        ),
+        nav_panel(
           title = "Tutorial",
           icon = icon("book"),
           card_body(includeMarkdown("docs/manual.md"))
@@ -1301,9 +1307,9 @@ ui <-
           card_body(includeMarkdown("docs/references.md"))
         ),
         nav_panel(
-          title = "Software Library",
+          title = "Appendix",
           icon = icon("screwdriver-wrench"),
-          card_body(includeMarkdown("docs/library.md"))
+          card_body(includeMarkdown("docs/appendix.md"))
         )
       )
     )

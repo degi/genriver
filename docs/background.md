@@ -51,19 +51,19 @@ GenRiver is a generic river flow model that responds to spatially explicit rainf
 
 Land cover change can significantly affect watershed functions through a) changes in the fraction of rainfall that reaches the ground, b) the subsequent path-ways of water flow over and through the soil as related to surface and subsurface structure of the soil, surface roughness, and landscape drainage, and c) the rate of water use by plants (Fig. 1.1). 
 
-<figure>
-  <img src="../docs/images/model1.png" width="400"/>
+
+  ![](./images/model1.png)
   <figcaption><b>Figure 1.1</b> Multiple influences of tree cover and (forest) soil condition in terms of the water balance.</figcaption>
-</figure>
+
 
 Simple characteristics of the vegetation (monthly pattern of leaf biomass, influencing canopy interception and transpiration, and ability to extract water from deeper soil layers) and soil (especially compaction of the macro pores in the soil that store water between ‘saturation’ and ‘field capacity’) can probably explain a major part of the impacts on river flow.
 
 Empirical assessment of the dynamics of water flows as a function of land cover change and soil properties takes time and resources, and needs to take temporal and spatial variation of rainfall into account. A model based on ‘first principles’ that integrates land cover change and change in soil properties as driving factors of changes in river flow can be used as a tool to explore scenarios of land use change if it passes a ‘validation’ test against observed data.
 
-<figure>
-  <img src="../docs/images/model2.png" width="400" />
+
+  ![](./images/model2.png")
   <figcaption><b>Figure 1.2</b> Landscape-scale processes that relate the spatial and temporal aspects of rainfall to river flow.</figcaption>
-</figure>
+
 
 GenRiver is a generic river model on river flow.  As is common in hydrology, it starts the accounting with rainfall or precipitation (P) and traces the subsequent flows and storage in the landscape, which can lead to either evapotranspiration (E), river flow (Q), or change in storage (ΔS) (Figure 1.3):
 
@@ -75,15 +75,15 @@ The core of the GenRiver model is a ‘patch’ level representation of a daily 
 
 A river is treated as a summation of streams, each originating in a sub-catch¬ment with its own daily rainfall, yearly land cover fractions, and constant total area and distance to the river outflow (or measurement) point.  Interactions between streams in their contribution to the river are considered to be negligible (i.e. there is no ‘backflow’ problem).  Spatial patterns in daily rainfall events are translated into average daily rainfall in each sub-catchment.  The sub-catchment model represents interception, infiltration into the soil, rapid percolation into the subsoil, the surface flow of water, and rapid lateral subsurface flow into streams with parameters that can vary between land cover classes.
 
-<figure>
-  <img src="../docs/images/model3.png" width="400"/>
-  <figcaption><b>Figure 1.3</b> Overview of the GenRiver model; the multiple subcatchments that make up the catchment as a whole can differ in basic soil properties, land cover fractions that affect interception, soil structure (infiltration rate), and seasonal pattern of water use by the vegetation. The sub-catchment will also typically differ in ‘routing time’ or in the time it takes the streams and river to reach the observation point of main interest.</figcaption>
-</figure>
 
-<figure>
-  <img src="../docs/images/model4.png" width="400"/>
+  ![](./images/model3.png)
+  <figcaption><b>Figure 1.3</b> Overview of the GenRiver model; the multiple subcatchments that make up the catchment as a whole can differ in basic soil properties, land cover fractions that affect interception, soil structure (infiltration rate), and seasonal pattern of water use by the vegetation. The sub-catchment will also typically differ in ‘routing time’ or in the time it takes the streams and river to reach the observation point of main interest.</figcaption>
+
+
+
+  ![](./images/model4.png)
   <figcaption><b>Figure 1.4</b> GenRiver model, key types of input, and main output.</figcaption>
-</figure>
+
 
 
 ## 2. Description of Model Sectors
@@ -92,10 +92,10 @@ A river is treated as a summation of streams, each originating in a sub-catch¬m
 
 At short time span of most observers of river flow it is difficult to distinguish interannual variability of weather from real change in climate and from changes in land cover and soil conditions.
 
-<figure>
-  <img src="../docs/images/back1.png" width="400"/>
+
+  ![](./images/back1.png)
   <figcaption><b>Figure 2.1</b> The biophysical relations between rainfall, land use in upper catchments and river flow to downstream.</figcaption>
-</figure>
+
 
 The hydrology of the river basin integrates processes at a range of temporal and spatial scales and the interactions between ‘input’ and ‘water processing’ at patch and river channel scale are not easily unraveled. Purely empirical (data driven) models may need only  a few parameter to reconstruct a daily hydrograph from rainfall data, but because their parameter cannot ‘unpacked’ at the land use level, such models are not  suited for scenario models where the effect of land cover change (including forest cover) are the main interest (Croke, et. al., 2004).
 
@@ -134,10 +134,10 @@ Q = 0.94 P – 1000 mm year –1
 
 with Q as river flow and P as precipitation both in mm year –1. A tentative interpretation of these coefficients is that 6% of rainfall is lost through interception and direct evaporation from wet leaf surfaces and/or a rainfall-dependent increase in plant transpiration, and that the basic value for annual evapotranspiration is 1000 mm year –1. Both these parameters, the interception loss, and the evapotranspiration will vary with the temporal distribution of rainfall and the land cover type, but the intercept is unlikely to change by more than 50% of the values given (so the intercept in unlikely to be more than 1500 or less than 500 mm year-1), while the slope is probably confined to the range 0.8 – 1. The simple model may thus be fairly robust, but it is not sensitive to changes in land use or land cover (these could shift the parameters from the indicated values), and cannot be directly ‘downscaled’ to shorter periods of time (as it does not consider changes in storage terms). More sophisticated models will need to be explicit in the basic value for evapotranspiration of different types of land cover, and the degree to which these land covers induce direct evaporative losses.
 
-<figure>
-  <img src="../docs/images/back2.png" width="400"/>
+
+  ![](./images/back2.png)
   <figcaption><b>Figure 2.2</b> The biophysical relations between rainfall, land use in upper catchments and river flow to downstream areas are subject to discussions between downstream and upland people whose perceptions on the cause-effect relations are reflected in policies that may aggravate poverty and conflict.</figcaption>
-</figure>
+
 
 Four classes of land cover can be distinguished from the perspective of evapotranspiration : 
 
@@ -165,10 +165,10 @@ By expressing the rainfall and river flow in mm year-1 we essentially use volume
 
 If a greater model sensitivity to land use change is important for the question we try to answer or if we are interested in phenomena operating at shorter time scales than a year, we need to take into account the intermediate processes that determine the access to and use of water stored in the soil and the upper groundwater, as well as the rates of transport and temporary storage of water in the river network. The basic framework for a patch or plot level water balance (Figure 4.3) is well accepted, so the various models differ in the details of the time course of describing canopy interception and throughfall, and the way lateral flows over the surface and through the soil are described. As most plot level studies exclude surface inflows, there is a tendency to focus on surface runoff rather than run-on or net transport.
 
-<figure>
-  <img src="../docs/images/back3.png" width="400"/>
+
+  ![](./images/back3.png)
   <figcaption><b>Figure 2.3</b> The basic framework for a patch or plot level water balance.</figcaption>
-</figure>
+
 
 **Table 2.1** Models concepts of river flow
 
@@ -183,10 +183,10 @@ A number of existing models address only a single scale, be it a plot or a catch
 
 The model was initially designed as a ‘simple’ (few parameters) model that still has a link to process-based models, and that can be gradually spatially differentiated, as the need arises.
 
-<figure>
-  <img src="../docs/images/back4.png" width="400"/>
+
+  ![](./images/back4.png)
   <figcaption><b>Figure 2.4</b> Overview of the GenRiver model; the multiple sub-catchments that make up the catchment as a whole can differ in basic soil properties, land cover fractions that affect interception, soil structure (infiltration rate) and seasonal pattern of water use by the vegetation. The sub-catchment will also typically differ in ‘routing time’ or in the time it takes the streams and river to reach the observation point of main interest.</figcaption>
-</figure>
+
 
 The core of the model is a ‘patch level representation of a daily water balance, driven by local rainfall and modified by the land cover and soil properties of the patch. The patch can contribute to three types of stream flow: surface-quick flow on the day of the rainfall event, soil-quick flow on the next day and base flow, via the gradual release of groundwater (Figure 4.4).
 
@@ -210,10 +210,10 @@ Everybody is probably familiar with the ‘mental model’ of the forests as a s
 
 There is, however, an alternative explanation for even river flow patterns, that gets much less attention: spatial heterogeneity of rainfall. Simply said: if today it rains here and tomorrow there, the river that receives water from both areas may have a fairly steady flow, despite a poor buffering in either areas (Figure 4.6). If this second model dominates, changes in river flow may be due to a change in the spatial correlation of rainfall, not to land use change in any of the subcatchments per see.
 
-<figure>
-  <img src="../docs/images/back5.png" width="400"/>
+
+  ![](./images/back5.png)
   <figcaption><b>Figure 2.5</b> Models for watershed functions at catchment scale need to combine explicit rules for effects of land use on interception, infiltration and transport to the stream network at ‘patch’ scale, with assemblage and filter rules that reflect the river network and the changes that this can cause to the overall flow.</figcaption>
-</figure>
+
 
 A distinction between these two types of explanation for patterns in river flow is thus essential to evaluate the likely impact of current land use change in forested areas and the types of interventions that may be effective or not. The relative importance of the two explanations clearly depends on the scale of consideration. In small subcatchments there is hardly any space for the second explanation, and the first must dominate. 
 
@@ -221,10 +221,10 @@ In areas of several hundreds of square kilometers or at subcontinental scale, th
 	  
 The GenRiver models were first designed to answer this rather specific question: how does spatial variability of rainfall influence the ‘evenness’ of river flow that is often attributed to forests as dominant land cover?, or ‘explanation 2’. We first of all need a representation of rainfall with spatial patterns that are intermediate between uncorrelated random and fully coupled. We then need to link this to a model that includes the ‘sponge’ in its essential form, so that we can compare the relative importance of both processes. The two tools described here, GenRiver were developed for such a purpose. We will briefly outline the conceptual basis of both, describe the model implementation and parameter sensitivity, and then proceed with the analysis of the relative impacts of land use change on river flow in catchments with spatially heterogeneous rainfall.  
  
-<figure>
-  <img src="../docs/images/back6.png" width="400"/>
+
+  ![](./images/back6.png)
   <figcaption><b>Figure 2.6</b> Two alternative models for steady river flow:  the ‘sponge’ and ‘patchy rain’ version that are likely to dominate at the scale of plot level research (left) and at landscape scale (right).</figcaption>
-</figure>
+
 
 **Table 2.3.** Well-documented impacts of land use change by basin size (Kiersch and Tognetti, 2002); x = Measured impact; - = No well-documented impact
 
@@ -295,10 +295,10 @@ Rainfall at subcatchment level is implemented as daily amounts (I_RainPerDay) fr
 | **…**    | …          | …           | …            | …             | …             | …             | …             | …             |
 | **1460** | 0.00       | 7.34        | 7.79         | 4.46          | 1.76          | 8.29          | 0.02          | 0.00          |
 
-<figure>
-  <img src="../docs/images/back7.png" width="400"/>
+
+  ![](./images/back7.png)
   <figcaption><b>Figure 2.7</b> Implementation process of daily rainfall at subcatchment level from long time records.</figcaption>
-</figure>
+
 
 	I_RainPerDay = if I_UseSpatVarRain? = 1 then I_SpatRainTime[i] else I_DailyRain[i]
 
@@ -316,10 +316,10 @@ Rainfall duration determines the ‘fraction of time available for infiltration�
 
 Rainfall will be distributed to each component of water balance, interception-evaporation (D_InterceptEvap), infiltration (D_Infiltration), deep infiltration (D_DeepInfiltration) and run off (D_SurfaceFlow).
 
-<figure>
-  <img src="../docs/images/back8.png" width="400"/>
+
+  ![](./images/back8.png)
   <figcaption><b>Figure 2.8</b> Water balance in soil surface level.</figcaption>
-</figure>
+
 	   
 #### Interception
 
@@ -387,10 +387,10 @@ During a rain event the soil may get saturated, but within one day it is suppose
 * Drain to the groundwater reserve, calculated as the minimum of the amount that can be transported downwards and the fraction of soil water that will drain on any given day (D_Percolation)  
 * Drain to the rivers as ‘soil quick flow’: any water left above field capacity by the two preceding processes (D_SoilDischarge)
 
-<figure>
-  <img src="../docs/images/back9.png" width="400"/>
+
+  ![](./images/back9.png)
   <figcaption><b>Figure 2.9</b> The process of soil water dynamic.</figcaption>
-</figure>
+
 
 After a rain event, the soil starts to drain and will reach field capacity after one day (or depending on further parameter 1-3 days). The water held between saturation and field capacity is distributed in the order transpiration, drainage to the groundwater reserve or drain to the rivers as “soil quick flow” (van Noordwijk et al, 2003). The Soil water retention curve (saturation, field capacity, wilting point) is estimated based on pedotransfer functions using the soil type to indicate the soil texture. The groundwater was driven by the ‘differential storage’ in ‘active groundwater’ and the groundwater release’ fraction which representing the recession phase of actual river flow during periods without rainfall.
 
@@ -419,10 +419,10 @@ Unused soil water by plants has potential to become sub surface flow or soil dis
 
 Percolation and deep infiltration are the source of ground water. The ground water then will be used for irrigation and base flow. Figure 4.10. shows the flows to and from the ground water level.
 
-<figure>
-  <img src="../docs/images/back10.png" width="400"/>
+
+  ![](./images/back10.png)
   <figcaption><b>Figure 2.10</b> Water balance in ground water level.</figcaption>
-</figure>
+
 
 #### Irrigation
 
@@ -446,10 +446,10 @@ A river in the model is treated as the sum of streams, each originating in a sub
 
 	D_TotalStreamInFlow = (D_SurfaceFlow[i]+D_GWaDisch[i] x (1-D_FracGWtoLake[i])+ARRAYSUM(D_SoilDischarge[*,i]))+D_SubCResOutflow[i] x (1-I_DaminThisStream?[i])
 
-<figure>
-  <img src="../docs/images/back11.png" width="400"/>
+
+  ![](./images/back11.png)
   <figcaption><b>Figure 2.11</b> Array dimensions is used in the model.</figcaption>
-</figure>
+
 
 #### Routing time
 
@@ -470,10 +470,10 @@ Land cover sector is a sector to generate proportion of land cover for each year
 
 There are eleven types of land cover and four time series data (start simulation, first transition, second transition and end transition) as a default that provided by GenRiver model. Fraction of land cover change for each year is a result of interpolation. Figure 4.12. and below equation shows calculation for interpolation of fraction of land cover for each year in each subctachment.
 
-<figure>
-  <img src="../docs/images/back12.png" width="400"/>
+
+  ![](./images/back12.png)
   <figcaption><b>Figure 2.12</b> Interpolation of land cover fraction inside GenRiver. Number 1, 2, …, 11 on  I_Frac1_1 1, I_Frac2_1 1, …, I_Frac11_4, the first number = land cover type, the second number = the transition year. I_FracVegClass1, I_FracVegClass2, I_FracVegClass3 and I_FracVegClass4 is land cover fraction for start simulation, first transition, second transition and end transition.</figcaption>
-</figure>
+
 
 	I_FracVegClassNow = if I_RelArea[i]>0  then   
 	(if I_Flag1 = 1 then (I_FracVegClass1[j,i]+((I_FracVegClass2[j,i]-I_FracVegClass1[j,i]) x (int((I_Simulation_Time)/365)-I_InputDataYears	[Start])/(I_InputDataYears[Trans1]-I_InputDataYears[Start]))/ARRAYSUM(I_FracVegClass1[*,i])) ELSE  
@@ -545,10 +545,10 @@ FlowPer Model in excel file is organized into seven sheets, labeled: “READ ME�
 
 The only input required is a (partial) time series of daily river flow data, to be entered in the “DebitData” sheet, as in GenRiver.xls. Once river flow data have passed minimum quality checks, we can use them to parameterize the FlowPer model, esp. the Fp parameter. The “FlowPerModel” sheet (Figure 5.3) then provide options to run the model for each year that data are available and derive four auxiliary parameters to run FlowPer model (Table 5.2). The four auxiliary parameters are flow persistence (“FP” sheet), the mean random variate that reflects inputs from recent rainfall (“QAddon” sheet), and two parameters that describe a seasonal pattern, peak and shape of the distribution (“Shape and TimeMax” sheet). The only parameters that based on trial and fit is coefficient variation of measurement noise.
 
-<figure>
-  <img src="../docs/images/back13.png" width="400"/>
+
+  ![](./images/back13.png)
   <figcaption><b>Figure 3.2</b> The main interface of FlowPer Model.</figcaption>
-</figure>
+
 
 #### Running the model
 
@@ -571,10 +571,10 @@ Table 3.2. Input parameters of FlowPerModel
 | Time Maximum Flow            | E10                                                          |                                                                                                  |
 | CV measurement noise         | E11                                                          |                                                                                                  |
 
-<figure>
-  <img src="../docs/images/back14.png" width="400"/>
+
+  ![](./images/back14.png)
   <figcaption><b>Figure 3.3</b> The interface of FlowPer Model.</figcaption>
-</figure>
+
 
 #### FlowPer model output
 
