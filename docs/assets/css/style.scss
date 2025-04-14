@@ -6,15 +6,12 @@
   "minima/skins/{{ site.minima.skin | default: 'classic' }}",
   "minima/initialize";
 
-.site-title {
-  display: inline-block;
-}
 
-.site-title::before {
-  content: URL("https://degi.github.io/genriver/images/genriver_logo.png");
-  display: inline-block;
-  position: relative;
-  width: 32px;
-  top: 5px;
-  margin-right: 10px;
-}
+#.site-title::before {
+#  content: URL("https://degi.github.io/genriver/images/genriver_logo.png");
+#  display: inline-block;
+#  position: relative;
+#  width: 32px;
+#  top: 5px;
+#  margin-right: 10px;
+#}
