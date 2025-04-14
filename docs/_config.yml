@@ -4,26 +4,15 @@ author:
   email: degi.ecomodels@gmail.com
   
 description: >
-  GenRiver is a generic river model on river flow.
+  GenRiver is a generic river model on river flow
 
 theme: minima
-
-#plugins:
-#  - jekyll-seo-tag
 
 sass:
   quiet_deps: true
   silence_deprecations: [import]
 
 minima:
-  # Minima skin selection. Available skins are:
-  #   Available skins:
-  #     * classic            Default, light color scheme.
-  #     * dark               Dark variant of the classic skin.
-  #     * auto               Adaptive skin based on the default classic and dark skins.
-  #     * solarized-light    Light variant of solarized color scheme.
-  #     * solarized-dark     Dark variant of solarized color scheme.
-  #     * solarized          Adaptive skin for solarized color scheme skins.
   skin: classic
 
   # Specific pages for site navigation.
