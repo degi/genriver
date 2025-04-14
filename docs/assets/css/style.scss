@@ -6,6 +6,10 @@
   "minima/skins/{{ site.minima.skin | default: 'classic' }}",
   "minima/initialize";
 
+.site-title {
+  display: inline-block;
+}
+
 .site-title::before {
   content: URL("https://degi.github.io/genriver/images/genriver_logo.png");
   display: inline-block;
