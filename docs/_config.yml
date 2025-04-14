@@ -8,8 +8,8 @@ description: >
 
 theme: minima
 
-plugins:
-  - jekyll-seo-tag
+#plugins:
+#  - jekyll-seo-tag
 
 sass:
   quiet_deps: true
