@@ -9,7 +9,6 @@ description: >
 theme: minima
 
 plugins:
-  - jekyll-feed
   - jekyll-seo-tag
 
 sass:
@@ -56,8 +55,8 @@ minima:
     - title: GenRiver repository at GitHub
       icon: github
       url: "https://github.com/degi/genriver"
-    - title: google_scholar
-      icon: google_scholar
+    - title: google-scholar
+      icon: google-scholar
       url: "https://scholar.google.co.id/citations?user=rSiPIssAAAAJ"
     - title: linkedin
       icon: linkedin
