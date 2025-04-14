@@ -53,15 +53,16 @@ minima:
   #     * icon     Font Awesome icon id. `github` corresponds to `fa-github`.
   #     * url      Full URL of social profile.
   social_links:
-    - title: Minima Theme repository at GitHub
+    - title: GenRiver repository at GitHub
       icon: github
-      url: "https://github.com/jekyll/minima"
-    - title: Jekyll at X (formerly Twitter)
-      icon: x-twitter
-      url: "https://x.com/jekyllrb"
+      url: "https://github.com/degi/genriver"
+    - title: google_scholar
+      icon: google_scholar
+      url: "https://scholar.google.co.id/citations?user=rSiPIssAAAAJ"
+    - title: linkedin
+      icon: linkedin
+      url: "https://www.linkedin.com/in/degi-harja-asmara-6545baa2/"
+    - title: youtube
+      icon: youtube
+      url: "https://www.youtube.com/@DegiHarja"
       
-#defaults:
-#  - scope:
-#      path: "images"
-#    values:
-#      image: true
