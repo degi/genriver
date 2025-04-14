@@ -61,7 +61,7 @@ Simple characteristics of the vegetation (monthly pattern of leaf biomass, influ
 Empirical assessment of the dynamics of water flows as a function of land cover change and soil properties takes time and resources, and needs to take temporal and spatial variation of rainfall into account. A model based on ‘first principles’ that integrates land cover change and change in soil properties as driving factors of changes in river flow can be used as a tool to explore scenarios of land use change if it passes a ‘validation’ test against observed data.
 
 
-  ![](./images/model2.png" width="400" />
+  ![](./images/model2.png")
   <figcaption><b>Figure 1.2</b> Landscape-scale processes that relate the spatial and temporal aspects of rainfall to river flow.</figcaption>
 
 
