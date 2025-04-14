@@ -7,7 +7,7 @@ layout: home
 GenRiver is a generic river model on river flow.
 
 * [About](https://degi.github.io/genriver/about/)
-* [Background](https://degi.github.io/genriver/background/)
 * [User Manual](https://degi.github.io/genriver/manual/)
+* [Background](https://degi.github.io/genriver/background/)
 * [References](https://degi.github.io/genriver/references/)
 * [Appendix](https://degi.github.io/genriver/appendix/)
