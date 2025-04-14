@@ -164,7 +164,11 @@ Average texture (or soil type in a way that allows texture to be estimated) as i
 
 ![](./images/soil_map_global.png)
 
-![](./images/soil_seg_sett.png)![](./images/soil_seg_sett2.png" height="400"/>![](./images/soil_seg_sett3.png" height="400"/>
+![](./images/soil_seg_sett.png)
+
+![](./images/soil_seg_sett2.png)
+
+![](./images/soil_seg_sett3.png)
 
 #### Hydraulic Properties
 
@@ -232,7 +236,7 @@ Evaluation of model performance can be done by comparing simulation results to m
 
 The Nash-Sutcliffe efficiency (NSE) is a normalized statistic that determines the relative magnitude of the residual variance (“noise”) compared to the measured data variance (Nash and Sutcliffe, 1970). NSE indicates how well the plot of observed versus simulated data fits the 1:1 line
 
-![](./images/nse.png" />
+![](./images/nse.png")
 
 where Yiobs is the observation for the constituent being evaluated, Yisim is the simulated value for the constituent being evaluated, Ymean is the mean of observed data for the constituent being evaluated, and n is the total number of observations.
 
@@ -265,7 +269,7 @@ The assessment of the hydrological situation of the watershed is determined by t
 
 **Table 2.5.** Criteria and indicators of watershed hydrological functions that are relevant to downstream stakeholders (Van Noordwijk, et al., 2006\)
 
-![](./images/ws_ci.png" width="700"/>
+![](./images/ws_ci.png)
 
 If there is a shortage of reliable data on river flow, you can first calibrate and validate a water balance model for the area, and then used this for further exploration of scenarios. If no continuous data on sedimentation or erosion exists, you can assess the risk of erosion through the level of runoff. This is with an underlying assumption that high run-off would lead to a high risk of erosion or you can use the run-off output as the input of other erosion models on the Catchment level.
 
