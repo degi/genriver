@@ -357,8 +357,8 @@ ui <-
       font_scale = 0.9
       
     ),
-    navbar_options = navbar_options(bg=theme_color$primary),
-    # bg = theme_color$primary,
+    # navbar_options = navbar_options(bg=theme_color$primary),
+    bg = theme_color$primary,
     header =
       tags$head(
         tags$style(
