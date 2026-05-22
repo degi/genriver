@@ -5,7 +5,7 @@ The **online version** is available at: [https://genriver.agroforestri.id/](http
 
 Run the program by executing this script in R or RStudio:
 
-    shiny::runGitHub("genriver", "degi")
+    shiny::runGitHub("genriver", "talas-tools")
 
 **User manual** is available at: [https://degi.github.io/genriver/](https://degi.github.io/genriver/) 
 
